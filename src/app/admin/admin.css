@@ -1,0 +1,14 @@
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,sans-serif;background:#f4f6f8;color:#1b2430}
+a{color:#0b7a3b}.shell{display:flex;min-height:100vh}.side{width:220px;background:#10261a;color:#cfe5d6;padding:20px 14px;flex:none}
+.side h2{margin:0 0 18px;color:#fff;font-size:18px}.side a{display:block;color:#cfe5d6;text-decoration:none;padding:9px 12px;border-radius:6px}
+.side a:hover{background:#1b3d29}.side form{margin-top:18px}.main{flex:1;padding:28px;min-width:0}
+h1{margin:0 0 18px;font-size:24px}.card{background:#fff;border:1px solid #e1e6ea;border-radius:10px;padding:18px;margin-bottom:18px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #eef1f3;vertical-align:top}th{font-size:12px;text-transform:uppercase;color:#6b7785}
+input[type=text],input[type=password],input[type=email],input[type=datetime-local],select,textarea{width:100%;padding:9px 10px;border:1px solid #cdd5dc;border-radius:6px;font:inherit;background:#fff}
+textarea{font-family:ui-monospace,Consolas,monospace;font-size:13px}label{display:block;font-weight:600;margin:12px 0 4px}
+.btn{display:inline-block;background:#0b7a3b;color:#fff;border:0;border-radius:6px;padding:9px 16px;font:inherit;cursor:pointer;text-decoration:none}
+.btn.sec{background:#e6ebef;color:#1b2430}.btn.del{background:#c0392b}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}.tile{background:#fff;border:1px solid #e1e6ea;border-radius:8px;padding:8px;font-size:12px;word-break:break-all}
+.tile img{width:100%;height:110px;object-fit:cover;border-radius:4px;background:#eee}.stat{font-size:30px;font-weight:700}.muted{color:#6b7785;font-size:13px}
+.login{max-width:360px;margin:12vh auto}.err{color:#c0392b}.badge{font-size:12px;padding:2px 8px;border-radius:99px;background:#e6ebef}.badge.published{background:#d8f1e0;color:#0b6b33}
+@media(max-width:760px){.shell{flex-direction:column}.side{width:auto}}

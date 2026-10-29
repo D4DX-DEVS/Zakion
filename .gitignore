@@ -1,0 +1,13 @@
+node_modules
+.next
+.open-next
+.wrangler
+.dev.vars
+crawl
+seed/media
+seed/*.sql
+seed/seed.json
+seed/parts
+tsconfig.tsbuildinfo
+next-env.d.ts
+seed/admin-password.txt

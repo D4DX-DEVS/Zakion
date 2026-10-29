@@ -1,0 +1,31 @@
+{
+  "name": "zakion-energy",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "seed:local": "node tools/seed.mjs && wrangler d1 migrations apply zakion-db --local && node tools/load-seed.mjs --local",
+    "seed:remote": "node tools/seed.mjs && wrangler d1 migrations apply zakion-db --remote && node tools/load-seed.mjs --remote"
+  },
+  "dependencies": {
+    "next": "15.5.28",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261029.1",
+    "@opennextjs/cloudflare": "^1.20.14",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5",
+    "wrangler": "^4.155.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "workerd@1.20261023.1": true
+  }
+}
