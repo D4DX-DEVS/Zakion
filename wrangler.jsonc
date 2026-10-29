@@ -8,5 +8,6 @@
   "d1_databases": [
     { "binding": "DB", "database_name": "zakion-db", "database_id": "0be7a536-5171-4cc1-8fff-4f0847bfe336", "migrations_dir": "migrations" }
   ],
+  "vars": { "SITE_URL": "https://zakion-energy.d4dx-fatwa.workers.dev" },
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zakion-media" }]
 }

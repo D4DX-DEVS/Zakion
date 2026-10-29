@@ -3,6 +3,7 @@ interface CloudflareEnv {
   MEDIA: R2Bucket;
   ASSETS: Fetcher;
   ADMIN_USER?: string;
+  SITE_URL?: string;
   ADMIN_PASSWORD: string;
   SESSION_SECRET: string;
 }

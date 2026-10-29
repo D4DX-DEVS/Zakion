@@ -5,7 +5,7 @@ export default async function Media({ searchParams }: { searchParams: Promise<{ 
   const { all } = await searchParams;
   const list = await env().MEDIA.list({ limit: 1000 });
   const objs = list.objects
-    .filter(o => all || !/-\d+x\d+\.\w+$/.test(o.key))
+    .filter(o => !o.key.startsWith("_snap/") && (all || !/-\d+x\d+\.\w+$/.test(o.key)))
     .sort((a, b) => b.uploaded.getTime() - a.uploaded.getTime());
   return (
     <>

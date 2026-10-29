@@ -1,6 +1,7 @@
 // seed/pages.json (+ WP REST posts) -> seed/seed.sql (chunked: D1 caps a statement at 100KB)
 import fs from 'fs';
 import path from 'path';
+import { SEO } from './seo-data.mjs';
 const ROOT = path.resolve(import.meta.dirname, '..');
 const ORIGIN = 'https://wordpress-1683093-6757014.cloudwaysapps.com';
 const pages = JSON.parse(fs.readFileSync(ROOT + '/seed/pages.json', 'utf8'));
@@ -34,6 +35,14 @@ function listTemplate(body) {
   return body.slice(0, a) + '{{CARDS}}' + body.slice(end);
 }
 
+// WordPress leftovers no page uses: each costs a request (emoji -> s.w.org, prefetch -> extra page loads)
+const JUNK = /wp-emoji|speculationrules|comment-reply|jquery\/ui\/|jquery-ui|ymc|filter-everything|woo\.css|ak_js_|elementskit_module_parallax_url|wp-i18n-js-after|wpc-/i;
+const strip = (html, re) => (html.match(re) || []).filter(t => !JUNK.test(t)).join('\n');
+for (const p of pages) {
+  p.head_html = strip(p.head_html, /<link[^>]*>|<style[\s\S]*?<\/style>/g);
+  p.foot_html = strip(p.foot_html, /<script[\s\S]*?<\/script>/g);
+}
+
 const out = [];
 for (const p of pages) {
   const isPost = postSlugs.has(p.path);
@@ -58,6 +67,8 @@ for (const p of pages) {
   out.push({ ...p, body_html: body, kind });
 }
 for (const p of out) {
+  const seo = SEO[p.path];
+  if (seo) [p.title, p.description] = seo;
   p.og_image = p.og_image || '';
   p.title = decode(p.title);
   ins('pages', ['path', 'title', 'description', 'og_image', 'body_class', 'head_html', 'body_html', 'foot_html', 'kind'], p, ['head_html', 'body_html', 'foot_html']);
