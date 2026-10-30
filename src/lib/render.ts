@@ -18,12 +18,26 @@ function card(p: Post) {
   return `<div class="col-lg-4 col-md-6"><div class="blog-item">${img}<div class="post-item-body"><h3><a href="${u}">${esc(p.title)}</a></h3><div class="post-meta"><ul><li><a href="${u}"><i class="fa-regular fa-calendar-days"></i> ${fmtDate(p.published_at)}</a></li><li><i class="fa-solid fa-tag"></i> <a href="/category/uncategorized/" rel="category tag">${esc(p.category)}</a></li></ul></div><div class="btn-readmore"><a href="${u}" class="btn-default">Read More</a></div></div></div></div>`;
 }
 
+// Fixes that apply to every mirrored page: the theme's breadcrumb widget ships without CSS (a numbered list),
+// and header contact/social links are too small to tap on phones.
+const PUBLIC_CSS = `<style>
+ol.ekit-breadcrumb{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+ol.ekit-breadcrumb li{display:inline-flex;align-items:center;list-style:none;margin:0;padding:0}
+ol.ekit-breadcrumb li::marker{content:""}
+.page-header-box ol.ekit-breadcrumb a,.page-header-box ol.ekit-breadcrumb span{color:inherit}
+@media(max-width:767px){
+a[href^="mailto:"],a[href^="tel:"]{display:inline-flex;align-items:center;min-height:44px}
+.ekit_social_media a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}
+img,video,iframe{max-width:100%}
+}
+</style>`;
+
 function document_(p: Page, body: string, post?: Post) {
   const t = esc(p.title);
   return `<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${t}</title>` +
     (p.description ? `<meta name="description" content="${esc(p.description)}">` : "") +
     `<meta property="og:title" content="${t}">` + seoHead(p, post, isPlaceholder(body)) +
-    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${p.head_html}</head>` +
+    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${p.head_html}${PUBLIC_CSS}</head>` +
     `<body class="${esc(p.body_class)}">${improveBody(body, post ? post.title : p.title.split(/ [–|] /)[0])}${p.foot_html}${FORM_JS}</body></html>`;
 }
 
@@ -68,7 +82,7 @@ export async function renderPath(path: string): Promise<Response> {
   if (slug && !slug.includes("/")) {
     const post = await d.prepare("SELECT * FROM posts WHERE slug=? AND status='published'").bind(slug).first<Post>();
     const tpl = post && (await d.prepare("SELECT * FROM pages WHERE path='__tpl_post'").first<Page>());
-    if (post && tpl) return html(document_({ ...tpl, path: norm, title: post.title + " – Zakionenergy", description: clip(post.excerpt), og_image: post.image }, postBody(tpl.body_html, post), post));
+    if (post && tpl) return html(document_({ ...tpl, path: norm, title: post.title + " | Zakion Energy", description: clip(post.excerpt), og_image: post.image }, postBody(tpl.body_html, post), post));
   }
   return notFound();
 }

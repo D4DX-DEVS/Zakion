@@ -1,4 +1,5 @@
 import { db, env } from "@/lib/env";
+import { HIDDEN } from "@/lib/media";
 
 export default async function Dashboard() {
   const d = db();
@@ -9,7 +10,7 @@ export default async function Dashboard() {
     n("SELECT COUNT(*) c FROM posts WHERE status='draft'"),
     n("SELECT COUNT(*) c FROM messages"),
   ]);
-  const media = (await env().MEDIA.list({ limit: 1000 })).objects.filter(o => !o.key.startsWith("_snap/")).length;
+  const media = (await env().MEDIA.list({ limit: 1000 })).objects.filter(o => !HIDDEN.test(o.key)).length;
   const stats: [string, number, string][] = [["Pages", pages, "/admin/pages"], ["Blog posts", posts, "/admin/posts"], ["Drafts", drafts, "/admin/posts"], ["Media files", media, "/admin/media"], ["Messages", msgs, "/admin/messages"]];
   return (
     <>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { purge } from "@/lib/cache";
+import { HIDDEN } from "@/lib/media";
 import { db, env } from "@/lib/env";
 import { login, logout, requireAdmin } from "@/lib/auth";
 
@@ -36,7 +37,9 @@ export async function uploadMedia(f: FormData) {
 }
 export async function deleteMedia(f: FormData) {
   await requireAdmin();
-  await env().MEDIA.delete(s(f, "key"));
+  const key = s(f, "key");
+  if (HIDDEN.test(key)) return;
+  await env().MEDIA.delete(key);
   revalidatePath("/admin/media");
 }
 

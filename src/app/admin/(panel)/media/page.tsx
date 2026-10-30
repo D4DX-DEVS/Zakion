@@ -1,12 +1,13 @@
 import { env } from "@/lib/env";
 import { deleteMedia, uploadMedia } from "../../actions";
 import { ConfirmButton, CopyButton, SubmitButton } from "../../ui";
+import { HIDDEN } from "@/lib/media";
 
 export default async function Media({ searchParams }: { searchParams: Promise<{ all?: string }> }) {
   const { all } = await searchParams;
   const list = await env().MEDIA.list({ limit: 1000 });
   const objs = list.objects
-    .filter(o => !o.key.startsWith("_snap/") && (all || !/-\d+x\d+\.\w+$/.test(o.key)))
+    .filter(o => !HIDDEN.test(o.key) && (all || !/-\d+x\d+\.\w+$/.test(o.key)))
     .sort((a, b) => b.uploaded.getTime() - a.uploaded.getTime());
   return (
     <>

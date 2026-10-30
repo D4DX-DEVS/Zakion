@@ -70,7 +70,7 @@ for (const p of out) {
   const seo = SEO[p.path];
   if (seo) [p.title, p.description] = seo;
   p.og_image = p.og_image || '';
-  p.title = decode(p.title);
+  p.title = decode(p.title).replace(' – Zakionenergy', ' | Zakion Energy');
   ins('pages', ['path', 'title', 'description', 'og_image', 'body_class', 'head_html', 'body_html', 'foot_html', 'kind'], p, ['head_html', 'body_html', 'foot_html']);
 }
 for (const p of posts) {

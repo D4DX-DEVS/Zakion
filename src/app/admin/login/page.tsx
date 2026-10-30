@@ -17,6 +17,7 @@ export default function Login() {
         </div>
       </section>
       <div className="panel">
+        <img className="mlogo" src="/media/2024/03/zak-logo.png" alt="Zakion Energy" />
         <form action={act}>
           <h1>Sign in</h1>
           <p className="sub">Use your admin account to edit the website.</p>

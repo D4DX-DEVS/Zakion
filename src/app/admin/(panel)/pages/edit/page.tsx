@@ -12,7 +12,7 @@ export default async function EditPage({ searchParams }: { searchParams: Promise
   const removable = p.kind !== "template" && p.path !== "/";
   return (
     <>
-      <p className="muted"><a href="/admin/pages">Pages</a> / {p.path}</p>
+      <p className="muted crumb"><a href="/admin/pages">Pages</a> / {p.path}</p>
       <h1>{p.title || "Edit page"}</h1>
       {saved && <Toast text="Page saved" />}
       <form action={savePage} className="editor">

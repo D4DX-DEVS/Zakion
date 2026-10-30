@@ -17,7 +17,7 @@ export default async function EditPost({ params, searchParams }: { params: Promi
     .sort((a, b) => b.uploaded.getTime() - a.uploaded.getTime()).slice(0, 150).map(o => "/media/" + o.key);
   return (
     <>
-      <p className="muted"><a href="/admin/posts">Blog posts</a> / {isNew ? "New" : p.title}</p>
+      <p className="muted crumb"><a href="/admin/posts">Blog posts</a> / {isNew ? "New" : p.title}</p>
       <h1>{isNew ? "Write a post" : "Edit post"}</h1>
       {saved && <Toast text="Post saved" />}
       <form action={savePost} className="editor">
