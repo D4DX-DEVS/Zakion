@@ -23,7 +23,7 @@ function document_(p: Page, body: string, post?: Post) {
   return `<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${t}</title>` +
     (p.description ? `<meta name="description" content="${esc(p.description)}">` : "") +
     `<meta property="og:title" content="${t}">` + seoHead(p, post, isPlaceholder(body)) +
-    `<link rel="icon" href="/media/2025/04/cropped-energy-32x32.png" sizes="32x32"><link rel="apple-touch-icon" href="/media/2025/04/cropped-energy-180x180.png">${p.head_html}</head>` +
+    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${p.head_html}</head>` +
     `<body class="${esc(p.body_class)}">${improveBody(body, post ? post.title : p.title.split(/ [–|] /)[0])}${p.foot_html}${FORM_JS}</body></html>`;
 }
 

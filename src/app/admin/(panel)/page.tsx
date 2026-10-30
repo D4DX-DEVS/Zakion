@@ -9,18 +9,20 @@ export default async function Dashboard() {
     n("SELECT COUNT(*) c FROM posts WHERE status='draft'"),
     n("SELECT COUNT(*) c FROM messages"),
   ]);
-  const media = (await env().MEDIA.list({ limit: 1000 })).objects.length;
-  const stats: [string, number, string][] = [["Pages", pages, "/admin/pages"], ["Posts", posts, "/admin/posts"], ["Drafts", drafts, "/admin/posts"], ["Media files", media, "/admin/media"], ["Messages", msgs, "/admin/messages"]];
+  const media = (await env().MEDIA.list({ limit: 1000 })).objects.filter(o => !o.key.startsWith("_snap/")).length;
+  const stats: [string, number, string][] = [["Pages", pages, "/admin/pages"], ["Blog posts", posts, "/admin/posts"], ["Drafts", drafts, "/admin/posts"], ["Media files", media, "/admin/media"], ["Messages", msgs, "/admin/messages"]];
   return (
     <>
       <h1>Dashboard</h1>
-      <div className="grid">
+      <div className="stats">
         {stats.map(([l, v, h]) => (
-          <a key={l} href={h} className="card" style={{ textDecoration: "none", color: "inherit" }}>
-            <div className="muted">{l}</div>
-            <div className="stat">{v}</div>
-          </a>
+          <a key={l} href={h} className="stat"><span className="muted">{l}</span><b>{v}</b></a>
         ))}
+      </div>
+      <div className="card row">
+        <a className="btn amber" href="/admin/posts/new">Write a post</a>
+        <a className="btn sec" href="/admin/media">Upload media</a>
+        <a className="btn sec" href="/admin/pages">Edit pages</a>
       </div>
     </>
   );
