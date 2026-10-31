@@ -5,10 +5,15 @@ import { headers } from "next/headers";
 import { purge } from "@/lib/cache";
 import { HIDDEN } from "@/lib/media";
 import { db, env } from "@/lib/env";
+import { siteUrl } from "@/lib/seo";
 import { login, logout, requireAdmin } from "@/lib/auth";
 
 const s = (f: FormData, k: string) => String(f.get(k) ?? "");
-const purgeSite = async (paths: string[]) => purge(`https://${(await headers()).get("host")}`, paths);
+// Purge both the host the admin used and the public SITE_URL host: they differ behind a forwarder.
+const purgeSite = async (paths: string[]) => {
+  const origins = new Set([`https://${(await headers()).get("host")}`, siteUrl()].filter(Boolean));
+  await Promise.all([...origins].map(o => purge(o, paths)));
+};
 const LISTS = ["/blog/", "/category/uncategorized/"];
 const slugify = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
