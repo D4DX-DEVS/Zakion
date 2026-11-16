@@ -8,7 +8,8 @@ import { db, env } from "@/lib/env";
 import { siteUrl } from "@/lib/seo";
 import { login, logout, requireAdmin } from "@/lib/auth";
 
-const s = (f: FormData, k: string) => String(f.get(k) ?? "");
+// Browsers submit textarea newlines as \r\n; store \n so saves don't alter the HTML.
+const s = (f: FormData, k: string) => String(f.get(k) ?? "").replace(/\r\n?/g, "\n");
 // Purge both the host the admin used and the public SITE_URL host: they differ behind a forwarder.
 const purgeSite = async (paths: string[]) => {
   const origins = new Set([`https://${(await headers()).get("host")}`, siteUrl()].filter(Boolean));
@@ -26,7 +27,11 @@ export async function logoutAction() {
   redirect("/admin/login");
 }
 
+// Server-side allowlist: the file input's accept="" only guides people, it does not stop a crafted request.
+const UPLOADABLE = /^(image\/(png|jpe?g|webp|gif|avif|svg\+xml)|video\/(mp4|webm)|application\/pdf)$/;
+
 async function uploadFile(file: File) {
+  if (!UPLOADABLE.test(file.type)) throw new Error(`"${file.name}" is not an image, MP4/WebM video or PDF`);
   const d = new Date();
   const base = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
   let key = `${d.getUTCFullYear()}/${String(d.getUTCMonth() + 1).padStart(2, "0")}/${base}`;
@@ -37,14 +42,21 @@ async function uploadFile(file: File) {
 
 export async function uploadMedia(f: FormData) {
   await requireAdmin();
-  for (const file of f.getAll("files")) if (file instanceof File && file.size) await uploadFile(file);
+  const rejected: string[] = [];
+  for (const file of f.getAll("files")) {
+    if (!(file instanceof File) || !file.size) continue;
+    if (UPLOADABLE.test(file.type)) await uploadFile(file);
+    else rejected.push(file.name);
+  }
   revalidatePath("/admin/media");
+  if (rejected.length) redirect("/admin/media?rejected=" + encodeURIComponent(rejected.join(", ")));
 }
 export async function deleteMedia(f: FormData) {
   await requireAdmin();
   const key = s(f, "key");
   if (HIDDEN.test(key)) return;
   await env().MEDIA.delete(key);
+  await purgeSite(["/media/" + key.split("/").map(encodeURIComponent).join("/")]); // else the edge keeps serving it for up to a day
   revalidatePath("/admin/media");
 }
 
@@ -83,7 +95,8 @@ export async function savePost(f: FormData) {
   const slug = slugify(s(f, "slug") || title);
   let image = s(f, "image");
   const up = f.get("image_file");
-  if (up instanceof File && up.size) image = await uploadFile(up);
+  let bad = ""; // a wrong file type is skipped, the rest of the post still saves
+  if (up instanceof File && up.size) { if (UPLOADABLE.test(up.type)) image = await uploadFile(up); else bad = "&badimage=" + encodeURIComponent(up.name); }
   const when = s(f, "published_at").replace("T", " ") || new Date().toISOString().slice(0, 16).replace("T", " ");
   const v = [slug, title, s(f, "excerpt"), s(f, "content"), image, s(f, "category") || "Uncategorized", s(f, "author") || "Amjad", s(f, "status"), when];
   if (id === "new") {
@@ -92,14 +105,14 @@ export async function savePost(f: FormData) {
       .bind(...v)
       .run();
     await purgeSite([`/${slug}/`, ...LISTS]);
-    redirect("/admin/posts/" + r.meta.last_row_id + "?saved=1");
+    redirect("/admin/posts/" + r.meta.last_row_id + "?saved=1" + bad);
   }
   await db()
     .prepare("UPDATE posts SET slug=?,title=?,excerpt=?,content=?,image=?,category=?,author=?,status=?,published_at=?,updated_at=datetime('now') WHERE id=?")
     .bind(...v, id)
     .run();
   await purgeSite([`/${slug}/`, ...LISTS]);
-  redirect("/admin/posts/" + id + "?saved=1");
+  redirect("/admin/posts/" + id + "?saved=1" + bad);
 }
 export async function deletePost(f: FormData) {
   await requireAdmin();

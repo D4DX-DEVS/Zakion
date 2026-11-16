@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "preview": "node tools/deploy.mjs preview",
+    "deploy": "node tools/deploy.mjs deploy",
     "seed:local": "node tools/seed.mjs && wrangler d1 migrations apply zakion-db --local && node tools/load-seed.mjs --local",
     "seed:remote": "node tools/seed.mjs && wrangler d1 migrations apply zakion-db --remote && node tools/load-seed.mjs --remote"
   },

@@ -4,9 +4,9 @@ import type { Post } from "@/lib/render";
 import { deletePost, savePost } from "../../../actions";
 import { ConfirmButton, ImagePicker, SubmitButton, Toast } from "../../../ui";
 
-export default async function EditPost({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
+export default async function EditPost({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string; badimage?: string }> }) {
   const { id } = await params;
-  const { saved } = await searchParams;
+  const { saved, badimage } = await searchParams;
   const isNew = id === "new";
   const p = isNew
     ? ({ id: 0, slug: "", title: "", excerpt: "", content: "<p></p>", image: "", category: "Uncategorized", author: "Amjad", status: "draft", published_at: new Date().toISOString().slice(0, 16).replace("T", " ") } as Post)
@@ -20,6 +20,7 @@ export default async function EditPost({ params, searchParams }: { params: Promi
       <p className="muted crumb"><a href="/admin/posts">Blog posts</a> / {isNew ? "New" : p.title}</p>
       <h1>{isNew ? "Write a post" : "Edit post"}</h1>
       {saved && <Toast text="Post saved" />}
+      {badimage && <p className="alert" role="alert">The post was saved, but "{badimage}" was not uploaded: only image files are allowed.</p>}
       <form action={savePost} className="editor">
         <input type="hidden" name="id" value={id} />
         <div>

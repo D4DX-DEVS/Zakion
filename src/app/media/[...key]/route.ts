@@ -12,6 +12,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ key: string[] }
     const h = new Headers();
     obj.writeHttpMetadata(h);
     h.set("etag", obj.httpEtag);
+    h.set("x-content-type-options", "nosniff");
     h.set("cache-control", "public, max-age=31536000, immutable");
     return new Response(obj.body, { headers: h });
   });

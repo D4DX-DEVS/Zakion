@@ -3,8 +3,8 @@ import { deleteMedia, uploadMedia } from "../../actions";
 import { ConfirmButton, CopyButton, SubmitButton } from "../../ui";
 import { HIDDEN } from "@/lib/media";
 
-export default async function Media({ searchParams }: { searchParams: Promise<{ all?: string }> }) {
-  const { all } = await searchParams;
+export default async function Media({ searchParams }: { searchParams: Promise<{ all?: string; rejected?: string }> }) {
+  const { all, rejected } = await searchParams;
   const list = await env().MEDIA.list({ limit: 1000 });
   const objs = list.objects
     .filter(o => !HIDDEN.test(o.key) && (all || !/-\d+x\d+\.\w+$/.test(o.key)))
@@ -12,6 +12,7 @@ export default async function Media({ searchParams }: { searchParams: Promise<{ 
   return (
     <>
       <h1>Media</h1>
+      {rejected && <p className="alert" role="alert">Not uploaded: {rejected}. Only images, MP4/WebM video and PDF files are allowed.</p>}
       <form action={uploadMedia} className="card row">
         <label className="field" style={{ margin: 0, flex: "1 1 280px" }}><span>Upload images, video or PDF</span><input type="file" name="files" multiple accept="image/*,video/*,.pdf" required /></label>
         <SubmitButton pending="Uploading…">Upload</SubmitButton>

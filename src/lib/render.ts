@@ -37,8 +37,8 @@ function document_(p: Page, body: string, post?: Post) {
   return `<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${t}</title>` +
     (p.description ? `<meta name="description" content="${esc(p.description)}">` : "") +
     `<meta property="og:title" content="${t}">` + seoHead(p, post, isPlaceholder(body)) +
-    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${p.head_html}${PUBLIC_CSS}</head>` +
-    `<body class="${esc(p.body_class)}">${improveBody(body, post ? post.title : p.title.split(/ [–|] /)[0])}${p.foot_html}${FORM_JS}</body></html>`;
+    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${p.head_html}${PUBLIC_CSS}<link rel="stylesheet" href="/zk-deck.css?v=12"></head>` +
+    `<body class="${esc(p.body_class)}">${improveBody(body, post ? post.title : p.title.split(/ [–|] /)[0])}${p.foot_html}${FORM_JS}<script src="/zk-deck.js?v=12" defer></script></body></html>`;
 }
 
 const html = (s: string, status = 200) => {

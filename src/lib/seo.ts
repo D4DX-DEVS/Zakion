@@ -7,7 +7,7 @@ const BRAND = "Zakion Energy";
 const ORG = {
   name: "Zakion Energy Pvt. Ltd.",
   email: "info@zakion.com",
-  telephone: "+91 9497 113001",
+  telephone: "+91 9188 944 337",
   foundingDate: "2015",
   address: { streetAddress: "D Space, Sky Tower, Bank Road", addressLocality: "Calicut", postalCode: "673001", addressCountry: "IN" },
   sameAs: ["https://www.facebook.com/zakionenergy/", "https://x.com/zakionenergy20", "https://www.instagram.com/zakionenergy/", "https://in.linkedin.com/company/zakion-energy"],
