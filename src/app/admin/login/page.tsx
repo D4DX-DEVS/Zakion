@@ -31,6 +31,7 @@ export default function Login() {
             </span>
           </label>
           <SubmitButton pending="Signing in…">Sign in</SubmitButton>
+          <p className="sub" style={{ margin: "18px 0 0", textAlign: "center" }}><a href="/admin/forgot">Forgot password?</a></p>
         </form>
       </div>
     </div>

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useFormStatus } from "react-dom";
 
-const NAV: [string, string][] = [["/admin", "Dashboard"], ["/admin/pages", "Pages"], ["/admin/posts", "Blog posts"], ["/admin/media", "Media"], ["/admin/messages", "Messages"]];
+const NAV: [string, string][] = [["/admin", "Dashboard"], ["/admin/pages", "Pages"], ["/admin/posts", "Blog posts"], ["/admin/media", "Media"], ["/admin/messages", "Messages"], ["/admin/account", "Account"]];
 
 export function Shell({ logout, children }: { logout: () => Promise<void>; children: React.ReactNode }) {
   const path = usePathname();

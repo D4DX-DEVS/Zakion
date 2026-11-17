@@ -6,7 +6,8 @@ import { purge } from "@/lib/cache";
 import { HIDDEN } from "@/lib/media";
 import { db, env } from "@/lib/env";
 import { siteUrl } from "@/lib/seo";
-import { login, logout, requireAdmin } from "@/lib/auth";
+import { changePassword, login, logout, requireAdmin, resetWithRecovery } from "@/lib/auth";
+import { passwordProblem } from "@/lib/password";
 
 // Browsers submit textarea newlines as \r\n; store \n so saves don't alter the HTML.
 const s = (f: FormData, k: string) => String(f.get(k) ?? "").replace(/\r\n?/g, "\n");
@@ -18,9 +19,32 @@ const purgeSite = async (paths: string[]) => {
 const LISTS = ["/blog/", "/category/uncategorized/"];
 const slugify = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
+const slow = () => new Promise(r => setTimeout(r, 600)); // every wrong guess costs time
+const raw = (f: FormData, k: string) => String(f.get(k) ?? ""); // passwords are used exactly as typed
+
 export async function loginAction(_: unknown, f: FormData) {
   if (await login(s(f, "user"), s(f, "pass"))) redirect("/admin");
+  await slow();
   return { error: "Invalid username or password" };
+}
+
+type PwResult = { error?: string; code?: string } | null;
+const newPasswordError = (f: FormData) => (raw(f, "next") !== raw(f, "confirm") ? "The new passwords don't match" : passwordProblem(raw(f, "next")));
+
+export async function changePasswordAction(_: PwResult, f: FormData): Promise<PwResult> {
+  await requireAdmin();
+  const bad = newPasswordError(f);
+  if (bad) return { error: bad };
+  const code = await changePassword(raw(f, "current"), raw(f, "next"));
+  if (!code) { await slow(); return { error: "The current password is incorrect" }; }
+  return { code };
+}
+export async function forgotPasswordAction(_: PwResult, f: FormData): Promise<PwResult> {
+  const bad = newPasswordError(f);
+  if (bad) return { error: bad };
+  const code = await resetWithRecovery(raw(f, "recovery"), raw(f, "next"));
+  if (!code) { await slow(); return { error: "That recovery code isn't right" }; }
+  return { code };
 }
 export async function logoutAction() {
   await logout();
