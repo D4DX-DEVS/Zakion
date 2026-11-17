@@ -12,4 +12,4 @@ tsconfig.tsbuildinfo
 next-env.d.ts
 seed/admin-password.txt
 
-.env
+.env*
