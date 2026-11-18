@@ -287,6 +287,8 @@ fieldset.list>legend{font:700 18px var(--font-head);color:var(--navy);padding:0 
 .mf{display:grid;gap:12px}
 .mf-file{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;min-height:44px;padding:0 16px;border-radius:12px;background:var(--amber-l);color:#7a4a00;font-weight:500;text-decoration:none}
 .mf-file:hover{background:#ffe6a8}
+.mf-spec{display:flex;align-items:flex-start;gap:10px;margin:0;padding:10px 14px;border-radius:var(--r-sm);background:var(--amber-l);color:#7a4a00;font-size:14px;line-height:1.45;font-weight:500}
+.mf-spec svg{flex:none;margin-top:1px}
 .mf-prev{max-width:240px;max-height:150px;border-radius:var(--r-sm);object-fit:contain;background:#fff;border:1px solid var(--line)}
 
 /* ---------- command palette ---------- */

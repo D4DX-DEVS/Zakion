@@ -25,7 +25,7 @@ export const ANCHORS: Record<string, string> = {
 export const HOME_HEAD =
   '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap">' +
-  '<link rel="stylesheet" href="/zk-home.css?v=21">';
+  '<link rel="stylesheet" href="/zk-home.css?v=28">';
 
 const FOOTER_MARK = "ekit-template-content-footer";
 const footerStart = (body: string) => { const i = body.indexOf(FOOTER_MARK); return i < 0 ? -1 : body.lastIndexOf("<div", i); };
@@ -57,6 +57,50 @@ function videoMarkup(h: Content["hero"]) {
   return `<div class="elementor-background-video-container zh-vid" data-yt="${id}" style="background-image:url(https://i.ytimg.com/vi/${id}/maxresdefault.jpg)"><div class="zh-vp"><div></div></div><div class="zh-vp"><div></div></div>${YT_LOOP}</div>`;
 }
 
+// Banner images. One image is a still banner. Two to four make a slider: cross-fading images with arrows, dots, a pause button, swipe on touch
+// screens and an automatic change every few seconds (it stops while the banner is off screen, when the pointer is on the controls and
+// for visitors who prefer reduced motion). The images fill the banner like the video does (object-fit: cover). Styles: public/zk-home.css (.zh-hs*, .zh-hc*).
+const ARROW = (d: string) => `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const SLIDER_JS = (sec: number) => `<script>(function(){function init(){var root=document.querySelector('.zh-hs-wrap'),bar=document.querySelector('.zh-hc');if(!root||!bar)return;
+var slides=[].slice.call(root.querySelectorAll('.zh-hs')),dots=[].slice.call(bar.querySelectorAll('.zh-hc-dot')),n=slides.length,i=0,t=0,paused=false,over=false,vis=true,ms=${sec * 1000},pb=bar.querySelector('.zh-hc-pause'),still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function show(k){i=(k+n)%n;slides.forEach(function(s,j){s.classList.toggle('on',j===i);s.setAttribute('aria-hidden',j===i?'false':'true')});dots.forEach(function(d,j){d.classList.toggle('on',j===i);if(j===i)d.setAttribute('aria-current','true');else d.removeAttribute('aria-current')})}
+function run(){clearTimeout(t);if(still||paused||over||!vis||document.hidden)return;t=setTimeout(function(){show(i+1);run()},ms)}
+function go(k){show(k);run()}
+bar.querySelector('.zh-hc-prev').addEventListener('click',function(){go(i-1)});
+bar.querySelector('.zh-hc-next').addEventListener('click',function(){go(i+1)});
+dots.forEach(function(d,j){d.addEventListener('click',function(){go(j)})});
+pb.addEventListener('click',function(){paused=!paused;bar.classList.toggle('is-paused',paused);pb.setAttribute('aria-label',paused?'Play slideshow':'Pause slideshow');run()});
+bar.addEventListener('mouseenter',function(){over=true;run()});bar.addEventListener('mouseleave',function(){over=false;run()});
+bar.addEventListener('focusin',function(){over=true;run()});bar.addEventListener('focusout',function(){over=false;run()});
+var hero=bar.parentNode,x0=null;hero.addEventListener('touchstart',function(e){x0=e.touches[0].clientX},{passive:true});
+hero.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50)go(i+(dx<0?1:-1))},{passive:true});
+document.addEventListener('visibilitychange',run);
+if('IntersectionObserver' in window)new IntersectionObserver(function(e){vis=e[0].isIntersecting;run()}).observe(hero);
+if(still)pb.hidden=true;bar.classList.add('ready');run()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init()})();</script>`;
+
+/** The banner images from the admin (at most 4, blank ones skipped). */
+const bannerImages = (h: Content["hero"]): { src: string; alt: string }[] =>
+  (Array.isArray(h.images) ? h.images : []).map((it: any) => ({ src: safeUrl(it?.image), alt: String(it?.alt ?? "").trim() })).filter((p: { src: string }) => p.src).slice(0, 4);
+
+function imagesMarkup(h: Content["hero"]) {
+  const pics = bannerImages(h);
+  if (!pics.length) return null;
+  const n = pics.length;
+  const layer = `<div class="elementor-background-video-container zh-vid zh-hs-wrap" data-n="${n}"${n > 1 ? ' role="group" aria-roledescription="carousel" aria-label="Banner images"' : ""}>` +
+    pics.map((p, i) => `<div class="zh-hs${i === 0 ? " on" : ""}"${n > 1 ? ` role="group" aria-roledescription="slide" aria-label="${i + 1} of ${n}"${i ? ' aria-hidden="true"' : ""}` : ""}>` +
+      `<img src="${esc(p.src)}" alt="${esc(p.alt)}" decoding="async"${i === 0 ? ' fetchpriority="high"' : ' loading="lazy"'}></div>`).join("") + `</div>`;
+  if (n < 2) return { layer, controls: "" };
+  const sec = Math.min(20, Math.max(3, Number(h.slideSeconds) || 6));
+  const controls = `<div class="zh-hc" role="group" aria-label="Banner slide controls">` +
+    `<button type="button" class="zh-hc-btn zh-hc-prev" aria-label="Previous slide">${ARROW("M14.5 5.5 8 12l6.5 6.5")}</button>` +
+    `<span class="zh-hc-dots">${pics.map((_, i) => `<button type="button" class="zh-hc-dot${i === 0 ? " on" : ""}" aria-label="Show slide ${i + 1}"${i === 0 ? ' aria-current="true"' : ""}></button>`).join("")}</span>` +
+    `<button type="button" class="zh-hc-btn zh-hc-next" aria-label="Next slide">${ARROW("M9.5 5.5 16 12l-6.5 6.5")}</button>` +
+    `<button type="button" class="zh-hc-btn zh-hc-pause" aria-label="Pause slideshow"><svg class="i-pause" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M8 5v14M16 5v14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><svg class="i-play" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></button>` +
+    `</div>${SLIDER_JS(sec)}`;
+  return { layer, controls };
+}
+
 // Sunlight over the banner video: a glowing sun just off the top-right corner, two slowly turning sets of rays, a light shaft
 // that sweeps across, lens-flare discs and drifting dust motes. Pure CSS (rules at the end of public/zk-home.css), no extra requests.
 const MOTES = [[8, 12, 9], [17, 40, 13], [26, 22, 8], [34, 64, 11], [43, 8, 14], [52, 50, 10], [61, 30, 12], [69, 72, 9], [77, 18, 13], [84, 56, 8], [91, 36, 11], [96, 80, 10]]
@@ -79,8 +123,10 @@ function patchHero(prefix: string, h: Content["hero"]) {
   button("7c1ec2c", h.btn2Text, h.btn2Link);
   // take the video away from Elementor's own player (the key is renamed so it is ignored) and use ours
   hero = hero.replace("&quot;background_video_link&quot;", "&quot;zh_video_link&quot;");
-  hero = hero.replace(/<div class="elementor-background-video-container">\s*<div class="elementor-background-video-embed" role="presentation"><\/div>\s*<\/div>/, videoMarkup(h));
-  hero = hero.replace('<div class="e-con-inner">', () => SUN + '<div class="e-con-inner">'); // sunlight sits between the video and the text
+  // the banner's picture: the admin's images (one still image, or a slider) when there are any, otherwise the video
+  const pics = imagesMarkup(h);
+  hero = hero.replace(/<div class="elementor-background-video-container">\s*<div class="elementor-background-video-embed" role="presentation"><\/div>\s*<\/div>/, () => (pics ? pics.layer : videoMarkup(h)));
+  hero = hero.replace('<div class="e-con-inner">', () => SUN + (pics ? pics.controls : "") + '<div class="e-con-inner">'); // sunlight sits between the picture and the text, the slider controls above the text
   return pre + hero;
 }
 

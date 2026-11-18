@@ -19,8 +19,8 @@
 .zh-q-who img:hover,.zh-scan img:hover{scale:1.1}
 .zh-aitem:hover img{scale:1.05;rotate:-1deg}
 /* big decorative backgrounds and the logo carousel keep their own behaviour */
-.zh-vm-bg img:hover,.zh-roi-hero img:hover,.zh-track-bg:hover,.zh-city img:hover,.zh-mlogo img:hover{filter:none}
-.zh-vm-bg img:hover,.zh-roi-hero img:hover,.zh-track-bg:hover,.zh-city img:hover{scale:none}
+.zh-vm-bg img:hover,.zh-roi-hero img:hover,.zh-track-bg:hover,.zh-city img:hover,.zh-mlogo img:hover,.zh-home-photo img:hover{filter:none}
+.zh-vm-bg img:hover,.zh-roi-hero img:hover,.zh-track-bg:hover,.zh-city img:hover,.zh-home-photo img:hover{scale:none}
 /* header logo */
 .main-header .elementor-widget-image img{transition:scale .35s cubic-bezier(.34,1.56,.64,1),filter .35s}
 .main-header .elementor-widget-image a:hover img,.main-header .elementor-widget-image img:hover{scale:1.05}

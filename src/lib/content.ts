@@ -14,6 +14,7 @@ export type Field = {
   itemLabel?: string; // list: "Add <itemLabel>"
   min?: number;
   editor?: "menu" | "links"; // list: edit it with the menu editor (add, edit, delete, reorder; "menu" also has submenu items)
+  spec?: string; // image/video/file: the size and format to upload, shown in a highlighted note beside the upload button
 };
 export type SectionDef = { key: string; title: string; page: string; help: string; fields: Field[]; data: Record<string, unknown> };
 export type Content = Record<string, any>;
@@ -76,14 +77,31 @@ export const MARKUP_HELP = "Use ==text== for the amber highlight and **text** fo
 
 export const SECTIONS: SectionDef[] = [
   {
-    key: "hero", title: "Home banner", page: "Home", help: "The video banner at the top of the home page. Leave the MP4 empty to keep the YouTube video.",
+    key: "hero", title: "Home banner", page: "Home", help: "The banner at the top of the home page. Add 1 image for a still banner, or 2 to 4 images for a slider with arrows and dots. With no images it plays the video instead.",
     fields: [
       T("eyebrow", "Small heading"), T("title", "Main heading", "Use ==text== to colour a word amber."), TA("subtitle", "Paragraph"),
       T("btn1Text", "Button 1 label"), T("btn1Link", "Button 1 link"), T("btn2Text", "Button 2 label"), T("btn2Link", "Button 2 link"),
-      { k: "videoUrl", label: "Self-hosted video (MP4/WebM)", type: "video", help: "Optional. Plays as a perfectly smooth loop. Upload an MP4 (up to 15 MB, 1080p or less) to replace the YouTube video." },
-      T("youtube", "YouTube video link", "Used when no MP4 is set. It is looped with a cross-fade so there is no pause."),
+      {
+        k: "images", label: "Banner images (up to 4)", type: "list", itemLabel: "image", max: 4,
+        help: "Add 1 image for a still banner. Add 2 to 4 and the banner becomes a slider with arrows and dots. Leave this empty to show the video below instead.",
+        fields: [
+          {
+            k: "image", label: "Image", type: "image",
+            spec: "Image size: 1920 × 1080 px (width × height), landscape 16:9. Smallest that still looks sharp: 1600 × 900 px. JPG or WebP, ideally under 500 KB so the page opens fast (up to 15 MB is accepted). Use the same size for every image.",
+            help: "The picture fills the banner, so a little of the top and bottom is cropped on wide screens and the sides on phones. Keep the main subject in the middle, and keep the left side calm because the heading sits there.",
+          },
+          T("alt", "Description (for screen readers)", "Optional. A few words saying what the picture shows."),
+        ],
+      },
+      NUM("slideSeconds", "Seconds on each image", "Only used when there are 2 or more images. Between 3 and 20."),
+      {
+        k: "videoUrl", label: "Self-hosted video (MP4/WebM)", type: "video",
+        spec: "Video size: 1920 × 1080 px (width × height), landscape 16:9. Smallest that still looks sharp: 1280 × 720 px. MP4 (H.264), up to 15 MB, a short loop of 10 to 20 seconds.",
+        help: "Used when no banner images are added. Plays as a smooth, silent loop and replaces the YouTube video. The video fills the banner, so a little of the top and bottom is cropped on wide screens and the sides on phones. Keep the main subject in the middle.",
+      },
+      T("youtube", "YouTube video link", "Used when there are no banner images and no MP4. It is looped with a cross-fade so there is no pause."),
     ],
-    data: { eyebrow: "Welcome to Zakion Energy", title: "Powering the Future With ==Renewable.==", subtitle: "Premium renewable energy solutions for a sustainable tomorrow. Powering homes. Empowering businesses. Building a sustainable future.", btn1Text: "Our Services", btn1Link: "/services/", btn2Text: "Contact Now", btn2Link: "/contact/", videoUrl: "", youtube: "https://www.youtube.com/watch?v=TzfnlPxCZv0" },
+    data: { eyebrow: "Welcome to Zakion Energy", title: "Powering the Future With ==Renewable.==", subtitle: "Premium renewable energy solutions for a sustainable tomorrow. Powering homes. Empowering businesses. Building a sustainable future.", btn1Text: "Our Services", btn1Link: "/services/", btn2Text: "Contact Now", btn2Link: "/contact/", images: [], slideSeconds: 6, videoUrl: "", youtube: "https://www.youtube.com/watch?v=TzfnlPxCZv0" },
   },
   {
     key: "about", title: "About Zakion Energy", page: "Home, About Us", help: MARKUP_HELP,
@@ -180,7 +198,7 @@ export const SECTIONS: SectionDef[] = [
   },
   {
     key: "solarHome", title: "Solar Home (3 KW and 5 KW)", page: "Home, Solutions", help: "Two plans are shown side by side. The table uses the same two plans.",
-    fields: [T("title", "Heading"), TA("subtitle", "Subheading"), IMG("photo", "House picture", "The picture on the right. The standard photo also gets blinking window lights and a neon roof line. Clear it to show the animated neon house drawing instead; any other picture gets a flickering neon outline."),
+    fields: [T("title", "Heading"), TA("subtitle", "Subheading"), { ...IMG("photo", "House picture", "The picture on the right. The standard photo is animated: by day sunlight reaches the solar panels, then it turns to a dark night and the lights inside the house blink behind the windows. Any other picture is shown as it is. Clear it to show the drawn neon house instead."), spec: "Picture size: 1600 × 900 px (width × height), landscape 16:9, JPG or WebP, under 500 KB if you can. On a computer the middle of the picture is shown, so keep the house in the centre." },
       LIST("plans", "Plans (first two are shown)", "plan", [T("label", "Name (for example 3 KW)"), T("saving", "Bi-monthly saving"), T("units", "Daily units"), T("area", "Area needed")], 2, 2),
       T("powerTitle", "Table heading"),
       LIST("appliances", "What the system can power", "appliance", [T("name", "Appliance"), SEL("icon", "Icon", ICONS), T("v1", "Quantity for plan 1"), T("v2", "Quantity for plan 2")], 12),

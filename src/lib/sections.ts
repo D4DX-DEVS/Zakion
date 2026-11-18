@@ -181,7 +181,7 @@ const solarHome = (c: Content) => {
   // The house: the chosen picture with the neon overlay (when it is the standard photo), or the drawn neon house when no picture is set.
   const pic = safeUrl(s.photo);
   const house = pic
-    ? `<figure class="zh-home-photo zh-home-photo--pic zr zr-r">${img(pic, "Home with a rooftop solar system at sunset", 687, 580, "zh-hp-img")}${/^\/zk\/solarhome-photo\./.test(pic) ? PHOTO_FX : ""}</figure>`
+    ? `<figure class="zh-home-photo zh-home-photo--pic zr zr-r">${img(pic, "Home with a rooftop solar system, shown by day and by night", 1280, 721, "zh-hp-img")}${/^\/zk\/solarhome-photo\./.test(pic) ? PHOTO_FX : ""}</figure>`
     : `<figure class="zh-nh zr zr-r">${NEON_HOUSE}</figure>`;
   return `<section class="zh zh-home" id="solar-home"><div class="zh-wrap">
 <div class="zh-home-top">

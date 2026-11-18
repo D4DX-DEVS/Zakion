@@ -28,7 +28,7 @@ export const MOTION_JS =
 export const LIGHT_JS =
   `<script>(function(){if(!matchMedia('(hover:hover) and (pointer:fine)').matches||matchMedia('(prefers-reduced-motion: reduce)').matches)return;` +
   `var d=document,L=d.createElement('div'),cur=null,mx=0,my=0,run=0;L.className='zk-light';L.setAttribute('aria-hidden','true');L.innerHTML='<i class="zk-light-spot"></i><i class="zk-light-sweep"></i>';d.body.appendChild(L);` +
-  `var OK='.zh img,.blog-item img,.post-featured-image img,.elementor-widget-image img,.zf-logo img',NO='.zh-vm-bg img,.zh-roi-hero img,.zh-track-bg,.zh-city img';` +
+  `var OK='.zh img,.blog-item img,.post-featured-image img,.elementor-widget-image img,.zf-logo img',NO='.zh-vm-bg img,.zh-roi-hero img,.zh-track-bg,.zh-city img,.zh-home-photo img';` +
   `function stop(){cur=null;L.classList.remove('on','sweep');cancelAnimationFrame(run)}` +
   `function frame(){if(!cur||!cur.isConnected||!cur.matches(':hover')){stop();return}var r=cur.getBoundingClientRect(),s=L.style,c=getComputedStyle(cur);` +
   `s.left=r.left+'px';s.top=r.top+'px';s.width=r.width+'px';s.height=r.height+'px';s.borderRadius=c.borderRadius;s.clipPath=c.clipPath!=='none'?c.clipPath:'';` +

@@ -41,6 +41,7 @@ function MediaField({ f, value, set, pick, upload }: { f: Field; value: string; 
       {value && isFile && <a className="mf-file" href={value} target="_blank" rel="noreferrer"><Icon name="file" size={18} />{isImg(value) ? "Open the current image" : "Open the current file"}<span className="sr-only"> (opens in a new tab)</span></a>}
       {value && isVideo && <video className="mf-prev" src={value} muted controls preload="metadata" />}
       <input type="text" value={value} onChange={(e) => set(e.target.value)} placeholder={isVideo ? "/media/…mp4 (optional)" : isFile ? "/media/…pdf or /media/…jpg (optional)" : "/media/… or /zk/…"} aria-label={f.label} />
+      {f.spec && <p className="mf-spec"><Icon name={isVideo ? "video" : "image"} size={18} /><span>{f.spec}</span></p>}
       <div className="row">
         {!isVideo && !isFile && <button type="button" className="btn sec sm" onClick={() => pick(set)}><Icon name="image" size={16} />Choose from library</button>}
         <button type="button" className="btn sec sm" disabled={busy} onClick={() => file.current?.click()}><Icon name="upload" size={16} />{busy ? "Uploading…" : "Upload new"}</button>
