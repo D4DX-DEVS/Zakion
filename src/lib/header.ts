@@ -41,6 +41,21 @@ function button(body: string, id: string, label: string, href: string, newTab = 
   return body.slice(0, at) + seg + body.slice(end);
 }
 
+const telHref = (p: string) => "tel:" + p.replace(/[^+\d]/g, "");
+
+/** Sets the link and the text of one of the two contact items in the top bar (found by its Elementor element id). Empty hides the item. */
+function topItem(body: string, id: string, text: string, href: string) {
+  const at = body.indexOf("elementor-element-" + id + " ");
+  if (at < 0) return body;
+  const end = body.indexOf("</a>", at);
+  if (end < 0) return body;
+  if (!text) return body.slice(0, at) + "elementor-element-" + id + " zk-hide " + body.slice(at + ("elementor-element-" + id + " ").length);
+  let seg = body.slice(at, end);
+  seg = seg.replace(/<a href="[^"]*"/, () => `<a href="${esc(href)}"`);
+  seg = seg.replace(/(<h3 class="elementskit-info-box-title">)[\s\S]*?(<\/h3>)/, (_, a, b) => `${a} ${esc(text)} ${b}`);
+  return body.slice(0, at) + seg + body.slice(end);
+}
+
 // On tablets and phones the menu is a slide-in drawer (public/zk-menu.css). The Contact and Brochure buttons are hidden there by the
 // stored page, so the drawer gets its own copies at the bottom, plus the logo at the top and the phone and email under the buttons.
 // None of this shows on a computer: zk-menu.css only displays it below 1025px.
@@ -51,14 +66,15 @@ const ICON_MAIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5"
 function drawer(body: string, c: Content): string {
   const at = body.indexOf(IDENT);
   if (at < 0) return body;
-  const h = c.header, f = c.footer ?? {};
+  const h = c.header;
   const pdf = safeUrl(h.brochurePdf);
   const btns =
     `<a class="zk-mm-btn zk-mm-btn--a" href="${esc(safeUrl(h.contactUrl) || "/contact/")}">${esc(h.contactLabel || "Contact Us")}</a>` +
     (h.showBrochure ? `<a class="zk-mm-btn zk-mm-btn--p" href="${esc(pdf || "/contact/")}"${pdf ? ' target="_blank" rel="noopener"' : ""}>${esc(h.brochureLabel || "Brochure")}</a>` : "");
+  const phone = String(h.topPhone ?? "").trim(), email = String(h.topEmail ?? "").trim();
   const info =
-    (f.phone ? `<a class="zk-mm-i" href="tel:${esc(String(f.phone).replace(/[^+\d]/g, ""))}">${ICON_PHONE}<span>${esc(f.phone)}</span></a>` : "") +
-    (f.email ? `<a class="zk-mm-i" href="mailto:${esc(f.email)}">${ICON_MAIL}<span>${esc(f.email)}</span></a>` : "");
+    (phone ? `<a class="zk-mm-i" href="${esc(telHref(phone))}">${ICON_PHONE}<span>${esc(phone)}</span></a>` : "") +
+    (email ? `<a class="zk-mm-i" href="mailto:${esc(email)}">${ICON_MAIL}<span>${esc(email)}</span></a>` : "");
   const foot = `<div class="zk-mm-foot"><div class="zk-mm-btns">${btns}</div>${info ? `<div class="zk-mm-info">${info}</div>` : ""}</div>`;
   const logo = '<a class="zk-mm-logo" href="/" aria-label="Zakion Energy home"><img src="/media/2024/03/zak-logo.png" width="260" height="62" alt="Zakion Energy"></a>';
   return body.slice(0, at) + foot + IDENT + logo + body.slice(at + IDENT.length);
@@ -80,5 +96,8 @@ export function applyHeader(body: string, c: Content, path: string): string {
   const pdf = safeUrl(h.brochurePdf);
   out = button(out, "7b710eb", String(h.brochureLabel || "Brochure"), pdf || "/contact/", !!pdf);
   if (!h.showBrochure) out = out.replace("elementor-element-7b710eb ", "elementor-element-7b710eb zk-hide ");
+  const mail = String(h.topEmail ?? "").trim(), tel = String(h.topPhone ?? "").trim();
+  out = topItem(out, "dc51af0", mail, "mailto:" + mail);
+  out = topItem(out, "513e104", tel, telHref(tel));
   return out;
 }

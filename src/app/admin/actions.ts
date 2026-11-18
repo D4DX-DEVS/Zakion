@@ -10,7 +10,7 @@ import { changePassword, login, logout, requireAdmin, resetWithRecovery } from "
 import { passwordProblem } from "@/lib/password";
 import { MAX_UPLOAD, MAX_UPLOAD_LABEL } from "@/lib/upload";
 import { fmtBytes } from "./format";
-import { cleanLayout, HOME_KEYS, LAYOUT_KEY, loadContent, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
+import { type Field, cleanLayout, HOME_KEYS, LAYOUT_KEY, loadContent, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
 import { PAGE_PLAN } from "@/lib/home";
 import { CONTACT_NETS, cleanSite, SITE_DEFAULTS, siteOf, TAB_BY_ID } from "@/lib/site";
 
@@ -261,6 +261,13 @@ async function purgeEverywhere() {
   await purgeSite([...new Set(["/", ...allPages(), ...pages, ...posts, ...LISTS])]);
 }
 
+/** A tab can have several cards that edit the same section; this gathers each section's fields from all of its cards. */
+const groupsByKey = (groups: { key: string; fields: Field[] }[]) => {
+  const m = new Map<string, Field[]>();
+  for (const g of groups) m.set(g.key, [...(m.get(g.key) ?? []), ...g.fields]);
+  return m;
+};
+
 const settingsUrl = (tab: string, note: string) => `/admin/settings?tab=${encodeURIComponent(tab)}&saved=${note}`;
 
 /** Keeps the Contact block's four social links in step with the social list (the Contact block still reads its own fields). */
@@ -282,13 +289,13 @@ export async function saveSettings(f: FormData) {
   let input: any;
   try { input = JSON.parse(String(f.get("data") ?? "{}")); } catch { redirect(`/admin/settings?tab=${tab.id}&error=1`); }
   const content = await loadContent();
-  for (const g of tab.groups) {
-    const incoming = input?.[g.key];
+  for (const [key, fields] of groupsByKey(tab.groups)) {
+    const incoming = input?.[key];
     if (!incoming || typeof incoming !== "object") continue;
-    const merged: Record<string, unknown> = { ...(g.key === SITE_KEY ? siteOf(content) : content[g.key]) };
-    for (const fld of g.fields) if (fld.k in incoming) merged[fld.k] = incoming[fld.k];
-    const data = g.key === SITE_KEY ? cleanSite(merged) : sanitize(g.key, merged);
-    await upsert(g.key, data);
+    const merged: Record<string, unknown> = { ...(key === SITE_KEY ? siteOf(content) : content[key]) };
+    for (const fld of fields) if (fld.k in incoming) merged[fld.k] = incoming[fld.k];
+    const data = key === SITE_KEY ? cleanSite(merged) : sanitize(key, merged);
+    await upsert(key, data);
     if (tab.id === "social") await syncContactSocial((data.social as { network: string; url: string }[]).filter(x => x.network && x.url));
   }
   await purgeEverywhere();
@@ -301,10 +308,10 @@ export async function resetSettings(f: FormData) {
   const tab = TAB_BY_ID[s(f, "tab")];
   if (!tab) redirect("/admin/settings");
   const content = await loadContent();
-  for (const g of tab.groups) {
-    const merged: Record<string, unknown> = { ...(g.key === SITE_KEY ? siteOf(content) : content[g.key]) };
-    for (const fld of g.fields) merged[fld.k] = g.key === SITE_KEY ? (SITE_DEFAULTS as Record<string, unknown>)[fld.k] : structuredClone(SECTION_BY_KEY[g.key].data[fld.k]);
-    await upsert(g.key, g.key === SITE_KEY ? cleanSite(merged) : sanitize(g.key, merged));
+  for (const [key, fields] of groupsByKey(tab.groups)) {
+    const merged: Record<string, unknown> = { ...(key === SITE_KEY ? siteOf(content) : content[key]) };
+    for (const fld of fields) merged[fld.k] = key === SITE_KEY ? (SITE_DEFAULTS as Record<string, unknown>)[fld.k] : structuredClone(SECTION_BY_KEY[key].data[fld.k]);
+    await upsert(key, key === SITE_KEY ? cleanSite(merged) : sanitize(key, merged));
   }
   await purgeEverywhere();
   redirect(settingsUrl(tab.id, "reset"));

@@ -181,7 +181,10 @@ export const SETTINGS_TABS: SettingsTab[] = [
   { id: "layout", label: "Layout", sub: "How wide the pages are and how they behave.", groups: [{ key: "_site", title: "Page layout", fields: pick("_site", ["width", "spacing", "backToTop", "scrollAnimations", "imageShine"]) }] },
   { id: "theme", label: "Theme colours", sub: "Two colours drive the whole site. Every other shade is worked out from them.", groups: [{ key: "_site", title: "Brand colours", fields: pick("_site", ["primary", "accent"]) }] },
   { id: "fonts", label: "Fonts", sub: "Pick the fonts for titles and for text.", groups: [{ key: "_site", title: "Fonts", fields: pick("_site", ["headingFont", "bodyFont"]) }] },
-  { id: "header", label: "Header", sub: "The Contact and Brochure buttons at the top of every page.", groups: [{ key: "header", title: "Header buttons", help: "The menu itself is under Menu settings.", fields: pick("header", ["contactLabel", "contactUrl", "showBrochure", "brochureLabel", "brochurePdf"]) }] },
+  { id: "header", label: "Header", sub: "The email and phone bar and the Contact and Brochure buttons at the top of every page.", groups: [
+    { key: "header", title: "Top bar", help: "The email address and phone number in the thin bar above the logo and menu.", fields: pick("header", ["topEmail", "topPhone"]) },
+    { key: "header", title: "Header buttons", help: "The menu itself is under Menu settings.", fields: pick("header", ["contactLabel", "contactUrl", "showBrochure", "brochureLabel", "brochurePdf"]) },
+  ] },
   { id: "navigation", label: "Menu settings", sub: "Add, edit, reorder and delete menu items and their submenus.", groups: [
     { key: "header", title: "Main menu", help: "Shown at the top of every page. Press “Submenu” on an item to add links that drop down under it.", fields: pick("header", ["menu"]) },
     { key: "footer", title: "Footer quick links", fields: pick("footer", ["links"]) },

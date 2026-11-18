@@ -306,6 +306,8 @@ export const SECTIONS: SectionDef[] = [
     key: "header", title: "Header menu and brochure", page: "Every page", help: "The menu at the top of every page, the Contact button and the Brochure button. Upload a PDF or an image and the Brochure button opens it in a new tab.",
     fields: [
       { ...LIST("menu", "Main menu", "menu item", [T("label", "Label"), T("url", "Link", "/about-us/ or https://…"), LIST("children", "Dropdown links", "dropdown link", [T("label", "Label"), T("url", "Link")], 12)], 10), editor: "menu" },
+      T("topEmail", "Top bar email", "Shown at the very top of every page (and in the mobile menu). The link opens the visitor's email app. Leave empty to hide it."),
+      T("topPhone", "Top bar phone number", "Shown as typed; the call link uses its digits. Leave empty to hide it."),
       T("contactLabel", "Contact button label"), T("contactUrl", "Contact button link"),
       BOOL("showBrochure", "Show the Brochure button"), T("brochureLabel", "Brochure button label"),
       FILE("brochurePdf", "Brochure file (PDF or image)", "Upload a PDF or an image (PNG, JPG, WebP). Visitors who click Brochure open it in a new tab. With no file the button goes to the Contact page."),
@@ -316,7 +318,7 @@ export const SECTIONS: SectionDef[] = [
         { label: "Solutions", url: "/services/", children: [] },
         { label: "Projects", url: "/projects/", children: [] }, { label: "Blog", url: "/blog/", children: [] },
       ],
-      contactLabel: "Contact Us", contactUrl: "/contact/", showBrochure: true, brochureLabel: "Brochure", brochurePdf: "",
+      topEmail: "info@zakion.com", topPhone: "+91 9188 944 337", contactLabel: "Contact Us", contactUrl: "/contact/", showBrochure: true, brochureLabel: "Brochure", brochurePdf: "",
     },
   },
   {
