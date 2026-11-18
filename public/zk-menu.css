@@ -1,0 +1,47 @@
+/* Responsive menu (markup: src/lib/header.ts, and the stored ElementsKit header). Below 1025px the menu is a drawer that slides in from the
+   right over a dimmed page: logo and close button on top, the menu as large tap rows, then the Contact and Brochure buttons and the
+   phone and email. Colours are the site's own: black text, the accent colour for hover and the current page (the Elementor kit variables,
+   so a chosen theme changes them too). The desktop menu is not touched. */
+.zk-mm-logo,.zk-mm-foot{display:none}
+@media (max-width:1024px){
+  body:has(.elementskit-menu-container.active){overflow:hidden}
+  /* ElementsKit paints the dimmed page with ::before and the white panel with ::after; everything that must show sits above them */
+  .main-header .elementskit-menu-container.elementskit-menu-offcanvas-elements::before{background:rgba(var(--zr-081a3f,8,26,63),.55)!important;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+  .main-header .elementskit-menu-container.elementskit-menu-offcanvas-elements{left:auto!important;right:-110vw;width:min(88vw,380px)!important;max-width:none!important;height:100%!important;padding:0!important;border-radius:0!important;background:#fff!important;box-shadow:-24px 0 60px rgba(var(--zr-081a3f,8,26,63),.28)!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;overflow:hidden!important;transition:right .5s cubic-bezier(.22,.8,.24,1)!important}
+  .main-header .elementskit-menu-container.elementskit-menu-offcanvas-elements.active{right:0!important}
+
+  /* top: logo and close */
+  .main-header .elementskit-nav-identity-panel{order:0;display:flex!important;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 18px!important;border-bottom:1px solid var(--zc-eef0f4,#eef0f4)}
+  .zk-mm-logo{display:block}
+  .zk-mm-logo img{display:block;height:34px;width:auto}
+  .main-header button.elementskit-menu-close{float:none!important;position:relative;display:grid;place-items:center;width:42px!important;height:42px;margin:0!important;padding:0!important;border-radius:12px!important;background:var(--e-global-color-accent)!important;color:#000!important;font-size:0!important;line-height:0;cursor:pointer;transition:transform .25s}
+  .main-header button.elementskit-menu-close:hover{transform:rotate(90deg)}
+  .main-header button.elementskit-menu-close::before,.main-header button.elementskit-menu-close::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:2.5px;margin:-1.25px 0 0 -9px;border-radius:2px;background:#101010;transform:rotate(45deg)}
+  .main-header button.elementskit-menu-close::after{transform:rotate(-45deg)}
+
+  /* the menu: big rows with a divider; hover and the current page show the accent colour and a bar on the left */
+  .main-header .elementskit-navbar-nav{order:1;overflow-x:hidden;flex:1 1 auto;position:relative;z-index:5;display:flex!important;flex-direction:column;justify-content:flex-start!important;height:auto!important;margin:0!important;padding:6px 0!important;overflow-y:auto;overscroll-behavior:contain}
+  .main-header .elementskit-navbar-nav>li{display:block!important;width:100%;margin:0!important;border-bottom:1px solid var(--zc-eef0f4,#eef0f4)}
+  .main-header .elementskit-navbar-nav>li>a.ekit-menu-nav-link{position:relative;height:auto!important;display:flex!important;align-items:center;justify-content:space-between;min-height:58px;padding:12px 22px!important;font-size:19px!important;font-weight:600!important;background:none!important;border-radius:0;transition:color .2s,background-color .2s,padding-left .25s}
+  .main-header .elementskit-navbar-nav>li>a.ekit-menu-nav-link::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:4px;border-radius:0 4px 4px 0;background:var(--e-global-color-accent);transform:scaleY(0);transition:transform .25s}
+  .main-header .elementskit-navbar-nav>li>a.ekit-menu-nav-link:hover,.main-header .elementskit-navbar-nav>li>a.ekit-menu-nav-link:focus-visible,.main-header .elementskit-navbar-nav>li.current-menu-item>a.ekit-menu-nav-link{padding-left:28px!important;background:var(--zc-fff9ec,#fff9ec)!important;background:color-mix(in srgb,var(--e-global-color-accent) 10%,#fff)!important}
+  .main-header .elementskit-navbar-nav>li>a.ekit-menu-nav-link:hover::before,.main-header .elementskit-navbar-nav>li>a.ekit-menu-nav-link:focus-visible::before,.main-header .elementskit-navbar-nav>li.current-menu-item>a.ekit-menu-nav-link::before{transform:scaleY(1)}
+  .main-header .elementskit-navbar-nav>li>a .elementskit-submenu-indicator{display:grid;place-items:center;width:36px;height:36px;margin:-6px -8px -6px 8px;border-radius:50%;font-size:12px!important}
+  /* submenu items (when a menu item has some): a quiet tinted list under their item */
+  .main-header .elementskit-navbar-nav .elementskit-submenu-panel{position:relative!important;top:auto!important;left:auto!important;right:auto!important;width:100%!important;transform:none!important;transition:max-height .4s ease!important;background:var(--zc-f6f8fc,#f6f8fc)!important;border-radius:0!important;box-shadow:none!important;padding:4px 0!important;min-width:0!important}
+  .main-header .elementskit-navbar-nav .elementskit-submenu-panel>li>a{padding:12px 22px 12px 38px!important;font-size:17px!important;font-weight:500!important;color:#000}
+  .main-header .elementskit-navbar-nav .elementskit-submenu-panel>li>a:hover,.main-header .elementskit-navbar-nav .elementskit-submenu-panel>li.current-menu-item>a{color:var(--e-global-color-accent)!important;background:none!important}
+
+  /* bottom: the Contact and Brochure buttons, then the phone and email */
+  .zk-mm-foot{order:2;position:relative;z-index:5;display:block;padding:18px 20px 24px;border-top:1px solid var(--zc-eef0f4,#eef0f4);background:#fff}
+  .zk-mm-btns{display:grid;gap:12px}
+  .zk-mm-btn{display:flex;align-items:center;justify-content:center;min-height:50px;padding:0 24px;border-radius:50px;border:2px solid transparent;font:600 18px/1 var(--zk-head,Rajdhani),sans-serif;text-decoration:none;transition:transform .25s,box-shadow .25s}
+  .main-header .zk-mm-btn--a{background:var(--e-global-color-accent);border-color:var(--e-global-color-accent);color:#000}
+  .main-header .zk-mm-btn--p{background:var(--e-global-color-primary);border-color:var(--e-global-color-primary);color:#fff}
+  .zk-mm-btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(var(--zr-081a3f,8,26,63),.2)}
+  .zk-mm-info{display:grid;gap:2px;margin-top:12px}
+  .main-header .zk-mm-i{display:flex;align-items:center;gap:10px;min-height:40px;font-size:15px;color:#101010;text-decoration:none;transition:color .2s}
+  .zk-mm-i svg{flex:none;width:18px;height:18px;fill:none;stroke:var(--e-global-color-accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .main-header .zk-mm-i:hover{color:var(--e-global-color-accent)}
+}
+@media (prefers-reduced-motion:reduce){.main-header .elementskit-menu-container.elementskit-menu-offcanvas-elements{transition:none!important}}

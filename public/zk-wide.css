@@ -1,0 +1,65 @@
+/* Site-wide content width: 70% of the screen. Laptops keep a 960px floor so the menu and cards still fit, and tablets and
+   phones use the full width minus a 48px (32px on phones) gutter. Applies to the header, every Elementor boxed section,
+   the footer and the deck sections. */
+:root{--zk-w:min(max(70vw,960px),calc(100vw - 48px))}
+@media(max-width:1023px){:root{--zk-w:calc(100vw - 48px)}}
+@media(max-width:767px){:root{--zk-w:calc(100vw - 32px)}}
+/* --u is the "1vw" the section type and spacing are sized in. The sections were designed for an 80vw container, so on desktops
+   it is 1/80 of the content width (type and spacing scale with the 70% container); on tablets and phones it is plain 1vw. */
+:root{--u:1vw}
+@media(min-width:1024px){:root{--u:calc(var(--zk-w)/80)}}
+
+.e-con{--content-width:var(--zk-w)!important}
+.e-con>.e-con-inner{max-width:var(--zk-w)!important}
+.container,.container-xl,.container-xxl{max-width:var(--zk-w)!important}
+.zk-in{max-width:var(--zk-w)!important}
+
+/* ---------- Headings and menu use the logo font (Rajdhani) ---------- */
+h1,h2,h3,h4,h5,h6,
+.elementor-heading-title,.ekit-heading__title,.ekit-heading--title,.entry-title,.widget-title,
+.page-header-box h1,.page-header-box ol,
+.ekit-menu-nav-link,.elementskit-navbar-nav>li>a,.elementskit-navbar-nav .elementskit-dropdown a,.elementskit-dropdown li a,.ekit-menu-nav-link *,
+.main-header .ekit_creative_button_text,.main-header .ekit-btn-wraper a,
+.elementor-widget-elementskit-heading .ekit-heading__title,
+.blog-item .post-item-body h3,.btn-default{font-family:var(--zk-head,Rajdhani),sans-serif!important;letter-spacing:0}
+.ekit-menu-nav-link{font-weight:600!important;font-size:18px!important}
+h1,h2,h3,.elementor-heading-title{font-weight:700}
+
+/* ---------- Inner page banner photo (from the deck) ---------- */
+.elementor-element.parallaxie.e-parent:not(.elementor-motion-effects-element-type-background),
+.elementor-element.parallaxie.e-parent>.elementor-motion-effects-container>.elementor-motion-effects-layer,
+.page-header{background-image:url("/zk/page-hero.jpg")!important;background-size:cover!important;background-position:center 58%!important}
+
+/* ---------- Back to top: sun button ---------- */
+.zk-top{position:fixed;right:clamp(14px,2vw,28px);bottom:clamp(88px,9vw,104px);z-index:9990;width:56px;height:56px;padding:0;border:0;border-radius:50%;cursor:pointer;
+  background:#fff;box-shadow:0 10px 26px rgba(var(--zr-082a5a,8,42,90),.3),0 0 0 4px #fff;color:var(--zc-082a5a,#082a5a);
+  opacity:0;visibility:hidden;transform:translateY(40px) scale(.4) rotate(-90deg);transition:opacity .35s ease,transform .6s cubic-bezier(.34,1.56,.64,1),visibility 0s linear .6s,box-shadow .3s}
+.zk-top.show{opacity:1;visibility:visible;transform:none;transition:opacity .35s ease,transform .6s cubic-bezier(.34,1.56,.64,1),visibility 0s,box-shadow .3s}
+.zk-top:hover{box-shadow:0 14px 32px rgba(var(--zr-082a5a,8,42,90),.4),0 0 0 4px #fff}
+.zk-top:active{transform:scale(.92)}
+.zk-top:focus-visible{outline:3px solid var(--zc-0d3d7b,#0d3d7b);outline-offset:6px}
+.zk-top-core{position:absolute;inset:6px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 32% 28%,var(--zc-ffe08a,#ffe08a),var(--zc-fec142,#fec142) 55%,var(--zc-f5a800,#f5a800));box-shadow:inset 0 -3px 6px rgba(var(--zr-be7800,190,120,0),.35),inset 0 2px 4px rgba(255,255,255,.6)}
+.zk-top-arrow{grid-area:1/1;width:24px;height:24px;fill:none;stroke:var(--zc-082a5a,#082a5a);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;animation:zkBob 2.2s ease-in-out infinite}
+.zk-top-arrow+.zk-top-arrow{transform:translateY(130%);animation:none}
+.zk-top:hover .zk-top-arrow{animation:none;transform:translateY(-130%);transition:transform .35s cubic-bezier(.5,0,.2,1)}
+.zk-top:hover .zk-top-arrow+.zk-top-arrow{transform:translateY(0)}
+.zk-top-ring{position:absolute;inset:-4px;width:calc(100% + 8px);height:calc(100% + 8px);transform:rotate(-90deg);pointer-events:none}
+.zk-top-ring circle{fill:none;stroke-width:3}
+.zk-top-ring .bg{stroke:rgba(var(--zr-0d3d7b,13,61,123),.14)}
+.zk-top-ring .pg{stroke:var(--zc-0d3d7b,#0d3d7b);stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset .15s linear}
+.zk-top-rays{position:absolute;inset:-17px;border-radius:50%;pointer-events:none;opacity:0;transform:scale(.6);
+  background:repeating-conic-gradient(var(--zc-fec142,#fec142) 0 7deg,transparent 7deg 30deg);-webkit-mask-image:radial-gradient(circle,transparent 58%,#000 60%,#000 100%);mask-image:radial-gradient(circle,transparent 58%,#000 60%,#000 100%);
+  transition:opacity .35s ease,transform .5s cubic-bezier(.34,1.56,.64,1)}
+.zk-top:hover .zk-top-rays{opacity:.9;transform:scale(1);animation:zkRays 7s linear infinite}
+.zk-top-tip{position:absolute;right:calc(100% + 16px);top:50%;translate:14px -50%;padding:7px 14px;border-radius:999px;background:var(--zc-0d3d7b,#0d3d7b);color:#fff;font:600 14px/1 Rajdhani,sans-serif;white-space:nowrap;opacity:0;pointer-events:none;box-shadow:0 8px 18px rgba(var(--zr-082a5a,8,42,90),.3);transition:opacity .25s,translate .3s cubic-bezier(.22,.8,.24,1)}
+.zk-top:hover .zk-top-tip,.zk-top:focus-visible .zk-top-tip{opacity:1;translate:0 -50%}
+@keyframes zkBob{0%,100%{transform:translateY(2px)}50%{transform:translateY(-3px)}}
+@keyframes zkRays{to{rotate:360deg}}
+@media (prefers-reduced-motion:reduce){.zk-top,.zk-top-arrow,.zk-top-rays{animation:none!important;transition:opacity .2s}}
+@media (max-width:600px){.zk-top{width:48px;height:48px}.zk-top-arrow{width:21px;height:21px}.zk-top-rays{inset:-14px}.zk-top-tip{display:none}}
+
+/* a header button the admin has switched off */
+.zk-hide{display:none!important}
+
+/* header buttons keep their label on one line, whatever the admin types */
+.main-header a.ekit_creative_button,.main-header .ekit_creative_button .ekit_creative_button_text{white-space:nowrap}

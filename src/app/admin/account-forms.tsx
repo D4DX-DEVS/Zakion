@@ -1,6 +1,7 @@
 "use client";
 import { useActionState, useEffect, useState } from "react";
 import { changePasswordAction, forgotPasswordAction } from "./actions";
+import { Icon } from "./icons";
 import { SubmitButton } from "./ui";
 
 function PasswordField({ name, label, autoComplete, hint }: { name: string; label: string; autoComplete: string; hint?: string }) {
@@ -47,8 +48,8 @@ Use it at /admin/forgot to reset a forgotten password. It works once; a new code
       <p className="alert" role="alert"><strong>Save this recovery code now. It is shown only once.</strong> If you lose it and then forget your password, the website cannot reset it for you.</p>
       <code aria-label="Recovery code">{code}</code>
       <div className="row">
-        <button type="button" className="btn sec sm" onClick={() => { navigator.clipboard?.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); }}>{copied ? "Copied" : "Copy code"}</button>
-        <button type="button" className="btn sec sm" onClick={download}>Download as file</button>
+        <button type="button" className="btn sec sm" onClick={() => { navigator.clipboard?.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); }}><Icon name={copied ? "check" : "copy"} size={16} />{copied ? "Copied" : "Copy code"}</button>
+        <button type="button" className="btn sec sm" onClick={download}><Icon name="save" size={16} />Download as file</button>
       </div>
       <p className="hint">Best place for it: a password manager. Any older recovery code no longer works.</p>
       <label className="ack"><input type="checkbox" checked={saved} onChange={e => setSaved(e.target.checked)} /> I have saved my recovery code</label>
@@ -61,9 +62,9 @@ export function ChangePasswordForm({ firstTime }: { firstTime: boolean }) {
   const [st, act] = useActionState(changePasswordAction, null);
   if (st?.code) return <RecoveryCode code={st.code} title="Password changed" doneLabel="Done" doneHref="/admin/account" />;
   return (
-    <form action={act} className="card" style={{ maxWidth: 520 }}>
-      <h2>Change password</h2>
-      <p className="muted" style={{ margin: "4px 0 16px" }}>
+    <form action={act} className="card">
+      <div className="card-h"><h2><Icon name="lock" size={22} />Change password</h2></div>
+      <p className="lead">
         {firstTime
           ? "You are still using the password set in Cloudflare. Change it here to manage it from the admin and to get a recovery code for “Forgot password?”."
           : "Changing it signs out every other device and gives you a new recovery code."}
@@ -72,7 +73,7 @@ export function ChangePasswordForm({ firstTime }: { firstTime: boolean }) {
       <PasswordField name="current" label="Current password" autoComplete="current-password" />
       <PasswordField name="next" label="New password" autoComplete="new-password" hint="At least 12 characters. A few random words with numbers works well." />
       <PasswordField name="confirm" label="Confirm new password" autoComplete="new-password" />
-      <SubmitButton pending="Changing…">Change password</SubmitButton>
+      <SubmitButton pending="Changing…"><Icon name="lock" size={18} />Change password</SubmitButton>
     </form>
   );
 }

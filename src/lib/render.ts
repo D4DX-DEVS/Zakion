@@ -1,5 +1,12 @@
 import { db } from "./env";
 import { improveBody, isPlaceholder, isStaging, seoHead } from "./seo";
+import { applyPage, HOME_HEAD, PAGE_PLAN } from "./home";
+import { type Content, loadContent } from "./content";
+import { BACK_TO_TOP, FONT_HEAD, LIGHT_JS, MOTION_EARLY, MOTION_JS } from "./chrome";
+import { swapFooter } from "./footer";
+import { applyHeader } from "./header";
+import { SCRIPT_EARLY } from "./sections";
+import { isThemed, siteHead, siteOf, socialOf, themeKey, themeText } from "./site";
 
 type Page = { path: string; title: string; description: string; og_image: string; body_class: string; head_html: string; body_html: string; foot_html: string };
 export type Post = { id: number; slug: string; title: string; excerpt: string; content: string; image: string; category: string; author: string; status: string; published_at: string; updated_at?: string };
@@ -32,13 +39,28 @@ img,video,iframe{max-width:100%}
 }
 </style>`;
 
-function document_(p: Page, body: string, post?: Post) {
+// The theme's "SmoothScroll" script takes over the mouse wheel and animates every scroll itself (400ms), which feels laggy and
+// keeps scrolling on the main thread. Native scrolling is smoother, so the script tag is removed from every page.
+const noSmoothScroll = (h: string) => h.replace(/<script[^>]*id=["']SmoothScroll-js["'][^>]*><\/script>/g, "");
+
+function document_(p: Page, body: string, c: Content, post?: Post) {
   const t = esc(p.title);
-  return `<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${t}</title>` +
+  const site = siteOf(c); // Site settings: theme, fonts, layout and the on/off switches
+  const sameAs = socialOf(c).filter((x) => x.network !== "WhatsApp").map((x) => x.url); // wa.me is a chat link, not a profile
+  if (!site.scrollAnimations) body = body.split(SCRIPT_EARLY).join(""); // the sections then never hide their content for the reveal
+  // A chosen theme also recolours what the stored pages hard-code: inline colours, and the Elementor stylesheets (recoloured when they are
+  // served, see the media route; the key in the link makes the browser fetch the recoloured copy).
+  let head = p.head_html, foot = p.foot_html;
+  if (isThemed(site)) {
+    body = themeText(body, site);
+    foot = themeText(foot, site);
+    head = themeText(head, site).replace(/(\/media\/elementor\/css\/[^'"?]+\?ver=\d+)/g, `$1&th=${themeKey(site)}`);
+  }
+  return `<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${site.scrollAnimations ? MOTION_EARLY : ""}<title>${t}</title>` +
     (p.description ? `<meta name="description" content="${esc(p.description)}">` : "") +
-    `<meta property="og:title" content="${t}">` + seoHead(p, post, isPlaceholder(body)) +
-    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${p.head_html}${PUBLIC_CSS}<link rel="stylesheet" href="/zk-deck.css?v=12"></head>` +
-    `<body class="${esc(p.body_class)}">${improveBody(body, post ? post.title : p.title.split(/ [–|] /)[0])}${p.foot_html}${FORM_JS}<script src="/zk-deck.js?v=12" defer></script></body></html>`;
+    `<meta property="og:title" content="${t}">` + seoHead(p, post, isPlaceholder(body), sameAs.length ? sameAs : undefined) +
+    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${head}${PUBLIC_CSS}<link rel="stylesheet" href="/zk-deck.css?v=14">${FONT_HEAD}<link rel="stylesheet" href="/zk-wide.css?v=6">${p.path in PAGE_PLAN ? HOME_HEAD : ""}<link rel="stylesheet" href="/zk-footer.css?v=2"><link rel="stylesheet" href="/zk-motion.css?v=11"><link rel="stylesheet" href="/zk-menu.css?v=7">${siteHead(site)}</head>` +
+    `<body class="${esc(p.body_class)}">${improveBody(swapFooter(noSmoothScroll(applyHeader(body, c, p.path)), c), post ? post.title : p.title.split(/ [–|] /)[0])}${site.scrollAnimations ? MOTION_JS : ""}${site.imageShine ? LIGHT_JS : ""}${noSmoothScroll(foot)}${FORM_JS}${site.backToTop ? BACK_TO_TOP : ""}<script src="/zk-deck.js?v=12" defer></script></body></html>`;
 }
 
 const html = (s: string, status = 200) => {
@@ -74,20 +96,21 @@ export async function renderPath(path: string): Promise<Response> {
   const norm = path === "/" ? "/" : "/" + path.replace(/^\/+|\/+$/g, "") + "/";
   const page = await d.prepare("SELECT * FROM pages WHERE path=? AND status='published' AND kind!='template'").bind(norm).first<Page>();
   if (page) {
-    let body = page.body_html;
+    const content = await loadContent();
+    let body = norm in PAGE_PLAN ? applyPage(norm, page.body_html, content) : page.body_html;
     if (body.includes("{{CARDS}}")) { const cards = (await published()).map(card).join(""); body = body.replace("{{CARDS}}", () => cards); }
-    return html(document_(page, body));
+    return html(document_(page, body, content));
   }
   const slug = norm.slice(1, -1);
   if (slug && !slug.includes("/")) {
     const post = await d.prepare("SELECT * FROM posts WHERE slug=? AND status='published'").bind(slug).first<Post>();
     const tpl = post && (await d.prepare("SELECT * FROM pages WHERE path='__tpl_post'").first<Page>());
-    if (post && tpl) return html(document_({ ...tpl, path: norm, title: post.title + " | Zakion Energy", description: clip(post.excerpt), og_image: post.image }, postBody(tpl.body_html, post), post));
+    if (post && tpl) return html(document_({ ...tpl, path: norm, title: post.title + " | Zakion Energy", description: clip(post.excerpt), og_image: post.image }, postBody(tpl.body_html, post), await loadContent(), post));
   }
   return notFound();
 }
 
 export async function previewPost(p: Post) {
   const tpl = await db().prepare("SELECT * FROM pages WHERE path='__tpl_post'").first<Page>();
-  return tpl ? html(document_({ ...tpl, path: `/${p.slug}/`, title: p.title }, postBody(tpl.body_html, p), p)) : notFound();
+  return tpl ? html(document_({ ...tpl, path: `/${p.slug}/`, title: p.title }, postBody(tpl.body_html, p), await loadContent(), p)) : notFound();
 }

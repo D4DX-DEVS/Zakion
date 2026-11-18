@@ -1,32 +1,116 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useFormStatus } from "react-dom";
+import { Icon, type IconName } from "./icons";
 
-const NAV: [string, string][] = [["/admin", "Dashboard"], ["/admin/pages", "Pages"], ["/admin/posts", "Blog posts"], ["/admin/media", "Media"], ["/admin/messages", "Messages"], ["/admin/account", "Account"]];
+import { SEC_ICON } from "./section-meta";
 
-export function Shell({ logout, children }: { logout: () => Promise<void>; children: React.ReactNode }) {
-  const path = usePathname();
-  const [open, setOpen] = useState(false);
-  useEffect(() => setOpen(false), [path]);
-  const active = (h: string) => (h === "/admin" ? path === h : path.startsWith(h));
+type Nav = { href: string; label: string; icon: IconName; group: string; sub: string; bare?: boolean };
+const NAV: Nav[] = [
+  { href: "/admin", label: "Overview", icon: "home", group: "Start", sub: "Your site at a glance and the quickest ways in." },
+  { href: "/admin/studio", label: "Studio", icon: "layers", group: "Home page", sub: "Arrange, edit and tune every block of the home page.", bare: true },
+  { href: "/admin/settings", label: "Site settings", icon: "settings", group: "Site", sub: "Layout, colours, fonts, header, footer, navigation and social links for the whole website.", bare: true },
+  { href: "/admin/pages", label: "Pages", icon: "file", group: "Content", sub: "Edit the text, images and settings of every page." },
+  { href: "/admin/posts", label: "Blog posts", icon: "pen", group: "Content", sub: "Write, edit and publish your articles." },
+  { href: "/admin/media", label: "Library", icon: "image", group: "Library", sub: "Upload and manage images, videos and PDFs." },
+  { href: "/admin/messages", label: "Inbox", icon: "inbox", group: "Inbox", sub: "Enquiries sent through your contact form." },
+  { href: "/admin/account", label: "Account", icon: "user", group: "Account", sub: "Change your password and recovery code." },
+];
+
+const isCur = (path: string, href: string) => (href === "/admin" ? path === "/admin" : path === href || path.startsWith(href + "/"));
+
+type Section = { key: string; title: string };
+type SettingsTab = { id: string; label: string };
+type Cmd = { label: string; hint: string; href: string; icon: IconName };
+
+// Command palette: Ctrl/Cmd+K (or the search button) opens it; type to filter, arrows to move, Enter to go.
+function Palette({ open, onClose, sections, tabs }: { open: boolean; onClose: () => void; sections: Section[]; tabs: SettingsTab[] }) {
+  const dlg = useRef<HTMLDialogElement>(null);
+  const [q, setQ] = useState("");
+  const [at, setAt] = useState(0);
+  const all = useMemo<Cmd[]>(() => [
+    ...NAV.map((n): Cmd => ({ label: n.label, hint: n.group, href: n.href, icon: n.icon })),
+    { label: "Write a new blog post", hint: "Action", href: "/admin/posts/new", icon: "pen" },
+    { label: "Upload to the library", hint: "Action", href: "/admin/media", icon: "upload" },
+    ...tabs.map((t): Cmd => ({ label: t.label, hint: "Site settings", href: "/admin/settings?tab=" + t.id, icon: "settings" })),
+    ...sections.map((s): Cmd => ({ label: s.title, hint: "Studio section", href: "/admin/studio?key=" + s.key, icon: SEC_ICON[s.key] ?? "layers" })),
+  ], [sections, tabs]);
+  const shown = useMemo(() => { const w = q.toLowerCase().split(/\s+/).filter(Boolean); return all.filter((c) => w.every((x) => (c.label + " " + c.hint).toLowerCase().includes(x))).slice(0, 12); }, [all, q]);
+  useEffect(() => {
+    const d = dlg.current;
+    if (!d) return;
+    if (open && !d.open) { setQ(""); setAt(0); d.showModal(); }
+    if (!open && d.open) d.close();
+  }, [open]);
+  const go = (c?: Cmd) => { if (c) location.href = c.href; };
   return (
-    <div className={"shell" + (open ? " open" : "")}>
-      <aside className="side" id="sidebar">
-        <a className="brand" href="/admin"><img src="/media/2024/03/zak-logo.png" alt="Zakion Energy admin" /></a>
-        <nav aria-label="Admin">
-          {NAV.map(([h, l]) => <a key={h} href={h} aria-current={active(h) ? "page" : undefined}>{l}</a>)}
-        </nav>
-      </aside>
-      <div className="scrim" onClick={() => setOpen(false)} />
-      <div>
-        <div className="top">
-          <button className="btn sec sm burger" aria-expanded={open} aria-controls="sidebar" onClick={() => setOpen(o => !o)}>Menu</button>
-          <a className="btn sec sm" href="/" target="_blank" rel="noreferrer">View site</a>
-          <form action={logout}><SubmitButton className="btn sm" pending="Signing out…">Log out</SubmitButton></form>
-        </div>
-        <main className="main">{children}</main>
+    <dialog ref={dlg} className="palette" aria-label="Search and jump" onClose={onClose} onClick={(e) => { if (e.target === dlg.current) onClose(); }}>
+      <div className="pal-in">
+        <label className="pal-q"><Icon name="search" size={20} /><span className="sr-only">Search</span>
+          <input type="text" autoFocus value={q} placeholder="Search sections, pages and actions…" onChange={(e) => { setQ(e.target.value); setAt(0); }}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowDown") { e.preventDefault(); setAt((i) => Math.min(i + 1, shown.length - 1)); }
+              else if (e.key === "ArrowUp") { e.preventDefault(); setAt((i) => Math.max(i - 1, 0)); }
+              else if (e.key === "Enter") { e.preventDefault(); go(shown[at]); }
+            }} />
+          <kbd>esc</kbd>
+        </label>
+        <ul className="pal-list" role="listbox">
+          {shown.length === 0 && <li className="pal-none">Nothing matches “{q}”.</li>}
+          {shown.map((c, i) => (
+            <li key={c.href + c.label} role="option" aria-selected={i === at}>
+              <a href={c.href} className={i === at ? "on" : ""} onMouseMove={() => setAt(i)}><Icon name={c.icon} size={18} /><span>{c.label}</span><i>{c.hint}</i></a>
+            </li>
+          ))}
+        </ul>
       </div>
+    </dialog>
+  );
+}
+
+export function Shell({ logout, user, sections, tabs, children }: { logout: () => Promise<void>; user: string; sections: Section[]; tabs: SettingsTab[]; children: React.ReactNode }) {
+  const path = usePathname();
+  const cur = NAV.find((n) => isCur(path, n.href) && n.href !== "/admin") ?? NAV[0];
+  const [cmd, setCmd] = useState(false);
+  // the left menu is open (labels shown) or collapsed to icons; the choice is remembered in this browser
+  const [open, setOpen] = useState(true);
+  useEffect(() => { try { if (localStorage.getItem("zk-dock") === "closed") setOpen(false); } catch { /* storage blocked: stays open */ } }, []);
+  const toggle = () => setOpen((o) => { try { localStorage.setItem("zk-dock", o ? "closed" : "open"); } catch { /* ignore */ } return !o; });
+  // on a phone the dock scrolls sideways: bring the current page's icon into view
+  useEffect(() => { document.querySelector(".dock [aria-current=page]")?.scrollIntoView({ inline: "center", block: "nearest" }); }, [path]);
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setCmd(true); } };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
+  return (
+    <div className="app" data-dock={open ? "open" : "closed"}>
+      <nav className="dock" id="dock" aria-label="Admin">
+        <button type="button" className="dock-toggle" aria-expanded={open} aria-controls="dock" aria-label={open ? "Collapse menu" : "Expand menu"} title={open ? "Collapse menu" : "Expand menu"} onClick={toggle}><Icon name="chevron" size={16} /></button>
+        <a className="dock-brand" href="/admin" aria-label="Zakion Studio home"><span className="dock-bolt"><Icon name="bolt" size={22} /></span><span className="dock-name">Zakion <b>Studio</b></span></a>
+        <ul>
+          {NAV.map((n) => (
+            <li key={n.href}><a href={n.href} aria-current={n === cur && (path !== "/admin" || n.href === "/admin") ? "page" : undefined} title={n.label}><Icon name={n.icon} size={22} /><span>{n.label}</span></a></li>
+          ))}
+        </ul>
+        <div className="dock-foot">
+          <a href="/" target="_blank" rel="noreferrer" title="View site"><Icon name="external" size={20} /><span>View site<span className="sr-only"> (opens in a new tab)</span></span></a>
+          <form action={logout}><SubmitButton className="dock-btn" pending="…"><Icon name="logout" size={20} /><span>Log out</span></SubmitButton></form>
+        </div>
+      </nav>
+      <div className="stage">
+        <header className="bar">
+          <div className="trail" aria-label="You are here"><span>Studio</span><Icon name="chevron" size={14} /><span>{cur.group}</span>{cur.label !== cur.group && <><Icon name="chevron" size={14} /><b>{cur.label}</b></>}</div>
+          <button type="button" className="cmdk" onClick={() => setCmd(true)}><Icon name="search" size={18} /><span>Search or jump to…</span><kbd>Ctrl K</kbd></button>
+          <a className="avatar" href="/admin/account" aria-label={`Account (${user})`} title={`Signed in as ${user}`}>{user.charAt(0)}</a>
+        </header>
+        <main className="page">
+          {!cur.bare && <div className="phead"><span className="eyebrow">{cur.group}</span><h1>{cur.label}</h1><p>{cur.sub}</p></div>}
+          {children}
+        </main>
+      </div>
+      <Palette open={cmd} onClose={() => setCmd(false)} sections={sections} tabs={tabs} />
     </div>
   );
 }
@@ -44,20 +128,76 @@ export function ConfirmButton({ children, message, className = "btn del" }: { ch
 export function Toast({ text, error }: { text: string; error?: boolean }) {
   const [show, setShow] = useState(true);
   useEffect(() => { const t = setTimeout(() => setShow(false), 3500); return () => clearTimeout(t); }, []);
-  return show ? <div className={"toast" + (error ? " err" : "")} role="status">{text}</div> : null;
+  return show ? <div className={"toast" + (error ? " err" : "")} role="status"><Icon name={error ? "alert" : "check"} size={18} />{text}</div> : null;
 }
 
 export function CopyButton({ text }: { text: string }) {
   const [done, setDone] = useState(false);
-  return <button type="button" className="btn sec sm" onClick={() => { navigator.clipboard?.writeText(location.origin + text); setDone(true); setTimeout(() => setDone(false), 1500); }}>{done ? "Copied" : "Copy URL"}</button>;
+  return (
+    <button type="button" className="btn sec sm" onClick={() => { navigator.clipboard?.writeText(location.origin + text); setDone(true); setTimeout(() => setDone(false), 1500); }}>
+      <Icon name={done ? "check" : "copy"} size={16} /><span className="lbl">{done ? "Copied" : "Copy URL"}</span>
+    </button>
+  );
 }
 
-export function TableSearch({ target, label = "Search" }: { target: string; label?: string }) {
+// Search box plus optional status pills for a list on the page. Rows carry data-q (lowercase searchable text) and data-s (status);
+// they sit inside #target. An element with id "<target>-none" is shown when nothing matches.
+export function TableTools({ target, label = "Search", noun = "items", total, filters }: {
+  target: string; label?: string; noun?: string; total: number; filters?: { value: string; label: string; count: number }[];
+}) {
+  const [q, setQ] = useState("");
+  const [f, setF] = useState("all");
+  const [shown, setShown] = useState(total);
+  useEffect(() => {
+    const needle = q.trim().toLowerCase();
+    let n = 0;
+    document.querySelectorAll<HTMLElement>(`#${target} [data-q]`).forEach(r => {
+      const ok = r.dataset.q!.includes(needle) && (f === "all" || r.dataset.s === f);
+      r.hidden = !ok;
+      if (ok) n++;
+    });
+    setShown(n);
+    const none = document.getElementById(`${target}-none`);
+    if (none) none.hidden = n > 0 || total === 0;
+  }, [q, f, target, total]);
   return (
-    <input type="search" aria-label={label} placeholder={label} onInput={e => {
-      const q = e.currentTarget.value.toLowerCase();
-      document.querySelectorAll<HTMLElement>(`#${target} [data-q]`).forEach(r => { r.hidden = !r.dataset.q!.includes(q); });
-    }} />
+    <div className="tools">
+      <label className="search">
+        <span className="sr-only">{label}</span>
+        <Icon name="search" size={18} />
+        <input type="search" placeholder={label} value={q} onChange={e => setQ(e.target.value)} />
+      </label>
+      {filters && (
+        <div className="pills" role="group" aria-label="Filter by status">
+          {filters.map(x => (
+            <button type="button" key={x.value} className="pill" aria-pressed={f === x.value} onClick={() => setF(x.value)}>{x.label} <i>{x.count}</i></button>
+          ))}
+        </div>
+      )}
+      <span className="count" aria-live="polite">{shown === total ? `${total} ${noun}` : `${shown} of ${total} ${noun}`}</span>
+    </div>
+  );
+}
+
+export function PickerDialog({ dlg, title, options, onPick }: { dlg: React.RefObject<HTMLDialogElement | null>; title: string; options: string[]; onPick: (url: string) => void }) {
+  return (
+    <dialog ref={dlg} className="picker-dlg" aria-label={title} onClick={e => { if (e.target === dlg.current) dlg.current?.close(); }}>
+      <div className="picker-in">
+        <div className="row between">
+          <h3>{title}</h3>
+          <button type="button" className="btn sec sm" onClick={() => dlg.current?.close()}><Icon name="close" size={16} />Close</button>
+        </div>
+        {options.length === 0 ? <p className="muted" style={{ marginTop: 16 }}>No images yet. Upload one in Media first.</p> : (
+          <div className="pgrid">
+            {options.map(o => (
+              <button type="button" key={o} title={o} onClick={() => { onPick(o); dlg.current?.close(); }}>
+                <img src={o} alt={o.split("/").pop()} loading="lazy" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </dialog>
   );
 }
 
@@ -66,22 +206,13 @@ export function ImagePicker({ name, initial, options }: { name: string; initial:
   const dlg = useRef<HTMLDialogElement>(null);
   return (
     <div>
-      {value ? <img className="preview" src={value} alt="Selected featured image" /> : <p className="muted">No image selected.</p>}
+      {value ? <img className="preview" src={value} alt="Selected featured image" /> : <div className="thumb" style={{ borderRadius: 12, marginBottom: 12 }}><Icon name="image" size={32} /></div>}
       <input type="hidden" name={name} value={value} />
       <div className="row">
-        <button type="button" className="btn sec sm" onClick={() => dlg.current?.showModal()}>Choose from library</button>
-        {value && <button type="button" className="btn sec sm" onClick={() => setValue("")}>Remove</button>}
+        <button type="button" className="btn sec sm" onClick={() => dlg.current?.showModal()}><Icon name="image" size={16} />Choose from library</button>
+        {value && <button type="button" className="btn sec sm" onClick={() => setValue("")}><Icon name="close" size={16} />Remove</button>}
       </div>
-      <dialog ref={dlg} className="picker-dlg" aria-label="Media library">
-        <div className="row between"><h3>Media library</h3><button type="button" className="btn sec sm" onClick={() => dlg.current?.close()}>Close</button></div>
-        <div className="pgrid">
-          {options.map(o => (
-            <button type="button" key={o} title={o} onClick={() => { setValue(o); dlg.current?.close(); }}>
-              <img src={o} alt={o.split("/").pop()} loading="lazy" />
-            </button>
-          ))}
-        </div>
-      </dialog>
+      <PickerDialog dlg={dlg} title="Media library" options={options} onPick={setValue} />
     </div>
   );
 }

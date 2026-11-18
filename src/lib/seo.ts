@@ -44,7 +44,8 @@ function crumbs(path: string, name: string, base: string) {
 export const PLACEHOLDER_SQL = "%Lorem Ipsum is simply dummy text%";
 export const isPlaceholder = (html: string) => html.includes("Lorem Ipsum is simply dummy text");
 
-export function seoHead(p: SeoPage, post?: SeoPost, placeholder = false) {
+/** `sameAs` is the list of official profile links (Site settings > Social media); without it the built-in list is used. */
+export function seoHead(p: SeoPage, post?: SeoPost, placeholder = false, sameAs?: string[]) {
   const base = siteUrl();
   const path = p.path;
   const canonicalPath = CANONICAL[path] || path;
@@ -54,7 +55,7 @@ export function seoHead(p: SeoPage, post?: SeoPost, placeholder = false) {
   const image = p.og_image ? (p.og_image.startsWith("http") ? p.og_image : base + p.og_image) : `${base}/media/2024/03/hero.jpg`;
   const robots = isStaging() ? "noindex, nofollow" : NOINDEX.has(path) || placeholder ? "noindex, follow" : "index, follow, max-image-preview:large";
   const name = post ? post.title : shortName(title);
-  const org = { "@type": "Organization", "@id": base + "/#organization", name: ORG.name, url: base + "/", logo: base + "/media/2024/03/zak-logo.png", email: ORG.email, telephone: ORG.telephone, foundingDate: ORG.foundingDate, address: { "@type": "PostalAddress", ...ORG.address }, sameAs: ORG.sameAs };
+  const org = { "@type": "Organization", "@id": base + "/#organization", name: ORG.name, url: base + "/", logo: base + "/media/2024/03/zak-logo.png", email: ORG.email, telephone: ORG.telephone, foundingDate: ORG.foundingDate, address: { "@type": "PostalAddress", ...ORG.address }, sameAs: sameAs ?? ORG.sameAs };
   const site = { "@type": "WebSite", "@id": base + "/#website", url: base + "/", name: BRAND, publisher: { "@id": base + "/#organization" }, inLanguage: "en" };
   const graph: object[] = [org, site];
   const page = { "@type": post ? "WebPage" : PAGE_TYPE[path] || "WebPage", "@id": url + "#webpage", url, name, ...(desc && { description: desc }), isPartOf: { "@id": base + "/#website" }, about: { "@id": base + "/#organization" }, breadcrumb: { "@id": url + "#breadcrumb" }, inLanguage: "en" };

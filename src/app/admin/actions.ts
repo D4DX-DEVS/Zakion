@@ -8,6 +8,11 @@ import { db, env } from "@/lib/env";
 import { siteUrl } from "@/lib/seo";
 import { changePassword, login, logout, requireAdmin, resetWithRecovery } from "@/lib/auth";
 import { passwordProblem } from "@/lib/password";
+import { MAX_UPLOAD, MAX_UPLOAD_LABEL } from "@/lib/upload";
+import { fmtBytes } from "./format";
+import { cleanLayout, HOME_KEYS, LAYOUT_KEY, loadContent, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
+import { PAGE_PLAN } from "@/lib/home";
+import { CONTACT_NETS, cleanSite, SITE_DEFAULTS, siteOf, TAB_BY_ID } from "@/lib/site";
 
 // Browsers submit textarea newlines as \r\n; store \n so saves don't alter the HTML.
 const s = (f: FormData, k: string) => String(f.get(k) ?? "").replace(/\r\n?/g, "\n");
@@ -66,14 +71,15 @@ async function uploadFile(file: File) {
 
 export async function uploadMedia(f: FormData) {
   await requireAdmin();
-  const rejected: string[] = [];
+  const rejected: string[] = [], big: string[] = [];
   for (const file of f.getAll("files")) {
     if (!(file instanceof File) || !file.size) continue;
-    if (UPLOADABLE.test(file.type)) await uploadFile(file);
-    else rejected.push(file.name);
+    if (!UPLOADABLE.test(file.type)) rejected.push(file.name);
+    else if (file.size > MAX_UPLOAD) big.push(`${file.name} (${fmtBytes(file.size)})`);
+    else await uploadFile(file);
   }
   revalidatePath("/admin/media");
-  if (rejected.length) redirect("/admin/media?rejected=" + encodeURIComponent(rejected.join(", ")));
+  if (rejected.length || big.length) redirect("/admin/media?" + [rejected.length && "rejected=" + encodeURIComponent(rejected.join(", ")), big.length && "big=" + encodeURIComponent(big.join(", "))].filter(Boolean).join("&"));
 }
 export async function deleteMedia(f: FormData) {
   await requireAdmin();
@@ -120,7 +126,11 @@ export async function savePost(f: FormData) {
   let image = s(f, "image");
   const up = f.get("image_file");
   let bad = ""; // a wrong file type is skipped, the rest of the post still saves
-  if (up instanceof File && up.size) { if (UPLOADABLE.test(up.type)) image = await uploadFile(up); else bad = "&badimage=" + encodeURIComponent(up.name); }
+  if (up instanceof File && up.size) {
+    if (!UPLOADABLE.test(up.type)) bad = "&badimage=" + encodeURIComponent(up.name);
+    else if (up.size > MAX_UPLOAD) bad = "&bigimage=" + encodeURIComponent(`${up.name} (${fmtBytes(up.size)})`);
+    else image = await uploadFile(up);
+  }
   const when = s(f, "published_at").replace("T", " ") || new Date().toISOString().slice(0, 16).replace("T", " ");
   const v = [slug, title, s(f, "excerpt"), s(f, "content"), image, s(f, "category") || "Uncategorized", s(f, "author") || "Amjad", s(f, "status"), when];
   if (id === "new") {
@@ -149,4 +159,172 @@ export async function deleteMessage(f: FormData) {
   await requireAdmin();
   await db().prepare("DELETE FROM messages WHERE id=?").bind(s(f, "id")).run();
   revalidatePath("/admin/messages");
+}
+
+// ---- page sections (src/lib/content.ts): one JSON document per section, merged over the built-in defaults ----
+
+/** Called from the section editor to upload an image or video; returns the public URL. */
+export async function uploadSectionFile(f: FormData): Promise<{ url?: string; error?: string }> {
+  await requireAdmin();
+  const file = f.get("file");
+  if (!(file instanceof File) || !file.size) return { error: "Choose a file first." };
+  if (file.size > MAX_UPLOAD) return { error: `"${file.name}" is ${fmtBytes(file.size)}. Files can be up to ${MAX_UPLOAD_LABEL}.` };
+  if (!UPLOADABLE.test(file.type)) return { error: `"${file.name}" is not an image, MP4/WebM video or PDF.` };
+  return { url: await uploadFile(file) };
+}
+
+const allPages = () => ["/", ...Object.keys(PAGE_PLAN).filter(p => p !== "/")];
+
+export async function saveSection(f: FormData) {
+  await requireAdmin();
+  const key = s(f, "key");
+  if (!SECTION_BY_KEY[key]) redirect("/admin/studio");
+  let data: unknown;
+  try { data = JSON.parse(String(f.get("data") ?? "{}")); } catch { redirect("/admin/studio?key=" + key + "&error=1"); }
+  await db()
+    .prepare("INSERT INTO site_content (key,data,updated_at) VALUES (?,?,datetime('now')) ON CONFLICT(key) DO UPDATE SET data=excluded.data,updated_at=datetime('now')")
+    .bind(key, JSON.stringify(sanitize(key, data)))
+    .run();
+  await purgeSite(allPages());
+  redirect("/admin/studio?key=" + key + "&saved=1");
+}
+export async function resetSection(f: FormData) {
+  await requireAdmin();
+  const key = s(f, "key");
+  if (!SECTION_BY_KEY[key]) redirect("/admin/studio");
+  await db().prepare("DELETE FROM site_content WHERE key=?").bind(key).run();
+  await purgeSite(allPages());
+  redirect("/admin/studio?key=" + key + "&saved=reset");
+}
+
+// ---- home page layout (order, hidden sections, per-section settings), kept in site_content under "_layout" ----
+
+async function readLayout(): Promise<Layout> {
+  const r = await db().prepare("SELECT data FROM site_content WHERE key=?").bind(LAYOUT_KEY).first<{ data: string }>().catch(() => null);
+  let v: unknown = null;
+  try { v = r ? JSON.parse(r.data) : null; } catch { /* a damaged row falls back to the defaults */ }
+  return cleanLayout(v);
+}
+async function writeLayout(l: Layout) {
+  await db()
+    .prepare("INSERT INTO site_content (key,data,updated_at) VALUES (?,?,datetime('now')) ON CONFLICT(key) DO UPDATE SET data=excluded.data,updated_at=datetime('now')")
+    .bind(LAYOUT_KEY, JSON.stringify(cleanLayout(l)))
+    .run();
+  await purgeSite(allPages());
+}
+const studioUrl = (key: string, note: string) => "/admin/studio?" + (key && SECTION_BY_KEY[key] ? "key=" + encodeURIComponent(key) + "&" : "") + "saved=" + note;
+
+/** Moves a home page section one place up or down. */
+export async function moveSection(f: FormData) {
+  await requireAdmin();
+  const key = s(f, "key"), step = s(f, "dir") === "up" ? -1 : 1, back = s(f, "back");
+  const l = await readLayout();
+  const i = l.order.indexOf(key), j = i + step;
+  if (i >= 0 && j >= 0 && j < l.order.length) { [l.order[i], l.order[j]] = [l.order[j], l.order[i]]; await writeLayout(l); }
+  redirect(studioUrl(back, "layout"));
+}
+/** Shows or hides a home page section (the section stays editable while hidden). */
+export async function toggleSection(f: FormData) {
+  await requireAdmin();
+  const key = s(f, "key"), back = s(f, "back");
+  const l = await readLayout();
+  if (l.order.includes(key)) { l.hidden = l.hidden.includes(key) ? l.hidden.filter((k) => k !== key) : [...l.hidden, key]; await writeLayout(l); }
+  redirect(studioUrl(back, "layout"));
+}
+/** Visibility, spacing and animation for one section, saved from its settings card. */
+export async function saveSectionSettings(f: FormData) {
+  await requireAdmin();
+  const key = s(f, "key");
+  if (!SECTION_BY_KEY[key]) redirect("/admin/studio");
+  const l = await readLayout();
+  const spacing = s(f, "spacing"), anim = s(f, "anim");
+  l.settings[key] = { spacing: (SPACINGS as readonly string[]).includes(spacing) ? (spacing as Layout["settings"][string]["spacing"]) : "standard", anim: anim === "off" ? "off" : "on" };
+  if (l.order.includes(key)) l.hidden = s(f, "visible") === "hide" ? [...new Set([...l.hidden, key])] : l.hidden.filter((k) => k !== key);
+  await writeLayout(l);
+  redirect(studioUrl(key, "settings"));
+}
+
+// ---- Site settings (theme, fonts, layout, header, navigation, footer, social links, section order) ----
+// Header, menu, footer and social links stay in their own sections (so Studio edits the same data); the look and feel is one
+// document under SITE_KEY. A tab only ever touches the fields it lists (lib/site.ts), whatever the request says.
+
+const upsert = (key: string, data: unknown) =>
+  db()
+    .prepare("INSERT INTO site_content (key,data,updated_at) VALUES (?,?,datetime('now')) ON CONFLICT(key) DO UPDATE SET data=excluded.data,updated_at=datetime('now')")
+    .bind(key, JSON.stringify(data))
+    .run();
+
+/** The header, footer and theme are on every page, so every public page (and the blog posts) is purged, not just the ones with blocks. */
+async function purgeEverywhere() {
+  const pages = await db().prepare("SELECT path FROM pages WHERE kind!='template' AND status='published'").all<{ path: string }>().then(r => r.results.map(x => x.path)).catch(() => [] as string[]);
+  const posts = await db().prepare("SELECT slug FROM posts WHERE status='published'").all<{ slug: string }>().then(r => r.results.map(x => `/${x.slug}/`)).catch(() => [] as string[]);
+  await purgeSite([...new Set(["/", ...allPages(), ...pages, ...posts, ...LISTS])]);
+}
+
+const settingsUrl = (tab: string, note: string) => `/admin/settings?tab=${encodeURIComponent(tab)}&saved=${note}`;
+
+/** Keeps the Contact block's four social links in step with the social list (the Contact block still reads its own fields). */
+async function syncContactSocial(social: { network: string; url: string }[]) {
+  const cur = (await loadContent()).contact as Record<string, unknown>;
+  const next = { ...cur };
+  let changed = false;
+  for (const [k, network] of Object.entries(CONTACT_NETS)) {
+    const url = social.find(x => x.network === network)?.url ?? "";
+    if (String(cur[k] ?? "") !== url) { next[k] = url; changed = true; }
+  }
+  if (changed) await upsert("contact", sanitize("contact", next));
+}
+
+export async function saveSettings(f: FormData) {
+  await requireAdmin();
+  const tab = TAB_BY_ID[s(f, "tab")];
+  if (!tab) redirect("/admin/settings");
+  let input: any;
+  try { input = JSON.parse(String(f.get("data") ?? "{}")); } catch { redirect(`/admin/settings?tab=${tab.id}&error=1`); }
+  const content = await loadContent();
+  for (const g of tab.groups) {
+    const incoming = input?.[g.key];
+    if (!incoming || typeof incoming !== "object") continue;
+    const merged: Record<string, unknown> = { ...(g.key === SITE_KEY ? siteOf(content) : content[g.key]) };
+    for (const fld of g.fields) if (fld.k in incoming) merged[fld.k] = incoming[fld.k];
+    const data = g.key === SITE_KEY ? cleanSite(merged) : sanitize(g.key, merged);
+    await upsert(g.key, data);
+    if (tab.id === "social") await syncContactSocial((data.social as { network: string; url: string }[]).filter(x => x.network && x.url));
+  }
+  await purgeEverywhere();
+  redirect(settingsUrl(tab.id, "1"));
+}
+
+/** Puts this tab's fields back to the original values; every other setting stays as it is. */
+export async function resetSettings(f: FormData) {
+  await requireAdmin();
+  const tab = TAB_BY_ID[s(f, "tab")];
+  if (!tab) redirect("/admin/settings");
+  const content = await loadContent();
+  for (const g of tab.groups) {
+    const merged: Record<string, unknown> = { ...(g.key === SITE_KEY ? siteOf(content) : content[g.key]) };
+    for (const fld of g.fields) merged[fld.k] = g.key === SITE_KEY ? (SITE_DEFAULTS as Record<string, unknown>)[fld.k] : structuredClone(SECTION_BY_KEY[g.key].data[fld.k]);
+    await upsert(g.key, g.key === SITE_KEY ? cleanSite(merged) : sanitize(g.key, merged));
+  }
+  await purgeEverywhere();
+  redirect(settingsUrl(tab.id, "reset"));
+}
+
+/** Which blocks a page shows and in which order. Home keeps its order and hidden list (Studio reads those); the other pages keep their list. */
+export async function savePageLayout(f: FormData) {
+  await requireAdmin();
+  const path = s(f, "path");
+  if (!PAGE_DEFAULTS[path]) redirect("/admin/settings?tab=sections");
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("keys") ?? "[]")); } catch { redirect(`/admin/settings?tab=sections&page=${encodeURIComponent(path)}&error=1`); }
+  const keys = [...new Set((Array.isArray(raw) ? raw.map(String) : []).filter(k => HOME_KEYS.includes(k)))];
+  const l = await readLayout();
+  if (path === "/") {
+    l.order = [...keys, ...HOME_KEYS.filter(k => !keys.includes(k))];
+    l.hidden = HOME_KEYS.filter(k => !keys.includes(k));
+  } else {
+    l.pages[path] = keys;
+  }
+  await writeLayout(l);
+  redirect(`/admin/settings?tab=sections&page=${encodeURIComponent(path)}&saved=layout`);
 }

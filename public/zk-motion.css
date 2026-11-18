@@ -1,0 +1,202 @@
+/* Motion layer for every page: lazy-load reveals, image/link hover effects and micro animations.
+   Reveal states only apply while html.zk-m is set (MOTION_EARLY / MOTION_JS in src/lib/chrome.ts); hover and micro animations are always on.
+   Animations use the individual transform properties (translate, scale, rotate) so they stack with the sections' own transforms. */
+
+/* ---------- 1. Sections, footer, blog cards: fade up the first time they scroll into view ---------- */
+.zk-m section.zh,.zk-m .page-header-box,.zk-m .blog-item{transition:opacity .9s ease calc(var(--n,0)*.12s),translate 1s cubic-bezier(.22,.8,.24,1) calc(var(--n,0)*.12s),scale 1s cubic-bezier(.22,.8,.24,1) calc(var(--n,0)*.12s)}
+.zk-m section.zh:not(.zs-in){opacity:0;translate:0 56px}
+.zk-m section.zh:nth-of-type(even):not(.zs-in){scale:.97}
+.zk-m .page-header-box:not(.zs-in){opacity:0;translate:0 28px}
+.zk-m .blog-item:not(.zs-in){opacity:0;translate:0 44px}
+
+/* ---------- 2. Images: sharpen and fade in as they load ---------- */
+:where(.zh,.zf,.blog-item,.post-featured-image,.elementor-widget-image) img{transition:opacity .7s ease,filter .3s ease,scale .6s cubic-bezier(.22,.8,.24,1),rotate .6s cubic-bezier(.22,.8,.24,1),box-shadow .4s ease}
+.zk-m :is(.zh,.zf,.blog-item,.post-featured-image) img:not(.is-loaded){opacity:0;scale:1.05}
+
+/* ---------- 3. Hover: images ---------- */
+:where(.zh,.blog-item,.post-featured-image,.elementor-widget-image,.zf-logo) img:hover{scale:1.04;filter:brightness(1.05) saturate(1.08)}
+.zh-ph img:hover,.zh-gal img:hover,.zh-scard img:hover,.zh-aitem img:hover,.blog-item .post-featured-image img:hover{scale:1.08}
+.zh-q-who img:hover,.zh-scan img:hover{scale:1.1}
+.zh-aitem:hover img{scale:1.05;rotate:-1deg}
+/* big decorative backgrounds and the logo carousel keep their own behaviour */
+.zh-vm-bg img:hover,.zh-roi-hero img:hover,.zh-track-bg:hover,.zh-city img:hover,.zh-mlogo img:hover{filter:none}
+.zh-vm-bg img:hover,.zh-roi-hero img:hover,.zh-track-bg:hover,.zh-city img:hover{scale:none}
+/* header logo */
+.main-header .elementor-widget-image img{transition:scale .35s cubic-bezier(.34,1.56,.64,1),filter .35s}
+.main-header .elementor-widget-image a:hover img,.main-header .elementor-widget-image img:hover{scale:1.05}
+
+/* ---------- 4. Hover: links ---------- */
+a{transition:color .25s ease,background-color .25s ease,border-color .25s ease,box-shadow .25s ease,opacity .25s ease}
+/* text links grow an underline from the left */
+:is(.zh p,.zh li,.zh td,.elementor-widget-text-editor p,.post-item-body p,.entry-content p,.post-content p) a:not([class*="btn"]):not(.zh-soc a),
+.blog-item .post-meta a,.page-header-box ol a{background:linear-gradient(currentColor,currentColor) no-repeat 0 100%/0 1.5px;transition:background-size .3s ease,color .25s ease}
+:is(.zh p,.zh li,.zh td,.elementor-widget-text-editor p,.post-item-body p,.entry-content p,.post-content p) a:not([class*="btn"]):not(.zh-soc a):hover,
+.blog-item .post-meta a:hover,.page-header-box ol a:hover{background-size:100% 1.5px}
+.blog-item h3 a{background:linear-gradient(currentColor,currentColor) no-repeat 0 100%/0 2px;transition:background-size .35s ease,color .25s ease}
+.blog-item h3 a:hover{background-size:100% 2px}
+/* header menu: amber underline slides in under the hovered item */
+.elementskit-navbar-nav>li>a.ekit-menu-nav-link{background:linear-gradient(var(--zc-fec142,#fec142),var(--zc-fec142,#fec142)) no-repeat 50% calc(100% - 6px)/0 3px;border-radius:2px;transition:background-size .3s ease,color .25s ease}
+.elementskit-navbar-nav>li>a.ekit-menu-nav-link:hover,.elementskit-navbar-nav>li.current-menu-item>a.ekit-menu-nav-link{background-size:calc(100% - 20px) 3px}
+/* header top-bar links and social icons */
+.ekit_social_media a{transition:transform .3s cubic-bezier(.34,1.56,.64,1),background-color .25s,color .25s}
+.ekit_social_media a:hover{transform:translateY(-3px) scale(1.12)}
+a[href^="mailto:"],a[href^="tel:"]{transition:color .25s,opacity .25s}
+a[href^="mailto:"]:hover,a[href^="tel:"]:hover{opacity:.85}
+.zh-btn,.zh a.zh-btn{position:relative;overflow:hidden;isolation:isolate}
+.zh-btn::before{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:-70%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);transform:skewX(-22deg);transition:left .7s ease}
+.zh-btn:hover::before{left:130%}
+.zh-btn:active{scale:.96}
+.zh-btn .zi{transition:translate .3s cubic-bezier(.34,1.56,.64,1)}
+.zh-btn:hover .zi{translate:5px 0}
+.zh-mlogo{transition:transform .35s ease,box-shadow .35s ease,background-color .3s}
+a:focus-visible{outline:3px solid var(--zc-fec142,#fec142);outline-offset:3px}
+
+/* ---------- 5. Micro animations on section elements (they play as each element scrolls into view) ---------- */
+@keyframes zkGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes zkPop{0%{scale:.2;opacity:0;rotate:-40deg}60%{scale:1.18;opacity:1}100%{scale:1;rotate:0deg}}
+@keyframes zkShine{to{background-position:-220% 0}}
+@keyframes zkGlowPulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--zr-fec142,254,193,66),.55)}60%{box-shadow:0 0 0 12px rgba(var(--zr-fec142,254,193,66),0)}}
+/* rules and underlines draw themselves */
+.zh-rule,.zh-amberbar,.zh-uline,.zh-roi-t::after{transform-origin:left center}
+.zh-rule.in,.zh-amberbar.in,.zr.in .zh-uline,.zh-roi-t.in::after{animation:zkGrow .95s cubic-bezier(.22,.8,.24,1) .25s backwards}
+/* icons pop in, then react on hover */
+.zr.in :is(.zh-wic,.zh-rc-i,.zh-rchk,.zh-kwi,.zh-rbi,.zh-go,.zh-afi,.zh-fi,.zh-pi),.zr.in.zh-kw-mid{animation:zkPop .8s cubic-bezier(.34,1.56,.64,1) .3s backwards}
+.zh-wic,.zh-rc-i,.zh-rbi,.zh-kwi,.zh-rchk,.zh-go,.zh-fi,.zh-pi,.zh-perks .zi,.zh-tbl thead .zi{transition:scale .35s cubic-bezier(.34,1.56,.64,1),rotate .35s ease,background-color .3s,color .3s,border-color .3s}
+.zh-rc:hover .zh-rc-i{scale:1.12;rotate:-8deg;background:var(--amber);color:var(--navy-d)}
+.zh-rbox:hover .zh-rbi{scale:1.12;rotate:8deg}
+.zh-kw-col li:hover .zh-kwi{scale:1.14;rotate:-8deg;background:rgba(var(--zr-fec142,254,193,66),.2)}
+.zh-perks li:hover .zi{scale:1.18;rotate:-6deg;color:var(--amber)}
+.zh-rcard:hover .zh-rchk{scale:1.12;rotate:-10deg}
+.zh-vcard:hover .zh-go{translate:6px 0}
+.zh-tbl thead th:hover .zi{scale:1.12;rotate:-6deg;background:rgba(var(--zr-fec142,254,193,66),.2)}
+/* accent words shimmer */
+.zh h2 em:not(.zh-navy){background:linear-gradient(100deg,var(--zc-f5a800,#f5a800) 35%,var(--zc-ffd979,#ffd979) 50%,var(--zc-f5a800,#f5a800) 65%) 0 0/220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+/* the amber word catches the light once, when its heading appears (an endless text-gradient animation repaints every frame) */
+.zh :is(h2.zr.in,.zh-head.in h2,.zr.in h2) em:not(.zh-navy){animation:zkShine 2.8s ease .9s 1}
+.zh-story h2 em:not(.zh-navy),.zh-home h2 em:not(.zh-navy){background-image:linear-gradient(100deg,var(--zc-fec142,#fec142) 35%,var(--zc-fff0bd,#fff0bd) 50%,var(--zc-fec142,#fec142) 65%)}
+/* small hover lifts and highlights */
+.zh-q,.zh-rbox,.zh-stat,.zh-perks li,.zh-kw-col li,.zh-addr li,.zh-scan,.zh-sched,.zh-power{transition:transform .35s cubic-bezier(.22,.8,.24,1),box-shadow .35s,background-color .3s,color .3s,border-color .3s}
+.zh-q:hover{transform:translateY(-6px)}
+.zh-rbox:hover{transform:translateY(-6px);box-shadow:0 26px 54px rgba(var(--zr-082a5a,8,42,90),.34)}
+.zh-stat:hover b{scale:1.06}
+.zh-stat b{display:block;transform-origin:left center;transition:scale .35s cubic-bezier(.34,1.56,.64,1)}
+.zh-scan:hover,.zh-sched:hover{transform:translateY(-4px)}
+.zh-addr li:hover,.zh-kw-col li:hover{transform:translateX(4px)}
+.zh-tbl tbody tr:hover td{background:rgba(255,255,255,.12)}
+.zh-tbl td{transition:background-color .25s}
+.zh-now{animation:zkGlowPulse 2.4s ease-out infinite}
+.zh-kw-mid{transition:scale .4s cubic-bezier(.34,1.56,.64,1),box-shadow .4s}
+.zh-kw-mid:hover{scale:1.08;box-shadow:0 0 0 18px rgba(255,255,255,.08)}
+.zh-cert img,.zh-clogo{transition:scale .4s cubic-bezier(.22,.8,.24,1)}
+.zh-ttrack .zh-q:hover .zh-q-who img{scale:1.06}
+
+/* ---------- 5b. Headlines wipe in, sections glow and drift, images catch moving light ---------- */
+@keyframes zkWipe{from{clip-path:inset(-8% 102% -8% 0)}to{clip-path:inset(-8% -2% -8% 0)}}
+@keyframes zkSwoosh{from{background-size:0 8px}to{background-size:100% 8px}}
+@keyframes zkDrift{from{translate:0 0;scale:1}to{translate:-7% 9%;scale:1.2}}
+@keyframes zkSweep{0%{left:-60%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:130%;opacity:0}}
+.zh h2.zr.in,.zh-head.in h2{animation:zkWipe 1s cubic-bezier(.22,.8,.24,1) .15s backwards}
+.zh-tag.in b{animation:zkSwoosh 1s ease .7s backwards}
+/* a soft amber or blue glow drifts behind most sections */
+.zh-why::after,.zh-ren::after,.zh-aes::after,.zh-comp::after,.zh-roi::after,.zh-proc::after,.zh-part::after,.zh-test::after,.zh-contact::after{content:"";position:absolute;z-index:0;right:-10%;top:-20%;width:46%;aspect-ratio:1;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(var(--zr-fec142,254,193,66),.17),transparent 68%);animation:zkDrift 16s ease-in-out infinite alternate}
+.zh-ren::after,.zh-test::after{right:auto;left:-12%;top:auto;bottom:-24%;background:radial-gradient(circle,rgba(var(--zr-2161b8,33,97,184),.14),transparent 68%);animation-duration:20s}
+.zh-story::before,.zh-home::before{animation:zkDrift 22s ease-in-out infinite alternate}
+.zh-ren::before{animation:zkStripes 40s linear infinite}
+@keyframes zkStripes{to{background-position:240px 0}}
+.zh-proj::before{animation:zkSway 14s ease-in-out infinite alternate}
+@keyframes zkSway{from{translate:0 0}to{translate:-4% 3%}}
+/* the moving-light overlay (one element, positioned over the hovered image by MOTION_JS's LIGHT_JS in src/lib/chrome.ts) */
+.zk-light{position:fixed;left:0;top:0;width:0;height:0;z-index:50;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .3s ease}
+.zk-light.on{opacity:1}
+.zk-light-spot{position:absolute;inset:0;background:radial-gradient(circle 210px at var(--x,50%) var(--y,50%),rgba(var(--zr-fffcee,255,252,238),.72),rgba(var(--zr-ffecaa,255,236,170),.3) 42%,rgba(255,255,255,0) 72%)}
+.zk-light-sweep{position:absolute;top:-25%;bottom:-25%;left:-60%;width:38%;opacity:0;transform:skewX(-20deg);background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55) 50%,rgba(255,255,255,0))}
+.zk-light.sweep .zk-light-sweep{animation:zkSweep .95s cubic-bezier(.3,.1,.2,1) both}
+
+/* ---------- 5c. On Grid / Hybrid / BESS ---------- */
+@keyframes zfDot{0%{box-shadow:0 0 0 0 rgba(var(--zr-f5a800,245,168,0),.65)}70%,100%{box-shadow:0 0 0 8px rgba(var(--zr-f5a800,245,168,0),0)}}
+@keyframes zfPill{0%{left:-60%}45%,100%{left:140%}}
+@keyframes zfBolt{0%,84%,100%{scale:1;filter:none}88%{scale:1.2;filter:drop-shadow(0 0 4px var(--zc-f5a800,#f5a800))}92%{scale:1}95%{scale:1.14;filter:drop-shadow(0 0 5px var(--zc-f5a800,#f5a800))}}
+@keyframes zfSun{to{rotate:360deg}}
+@keyframes zfTrend{0%,100%{translate:0 -1.5px}50%{translate:2px 2px}}
+@keyframes zfSwap{0%,100%{translate:-2px 0}50%{translate:2px 0}}
+@keyframes zfLeaf{from{rotate:-9deg}to{rotate:9deg}}
+@keyframes zfBeat{0%,100%{scale:1}50%{scale:1.14}}
+@keyframes zfBan{0%,100%{rotate:0deg}50%{rotate:14deg}}
+/* label pill: a pulsing dot and a light that glides across now and then */
+.zh-pill::before{animation:zfDot 2s ease-out infinite}
+.zh-pill::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;background:linear-gradient(100deg,transparent,rgba(var(--zr-f5a800,245,168,0),.3),transparent);transform:skewX(-20deg);animation:zfPill 5s ease-in-out 1.2s infinite}
+/* benefit cards: rise one after another, then lift on hover with a light sweep and a growing accent bar */
+.zh-js .zh-fc.zr{transition:opacity .9s cubic-bezier(.22,.8,.24,1) calc(var(--i,0)*.11s),translate .9s cubic-bezier(.22,.8,.24,1) calc(var(--i,0)*.11s),scale .9s cubic-bezier(.22,.8,.24,1) calc(var(--i,0)*.11s),transform .35s ease 0s,box-shadow .35s ease 0s,border-color .3s ease 0s}
+.zh-fc::before{content:"";position:absolute;top:0;bottom:0;left:-70%;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.85),transparent);transform:skewX(-20deg);transition:left .75s ease;pointer-events:none}
+.zh-fc::after{content:"";position:absolute;left:0;bottom:0;height:4px;width:0;background:linear-gradient(90deg,var(--zc-f5a800,#f5a800),var(--zc-103d7b,#103d7b));transition:width .5s cubic-bezier(.22,.8,.24,1)}
+.zh-fc:hover{transform:translateY(-6px);border-color:var(--zc-f5a800,#f5a800);box-shadow:0 20px 40px rgba(var(--zr-103d7b,16,61,123),.18)}
+.zh-fc:hover::before{left:130%}
+.zh-fc:hover::after{width:100%}
+.zh-fc:hover .zh-fi{background:var(--amber);color:var(--navy-d);rotate:-7deg;scale:1.1}
+.zh-fc h3{transition:color .3s,translate .3s}
+.zh-fc:hover h3{color:var(--blue);translate:3px 0}
+/* each icon has its own small idle motion */
+.zh-fi .zi{transform-origin:center}
+.zh-fi--bolt .zi{animation:zfBolt 3s ease-in-out infinite}
+.zh-fi--sun .zi{animation:zfSun 16s linear infinite}
+.zh-fi--trend .zi{animation:zfTrend 2.6s ease-in-out infinite}
+.zh-fi--swap .zi{animation:zfSwap 2.4s ease-in-out infinite}
+.zh-fi--leaf .zi{animation:zfLeaf 3.6s ease-in-out infinite alternate}
+.zh-fi--shield .zi,.zh-fi--battery .zi{animation:zfBeat 2.8s ease-in-out infinite}
+.zh-fi--ban .zi{animation:zfBan 3.2s ease-in-out infinite}
+.zh-fi--house .zi,.zh-fi--gear .zi,.zh-fi--globe .zi{animation:zfBeat 3.4s ease-in-out infinite}
+/* diagram stage: lifts a little on hover; its ripples keep spreading behind it (rules in zk-home.css) */
+.zh-stage{transition:transform .5s cubic-bezier(.22,.8,.24,1),box-shadow .4s}
+.zh-sys-media:hover .zh-stage{transform:translateY(-6px);box-shadow:0 34px 64px rgba(var(--zr-103d7b,16,61,123),.24)}
+
+/* ---------- 5d. Work process ---------- */
+@keyframes zpFlow{to{background-position:24px 0}}
+@keyframes zpSearch{0%,100%{translate:0 0}25%{translate:3px -2px}50%{translate:0 -3px}75%{translate:-3px -1px}}
+@keyframes zpChat{0%,100%{scale:1}50%{scale:1.16}}
+@keyframes zpRuler{0%,100%{rotate:-9deg}50%{rotate:9deg}}
+@keyframes zpTruck{0%,100%{translate:-3px 0}50%{translate:3px 0}}
+@keyframes zpWrench{0%,100%{rotate:-18deg}50%{rotate:18deg}}
+@keyframes zpGauge{0%,100%{rotate:-7deg}50%{rotate:7deg}}
+@keyframes zpCycle{to{rotate:360deg}}
+@keyframes zpGlow{0%{box-shadow:0 10px 22px rgba(var(--zr-f5a800,245,168,0),.35),0 0 0 6px rgba(var(--zr-fec142,254,193,66),.2)}70%,100%{box-shadow:0 10px 22px rgba(var(--zr-f5a800,245,168,0),.35),0 0 0 16px rgba(var(--zr-fec142,254,193,66),0)}}
+.zh-ps::after{animation:zpFlow 1s linear infinite}
+.zh-js .zh-ps.zr{transition:opacity .9s cubic-bezier(.22,.8,.24,1) calc(var(--i,0)*.11s),translate .9s cubic-bezier(.22,.8,.24,1) calc(var(--i,0)*.11s),scale .9s cubic-bezier(.22,.8,.24,1) calc(var(--i,0)*.11s),transform .35s ease 0s,box-shadow .35s ease 0s,border-color .3s ease 0s,background-color .3s ease 0s}
+.zh-ps:hover{transform:translateY(-8px);border-color:var(--zc-f5a800,#f5a800);background-color:rgba(255,255,255,.12);box-shadow:0 22px 44px rgba(0,0,0,.3)}
+.zh-ps:hover .zh-pi{rotate:-8deg;scale:1.1}
+.zh-ps:hover .zh-pn{color:var(--zc-fec142,#fec142);-webkit-text-stroke-color:var(--zc-fec142,#fec142)}
+.zh-pi .zi{transform-origin:center}
+.zh-pi--search .zi{animation:zpSearch 3.6s ease-in-out infinite}
+.zh-pi--chat .zi{animation:zpChat 2.4s ease-in-out infinite}
+.zh-pi--ruler .zi{animation:zpRuler 3s ease-in-out infinite}
+.zh-pi--truck .zi{animation:zpTruck 2.2s ease-in-out infinite}
+.zh-pi--wrench .zi{animation:zpWrench 2.4s ease-in-out infinite}
+.zh-pi--gauge .zi{animation:zpGauge 2.6s ease-in-out infinite}
+.zh-pi--power{animation:zpGlow 2.2s ease-out infinite}
+.zh-pi--cycle .zi{animation:zpCycle 6s linear infinite}
+.zh-pbar i{transform-origin:left center;transition:width .6s cubic-bezier(.22,.8,.24,1),transform 1.1s cubic-bezier(.22,.8,.24,1) calc(var(--i,0)*.11s + .5s)}
+.zh-js .zr:not(.in) .zh-pbar i{transform:scaleX(0)}
+.zh-ps:hover .zh-pbar i{width:100%}
+
+/* ---------- 5e. A section whose animation is switched off in the admin shows plainly ---------- */
+.zk-m section.zh[data-anim="off"],.zh[data-anim="off"] .zr,.zh[data-anim="off"] img{opacity:1!important;translate:none!important;scale:none!important;filter:none!important;transition:none!important}
+.zh[data-anim="off"] *,.zh[data-anim="off"] *::before,.zh[data-anim="off"] *::after{animation:none!important}
+
+/* ---------- 5f. Blocks that are off screen stop their endless animations (class set by MOTION_JS) ---------- */
+.zv-off,.zv-off *,.zv-off *::before,.zv-off *::after{animation-play-state:paused!important}
+
+/* ---------- 5g. Contact ---------- */
+@keyframes zctRing{0%{box-shadow:0 10px 22px rgba(var(--zr-f5a800,245,168,0),.32),0 0 0 0 rgba(var(--zr-fec142,254,193,66),.5)}70%,100%{box-shadow:0 10px 22px rgba(var(--zr-f5a800,245,168,0),.32),0 0 0 14px rgba(var(--zr-fec142,254,193,66),0)}}
+.zh-ci-ic{animation:zctRing 2.8s ease-out infinite;transition:scale .35s cubic-bezier(.34,1.56,.64,1),rotate .35s}
+.zh-ci:nth-child(2) .zh-ci-ic{animation-delay:.5s}.zh-ci:nth-child(3) .zh-ci-ic{animation-delay:1s}.zh-ci:nth-child(4) .zh-ci-ic{animation-delay:1.5s}
+.zh-ci:hover .zh-ci-ic{scale:1.1;rotate:-8deg}
+.zh-ci a{background:linear-gradient(currentColor,currentColor) no-repeat 0 100%/0 1.5px;transition:background-size .3s ease,color .25s}
+.zh-ci a:hover{background-size:100% 1.5px;color:var(--zc-ffd36b,#ffd36b)}
+.zh-ct-info:hover .zh-ct-qr img{scale:1.03}
+.zh-ct-qr img{transition:scale .4s cubic-bezier(.22,.8,.24,1)}
+
+/* ---------- 6. Reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  .zh *,.zh *::before,.zh *::after,.zf *,.zf *::before,.zf *::after{animation:none!important;transition:none!important}
+  .zk-light{display:none}
+  .zh h2 em:not(.zh-navy){background:none;-webkit-text-fill-color:currentColor;color:var(--amber)}
+}

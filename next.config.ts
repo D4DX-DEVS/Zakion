@@ -7,7 +7,8 @@ const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
 
 const config: NextConfig = {
   skipTrailingSlashRedirect: true,
-  experimental: { serverActions: { bodySizeLimit: "10mb" } },
+  // uploads go through server actions: one request may carry up to two files of the 15 MB limit in src/lib/upload.ts
+  experimental: { serverActions: { bodySizeLimit: "30mb" } },
   headers: async () => [
     { source: "/admin/:path*", headers: noindex },
     { source: "/api/:path*", headers: noindex },

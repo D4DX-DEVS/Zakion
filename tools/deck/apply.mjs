@@ -79,8 +79,9 @@ const PAGES = {
   "/": (b) => {
     b = sub(b, />Welcome to solor</, ">Welcome to Zakion Energy<");
     b = sub(b, /<p>Duis ultricies[^<]*<\/p>/, "<p>Premium renewable energy solutions for a sustainable tomorrow. Powering homes. Empowering businesses. Building a sustainable future.</p>");
-    b = sub(b, /href="#"([^>]*>\s*<span class="ekit_creative_button_text">Our Services)/, 'href="/services/"$1');
-    b = sub(b, /href="#"([^>]*>\s*<span class="ekit_creative_button_text">Contact Now)/, 'href="/contact/"$1');
+    // sub() treats a string replacement literally (no $1 expansion), so these need function replacements
+    b = sub(b, /href="#"([^>]*>\s*<span class="ekit_creative_button_text">Our Services)/, (_, rest) => `href="/services/"${rest}`);
+    b = sub(b, /href="#"([^>]*>\s*<span class="ekit_creative_button_text">Contact Now)/, (_, rest) => `href="/contact/"${rest}`);
     b = place(b, "about", S.about(), { after: "f176d98" });
     b = place(b, "stats", S.stats(), { replace: "e367b2a" });
     b = place(b, "why", S.why(), { afterMarker: "stats" });
