@@ -20,7 +20,7 @@ export const MOTION_JS =
   `[].forEach.call(d.querySelectorAll('.zh img,.zf img,.blog-item img,.post-featured-image img'),function(i){function s(){i.classList.add('is-loaded')}if(i.complete&&i.naturalWidth){s();return}i.addEventListener('load',s,{once:true});i.addEventListener('error',s,{once:true})});` +
   // endless animations only run for blocks that are on (or about to be on) screen; the rest are paused
   `var vis=new IntersectionObserver(function(es){es.forEach(function(e){e.target.classList.toggle('zv-off',!e.isIntersecting)})},{rootMargin:'160px 0px'});` +
-  `[].forEach.call(d.querySelectorAll('section.zh,.zf,.zk-sun'),function(el){vis.observe(el)})})();</script>`;
+  `[].forEach.call(d.querySelectorAll('section.zh,.zf'),function(el){vis.observe(el)})})();</script>`;
 
 // Moving light over images. One fixed overlay is laid over whichever image the mouse enters (same box, same rounded corners or
 // clip shape): a bright band sweeps across it once and a soft spotlight follows the pointer. The overlay tracks the image every

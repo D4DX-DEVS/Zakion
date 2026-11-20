@@ -615,7 +615,38 @@
 .zh-vp{position:absolute;top:50%;left:50%;width:max(100%,calc(100cqh*16/9));height:max(100%,calc(100cqw*9/16));transform:translate(-50%,-50%) scale(1.26);opacity:0;transition:opacity .7s ease;pointer-events:none}
 .zh-vp.show{opacity:1}
 .zh-vp iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none}
-.zh-vv{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform:translate(-50%,-50%);object-fit:cover}
+/* Self-hosted MP4 banner (markup: mp4Markup in src/lib/home.ts). The banner is exactly as tall as the video, so nothing is cropped:
+   the video and the text block share one grid cell, so the row is as tall as the video, or taller only if the text needs more room.
+   A second copy of the video fades in over the first just before it ends, so the loop has no stall and no jump. */
+.zh-hero-vid{display:grid!important;grid-template-columns:minmax(0,1fr);background:var(--zc-04122b,#04122b)}
+.zh-hero-vid>.zh-vauto,.zh-hero-vid>.e-con-inner{grid-area:1/1}
+.elementor .zh-hero-vid>.zh-vauto{position:relative;inset:auto;justify-self:start;width:calc(100% + var(--padding-left,0px) + var(--padding-right,0px));height:auto;margin-inline:calc(-1*var(--padding-left,0px)) calc(-1*var(--padding-right,0px));aspect-ratio:var(--zr,16/9);container-type:normal;overflow:hidden}
+.zh-hero-vid>.e-con-inner{position:relative;z-index:2}
+/* the text clears the header above it and sits low in the video; less padding than the old cropped-video layout, so the banner can stay as tall as the video */
+.elementor .elementor-element.e-con.zh-hero-vid{--padding-top:clamp(130px,13vw,190px);--padding-bottom:70px;background-color:var(--zc-04122b,#04122b)}
+/* the parallax photo that used to hide behind the cover video would show under the text on phones */
+.elementor .zh-hero-vid>.jarallax-container{display:none!important}
+/* if the text ever needs more room than the video is tall, the video grows to fill the banner (a little of its sides is cropped) */
+.elementor .zh-hero-vid>.zh-vauto{align-self:stretch}
+/* phones: a 16:9 video is too short to hold the text, so the text goes below the video on the navy banner colour */
+@media (max-width:767px){
+  .elementor .elementor-element.e-con.zh-hero-vid{display:flex!important;flex-direction:column;--padding-top:26px;--padding-bottom:40px}
+  .elementor .zh-hero-vid>.zh-vauto{flex:none;align-self:flex-start}
+}
+.zh-hero-bare>.e-con-inner{display:none}
+.zh-vv{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;background:var(--zc-04122b,#04122b)}
+.zh-vv2{opacity:0;transition:opacity .6s linear}
+.zh-vv2.on{opacity:1}
+/* video controls (play/pause and sound), bottom right of the video. Icons only: no background, and no colour change on hover or press.
+   They sit inside the video box but above the text block so they can always be clicked (the video box itself ignores the mouse). */
+.zh-vctl{pointer-events:auto;position:absolute;right:clamp(10px,2.4vw,32px);bottom:clamp(10px,2.4vw,32px);z-index:6;display:flex;align-items:center;gap:2px}
+.elementor .zh-vctl .zh-cbtn,.elementor .zh-vctl .zh-cbtn:hover,.elementor .zh-vctl .zh-cbtn:active,.elementor .zh-vctl .zh-cbtn:focus{appearance:none;-webkit-appearance:none;display:grid;place-items:center;width:46px;height:46px;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#fff;cursor:pointer;opacity:1;transform:none;transition:none;text-shadow:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+.elementor .zh-vctl .zh-cbtn:focus-visible{outline:2px solid #fff;outline-offset:-3px;border-radius:10px}
+.zh-vctl .i-off,.zh-vol.is-muted .i-on{display:none}
+.zh-vol.is-muted .i-off{display:block}
+.zh-play .i-play,.zh-play.is-paused .i-pause{display:none}
+.zh-play.is-paused .i-play{display:block}
+@media (max-width:640px){.elementor .zh-vctl .zh-cbtn,.elementor .zh-vctl .zh-cbtn:hover,.elementor .zh-vctl .zh-cbtn:active,.elementor .zh-vctl .zh-cbtn:focus{width:42px;height:42px}}
 
 /* ---------- Banner images: one still image, or a slider with arrows and dots (markup: imagesMarkup in src/lib/home.ts) ---------- */
 .zh-hs{position:absolute;inset:0;opacity:0;transition:opacity .9s ease}
@@ -642,37 +673,6 @@
 
 /* ---------- Heading font: Rajdhani (the logo's font) ---------- */
 .zh h2,.zh h3,.zh-eye,.zh-badge,.zh-now,.zh-scard b,.zh-scard i,.zh-stat b,.zh-stat strong,.zh-proj-n b,.zh-roi-t,.zh-tag b,.zh-upper{font-family:var(--zk-head,Rajdhani),sans-serif!important}
-
-/* ---------- Banner sunlight (markup: SUN in src/lib/home.ts) ----------
-   A sun just off the top-right corner. Its halo breathes, two sets of rays turn slowly in opposite directions, a light shaft
-   sweeps across, lens-flare discs fade in and out along the line from the sun, and dust motes drift up through the beams.
-   Only transform/opacity animate, so it stays smooth over the video. */
-.zk-sun{--sx:82%;--sy:2%;position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
-.zk-sun>*{position:absolute;display:block}
-.zk-sun-halo,.zk-sun-core,.zk-sun-rays{left:var(--sx);top:var(--sy);translate:-50% -50%;border-radius:50%}
-.zk-sun-halo{width:min(78vw,1100px);aspect-ratio:1;background:radial-gradient(circle,rgba(var(--zr-fff3c8,255,243,200),.62) 0,rgba(var(--zr-ffd060,255,208,96),.34) 14%,rgba(var(--zr-fec142,254,193,66),.14) 34%,transparent 64%);animation:zkSunBreathe 6.5s ease-in-out infinite}
-.zk-sun-core{width:clamp(80px,9vw,150px);aspect-ratio:1;background:radial-gradient(circle,var(--zc-fffdf0,#fffdf0) 0,var(--zc-fff3b8,#fff3b8) 30%,rgba(var(--zr-ffd86e,255,216,110),.6) 55%,transparent 72%);animation:zkSunPulse 3.6s ease-in-out infinite}
-.zk-sun-rays{width:min(130vw,1600px);aspect-ratio:1;
-  background:repeating-conic-gradient(from 0deg,rgba(var(--zr-ffeeaa,255,238,170),.34) 0 2.2deg,transparent 2.2deg 9deg),repeating-conic-gradient(from 4deg,rgba(var(--zr-ffe28c,255,226,140),.2) 0 .9deg,transparent .9deg 13deg);
-  -webkit-mask-image:radial-gradient(circle,#000 0,rgba(0,0,0,.65) 16%,transparent 50%);mask-image:radial-gradient(circle,#000 0,rgba(0,0,0,.65) 16%,transparent 50%);
-  animation:zkSunSpin 150s linear infinite,zkSunRayGlow 7s ease-in-out infinite}
-.zk-sun-rays--b{width:min(110vw,1300px);opacity:.7;background:repeating-conic-gradient(from 0deg,rgba(var(--zr-fff4c4,255,244,196),.26) 0 1.3deg,transparent 1.3deg 6deg);animation:zkSunSpin 210s linear infinite reverse,zkSunRayGlow 9s ease-in-out -3s infinite}
-.zk-sun-beam{left:0;top:-10%;width:26%;height:130%;background:linear-gradient(100deg,transparent,rgba(var(--zr-fff0be,255,240,190),.26) 45%,rgba(var(--zr-ffe696,255,230,150),.1) 60%,transparent);transform:translateX(-130%) skewX(-18deg);opacity:0;animation:zkSunBeam 12s ease-in-out 1.5s infinite}
-.zk-flare{border-radius:50%;translate:-50% -50%;opacity:0;animation:zkFlare 8s ease-in-out infinite}
-.zk-flare--1{left:68%;top:26%;width:clamp(50px,6vw,100px);aspect-ratio:1;background:radial-gradient(circle,rgba(var(--zr-ffecaa,255,236,170),.5),rgba(var(--zr-ffce5a,255,206,90),.14) 60%,transparent 72%)}
-.zk-flare--2{left:57%;top:44%;width:clamp(90px,11vw,180px);aspect-ratio:1;border:1.5px solid rgba(var(--zr-ffecaa,255,236,170),.22);background:radial-gradient(circle,transparent 55%,rgba(var(--zr-ffd666,255,214,102),.16) 75%,transparent 78%);animation-delay:-2.5s}
-.zk-flare--3{left:43%;top:64%;width:clamp(30px,3.6vw,60px);aspect-ratio:1;background:radial-gradient(circle,rgba(var(--zr-fff4c8,255,244,200),.55),transparent 70%);animation-delay:-5s}
-.zk-motes{inset:0}
-.zk-motes i{position:absolute;left:var(--x);bottom:-12px;width:var(--s);height:var(--s);border-radius:50%;background:var(--zc-fff3c4,#fff3c4);box-shadow:0 0 9px 2px rgba(var(--zr-ffd666,255,214,102),.65);opacity:0;animation:zkMote var(--t) linear var(--d) infinite}
-@keyframes zkSunBreathe{0%,100%{scale:.94;opacity:.82}50%{scale:1.08;opacity:1}}
-@keyframes zkSunPulse{0%,100%{scale:.92;opacity:.9}50%{scale:1.12;opacity:1}}
-@keyframes zkSunSpin{to{rotate:360deg}}
-@keyframes zkSunRayGlow{0%,100%{opacity:.55}50%{opacity:1}}
-@keyframes zkSunBeam{0%{transform:translateX(-130%) skewX(-18deg);opacity:0}12%{opacity:1}80%{opacity:1}100%{transform:translateX(420%) skewX(-18deg);opacity:0}}
-@keyframes zkFlare{0%,100%{opacity:0;scale:.7}45%,55%{opacity:1;scale:1.1}}
-@keyframes zkMote{0%{translate:0 0;opacity:0}12%{opacity:.95}85%{opacity:.6}100%{translate:36px -780px;opacity:0}}
-@media (max-width:767px){.zk-sun{--sx:84%}.zk-sun-rays--b,.zk-flare--3,.zk-motes i:nth-child(n+7){display:none}}
-@media (prefers-reduced-motion:reduce){.zk-sun *{animation:none!important}.zk-motes,.zk-sun-beam,.zk-flare{display:none}}
 
 /* ---------- phones: nothing smaller than a readable size, tighter gaps ---------- */
 @media (max-width:640px){

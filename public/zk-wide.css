@@ -70,8 +70,6 @@ h1,h2,h3,.elementor-heading-title{font-weight:700}
    above the banner. The banner is pulled 32px higher and gets the same 32px back as padding: nothing moves, but it now always
    reaches the top edge of the page. */
 .elementor[data-elementor-type="wp-page"]>.e-con-boxed:first-child{--margin-block-start:calc(var(--margin-top,0px) - 32px);padding-top:32px}
-/* the home banner's sunlight is placed from the top of the banner, so it is pushed down by the same 32px */
-.elementor[data-elementor-type="wp-page"]>.e-con-boxed:first-child>.zk-sun{--sy:calc(2% + 32px)}
 /* a thin line in the logo colours (navy to amber) across the very top of every page, above the banner and the header */
 body::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;z-index:60;pointer-events:none;
   background:linear-gradient(90deg,var(--zc-0d3d7b,#0d3d7b) 0%,var(--zc-0d3d7b,#0d3d7b) 20%,var(--zc-f5a800,#f5a800) 80%,var(--zc-f5a800,#f5a800) 100%);

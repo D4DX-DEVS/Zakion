@@ -4,7 +4,7 @@ import { fmtBytes, fmtDate } from "../../format";
 import { Icon } from "../../icons";
 import { ConfirmButton, CopyButton, SubmitButton, TableTools } from "../../ui";
 import { HIDDEN } from "@/lib/media";
-import { MAX_UPLOAD_LABEL } from "@/lib/upload";
+import { IMAGE_LABEL, LIMITS_TEXT, VIDEO_LABEL } from "@/lib/upload";
 
 const IMG = /\.(png|jpe?g|gif|webp|svg)$/i;
 const kind = (k: string) => (IMG.test(k) ? "image" : /\.(mp4|webm|mov)$/i.test(k) ? "video" : /\.pdf$/i.test(k) ? "pdf" : "other");
@@ -19,10 +19,10 @@ export default async function Media({ searchParams }: { searchParams: Promise<{ 
   return (
     <>
       {rejected && <p className="alert" role="alert">Not uploaded: {rejected}. Only images, MP4/WebM video and PDF files are allowed.</p>}
-      {big && <p className="alert" role="alert">Not uploaded, too large: {big}. Files can be up to {MAX_UPLOAD_LABEL}.</p>}
+      {big && <p className="alert" role="alert">Not uploaded, too large: {big}. {LIMITS_TEXT}</p>}
       <form action={uploadMedia} className="card drop">
         <span className="big"><Icon name="upload" size={28} /></span>
-        <label className="field"><span>Upload images, video or PDF <small className="muted">(up to {MAX_UPLOAD_LABEL} each)</small></span><input type="file" name="files" multiple accept="image/*,video/*,.pdf" required /></label>
+        <label className="field"><span>Upload images, video or PDF <small className="muted">(images and PDF up to {IMAGE_LABEL}, video up to {VIDEO_LABEL})</small></span><input type="file" name="files" multiple accept="image/*,video/*,.pdf" required /></label>
         <SubmitButton pending="Uploading…"><Icon name="upload" size={18} />Upload</SubmitButton>
       </form>
 

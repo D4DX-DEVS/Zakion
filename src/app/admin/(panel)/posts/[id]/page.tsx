@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { db, env } from "@/lib/env";
 import type { Post } from "@/lib/render";
-import { MAX_UPLOAD_LABEL } from "@/lib/upload";
+import { IMAGE_LABEL, LIMITS_TEXT } from "@/lib/upload";
 import { deletePost, savePost } from "../../../actions";
 import { Icon } from "../../../icons";
 import { ConfirmButton, ImagePicker, SubmitButton, Toast } from "../../../ui";
@@ -26,7 +26,7 @@ export default async function EditPost({ params, searchParams }: { params: Promi
       </div>
       {saved && <Toast text="Post saved" />}
       {badimage && <p className="alert" role="alert">The post was saved, but "{badimage}" was not uploaded: only image files are allowed.</p>}
-      {bigimage && <p className="alert" role="alert">The post was saved, but {bigimage} was not uploaded: files can be up to {MAX_UPLOAD_LABEL}.</p>}
+      {bigimage && <p className="alert" role="alert">The post was saved, but {bigimage} was not uploaded. {LIMITS_TEXT}</p>}
       <form action={savePost}>
         <input type="hidden" name="id" value={id} />
         <div className="editor">
@@ -53,7 +53,7 @@ export default async function EditPost({ params, searchParams }: { params: Promi
             <section className="card">
               <div className="card-h"><h3><Icon name="image" size={20} />Featured image</h3></div>
               <ImagePicker name="image" initial={p.image} options={library} />
-              <label className="field" style={{ marginTop: 16, marginBottom: 0 }}><span>Or upload a new image <small className="muted">(up to {MAX_UPLOAD_LABEL})</small></span><input type="file" name="image_file" accept="image/*" /></label>
+              <label className="field" style={{ marginTop: 16, marginBottom: 0 }}><span>Or upload a new image <small className="muted">(up to {IMAGE_LABEL})</small></span><input type="file" name="image_file" accept="image/*" /></label>
             </section>
           </aside>
         </div>

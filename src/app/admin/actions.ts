@@ -8,7 +8,7 @@ import { db, env } from "@/lib/env";
 import { siteUrl } from "@/lib/seo";
 import { changePassword, login, logout, requireAdmin, resetWithRecovery } from "@/lib/auth";
 import { passwordProblem } from "@/lib/password";
-import { MAX_UPLOAD, MAX_UPLOAD_LABEL } from "@/lib/upload";
+import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
 import { type Field, cleanLayout, HOME_KEYS, LAYOUT_KEY, loadContent, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
 import { PAGE_PLAN } from "@/lib/home";
@@ -75,7 +75,7 @@ export async function uploadMedia(f: FormData) {
   for (const file of f.getAll("files")) {
     if (!(file instanceof File) || !file.size) continue;
     if (!UPLOADABLE.test(file.type)) rejected.push(file.name);
-    else if (file.size > MAX_UPLOAD) big.push(`${file.name} (${fmtBytes(file.size)})`);
+    else if (file.size > maxUpload(file.type)) big.push(`${file.name} (${fmtBytes(file.size)})`);
     else await uploadFile(file);
   }
   revalidatePath("/admin/media");
@@ -128,7 +128,7 @@ export async function savePost(f: FormData) {
   let bad = ""; // a wrong file type is skipped, the rest of the post still saves
   if (up instanceof File && up.size) {
     if (!UPLOADABLE.test(up.type)) bad = "&badimage=" + encodeURIComponent(up.name);
-    else if (up.size > MAX_UPLOAD) bad = "&bigimage=" + encodeURIComponent(`${up.name} (${fmtBytes(up.size)})`);
+    else if (up.size > maxUpload(up.type)) bad = "&bigimage=" + encodeURIComponent(`${up.name} (${fmtBytes(up.size)})`);
     else image = await uploadFile(up);
   }
   const when = s(f, "published_at").replace("T", " ") || new Date().toISOString().slice(0, 16).replace("T", " ");
@@ -168,8 +168,8 @@ export async function uploadSectionFile(f: FormData): Promise<{ url?: string; er
   await requireAdmin();
   const file = f.get("file");
   if (!(file instanceof File) || !file.size) return { error: "Choose a file first." };
-  if (file.size > MAX_UPLOAD) return { error: `"${file.name}" is ${fmtBytes(file.size)}. Files can be up to ${MAX_UPLOAD_LABEL}.` };
   if (!UPLOADABLE.test(file.type)) return { error: `"${file.name}" is not an image, MP4/WebM video or PDF.` };
+  if (file.size > maxUpload(file.type)) return { error: `"${file.name}" is ${fmtBytes(file.size)}. ${file.type.startsWith("video/") ? "Videos" : "Images and PDFs"} can be up to ${maxUploadLabel(file.type)}.` };
   return { url: await uploadFile(file) };
 }
 

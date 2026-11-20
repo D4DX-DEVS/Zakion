@@ -25,7 +25,7 @@ export const ANCHORS: Record<string, string> = {
 export const HOME_HEAD =
   '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap">' +
-  '<link rel="stylesheet" href="/zk-home.css?v=28">';
+  '<link rel="stylesheet" href="/zk-home.css?v=38">';
 
 const FOOTER_MARK = "ekit-template-content-footer";
 const footerStart = (body: string) => { const i = body.indexOf(FOOTER_MARK); return i < 0 ? -1 : body.lastIndexOf("<div", i); };
@@ -49,9 +49,53 @@ function boot(){wrap.forEach(function(w,i){P[i]=new YT.Player(w.firstChild,{vide
 function tick(){if(ready<2||busy||!vis)return;var p=P[cur],q=P[1-cur];if(!p.getDuration)return;var dur=p.getDuration(),t=p.getCurrentTime();if(!dur||p.getPlayerState()!==1||dur-t>1.4)return;busy=true;q.seekTo(0,true);q.playVideo();var n=0,w=setInterval(function(){var qt=q.getCurrentTime();n++;if((qt>.15&&qt<2&&q.getPlayerState()===1)||n>60){clearInterval(w);wrap[1-cur].classList.add('show');wrap[cur].classList.remove('show');setTimeout(function(){p.pauseVideo();p.seekTo(0,true);cur=1-cur;busy=false},900)}},30)}
 if(window.YT&&YT.Player)boot();else{var prev=window.onYouTubeIframeAPIReady;window.onYouTubeIframeAPIReady=function(){prev&&prev();boot()};var s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';document.head.appendChild(s)}})();</script>`;
 
+// Self-hosted MP4 banner. The banner is as tall as the video (styles: .zh-hero-vid in public/zk-home.css). The clip is played twice over: a second copy
+// fades in over the first just before it ends, so the loop never stalls or jumps. Sound: it starts with sound when the browser allows that,
+// otherwise muted and switched on by the visitor's first click, tap or key press. Two icon buttons at the video's bottom right (no background, no
+// hover colour change) pause or play it and turn the sound on or off. It also pauses while the banner is off screen or the tab is hidden. If the script cannot run, the first video still plays as a muted native loop.
+const SPEAKER = (cls: string, extra: string) => `<svg class="${cls}" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="${extra}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+const PLAYPAUSE = `<svg class="i-pause" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M8 5v14M16 5v14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg><svg class="i-play" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+const MP4_JS = `<script>(function(){var box=document.querySelector('.zh-vauto');if(!box)return;
+var V=box.querySelectorAll('video'),A=V[0],B=V[1],btn=document.querySelector('.zh-vol'),pl=document.querySelector('.zh-play'),ctl=document.querySelector('.zh-vctl');if(!A||!B||!btn||!pl||!ctl)return;
+var cur=A,nxt=B,busy=false,vis=true,muted=true,chosen=false,userPaused=false,loaded=false,F=.6,vol=(function(){var t=document.createElement('video');t.volume=.5;return t.volume===.5})();
+A.loop=false;
+function ui(){btn.classList.toggle('is-muted',muted);btn.setAttribute('aria-pressed',muted?'false':'true');btn.setAttribute('aria-label',muted?'Turn sound on':'Turn sound off')}
+function pui(){var on=!A.paused||!B.paused;pl.classList.toggle('is-paused',!on);pl.setAttribute('aria-label',on?'Pause video':'Play video')}
+A.addEventListener('play',pui);A.addEventListener('pause',pui);B.addEventListener('play',pui);B.addEventListener('pause',pui);
+function mute(m){muted=m;A.muted=m;B.muted=m;ui()}
+function play(v){var p=v.play();if(p&&p.catch)p.catch(function(){if(!v.muted){mute(true);var q=v.play();if(q&&q.catch)q.catch(function(){})}})}
+function ratio(){if(A.videoWidth)box.style.setProperty('--zr',A.videoWidth+' / '+A.videoHeight)}
+A.addEventListener('loadedmetadata',ratio);if(A.readyState>0)ratio();
+function prep(){if(loaded)return;loaded=true;B.preload='auto';B.src=A.currentSrc||A.src;B.load()}
+A.addEventListener('canplaythrough',prep,{once:true});A.addEventListener('playing',function(){setTimeout(prep,1500)},{once:true});if(A.readyState>3)prep();
+function begin(f){busy=true;var out=cur,inn=nxt,t0=Date.now(),ms=f*1000;
+try{inn.currentTime=0}catch(x){}
+if(vol)inn.volume=0;else if(!muted)out.muted=true;
+B.style.transitionDuration=f+'s';B.classList.toggle('on',inn===B);play(inn);
+var iv=setInterval(function(){var k=Math.min(1,(Date.now()-t0)/ms);if(vol){out.volume=1-k;inn.volume=k}if(k>=1){clearInterval(iv);out.pause();try{out.currentTime=0}catch(x){}if(vol)out.volume=1;out.muted=muted;cur=inn;nxt=out;busy=false}},40)}
+setInterval(function(){if(busy||!vis||document.hidden||cur.paused)return;var d=cur.duration;if(!(d>0))return;var f=Math.min(F,d/4);if(d-cur.currentTime>f+.25||nxt.readyState<3)return;begin(f)},80);
+function ended(e){if(e.target!==cur||busy)return;try{cur.currentTime=0}catch(x){}play(cur)}
+A.addEventListener('ended',ended);B.addEventListener('ended',ended);
+function sync(){if(vis&&!document.hidden&&!userPaused){play(cur);if(busy)play(nxt)}else{A.pause();B.pause()}}
+if('IntersectionObserver' in window)new IntersectionObserver(function(e){vis=e[e.length-1].isIntersecting;sync()},{threshold:.1}).observe(box);
+document.addEventListener('visibilitychange',sync);
+btn.addEventListener('click',function(){chosen=true;mute(!muted);if(vol)cur.volume=1;if(!muted&&cur.paused&&vis&&!userPaused)play(cur)});
+pl.addEventListener('click',function(){if(!A.paused||!B.paused){userPaused=true;A.pause();B.pause()}else{userPaused=false;sync()}});
+var ev=['pointerdown','click','keydown','touchend'];
+function unlock(e){if(ctl.contains(e.target))return;ev.forEach(function(n){document.removeEventListener(n,unlock,true)});if(muted&&!chosen){mute(false);if(vol)cur.volume=1;if(vis&&!document.hidden&&!userPaused)play(cur)}}
+ev.forEach(function(n){document.addEventListener(n,unlock,true)});
+mute(false);play(A);pui()})();</script>`;
+
+function mp4Markup(h: Content["hero"]) {
+  const src = safeUrl(h.videoUrl);
+  if (!src) return null;
+  return `<div class="elementor-background-video-container zh-vid zh-vauto"><video class="zh-vv" src="${esc(src)}" autoplay muted loop playsinline preload="auto" aria-hidden="true" tabindex="-1"></video>` +
+    `<video class="zh-vv zh-vv2" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video>` +
+    `<div class="zh-vctl" role="group" aria-label="Video controls"><button type="button" class="zh-cbtn zh-play" aria-label="Pause video">${PLAYPAUSE}</button>` +
+    `<button type="button" class="zh-cbtn zh-vol is-muted" aria-pressed="false" aria-label="Turn sound on">${SPEAKER("i-on", "M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11")}${SPEAKER("i-off", "m16 9.5 5 5m0-5-5 5")}</button></div></div>${MP4_JS}`;
+}
+
 function videoMarkup(h: Content["hero"]) {
-  const mp4 = safeUrl(h.videoUrl);
-  if (mp4) return `<div class="elementor-background-video-container zh-vid"><video class="zh-vv" src="${esc(mp4)}" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video></div><script>(function(){var v=document.querySelector('.zh-vv');if(v&&'IntersectionObserver' in window)new IntersectionObserver(function(e){if(e[0].isIntersecting)v.play().catch(function(){});else v.pause()}).observe(v)})();</script>`;
   const id = /(?:v=|youtu\.be\/|embed\/)([\w-]{11})/.exec(String(h.youtube))?.[1];
   if (!id) return "";
   return `<div class="elementor-background-video-container zh-vid" data-yt="${id}" style="background-image:url(https://i.ytimg.com/vi/${id}/maxresdefault.jpg)"><div class="zh-vp"><div></div></div><div class="zh-vp"><div></div></div>${YT_LOOP}</div>`;
@@ -101,11 +145,19 @@ function imagesMarkup(h: Content["hero"]) {
   return { layer, controls };
 }
 
-// Sunlight over the banner video: a glowing sun just off the top-right corner, two slowly turning sets of rays, a light shaft
-// that sweeps across, lens-flare discs and drifting dust motes. Pure CSS (rules at the end of public/zk-home.css), no extra requests.
-const MOTES = [[8, 12, 9], [17, 40, 13], [26, 22, 8], [34, 64, 11], [43, 8, 14], [52, 50, 10], [61, 30, 12], [69, 72, 9], [77, 18, 13], [84, 56, 8], [91, 36, 11], [96, 80, 10]]
-  .map(([x, d, t], i) => `<i style="--x:${x}%;--d:-${d / 4}s;--t:${t}s;--s:${(i % 3) + 2}px"></i>`).join("");
-const SUN = `<div class="zk-sun" aria-hidden="true"><span class="zk-sun-halo"></span><span class="zk-sun-rays"></span><span class="zk-sun-rays zk-sun-rays--b"></span><span class="zk-sun-core"></span><span class="zk-sun-beam"></span><span class="zk-flare zk-flare--1"></span><span class="zk-flare zk-flare--2"></span><span class="zk-flare zk-flare--3"></span><span class="zk-motes">${MOTES}</span></div>`;
+/** Removes one Elementor element (found by its id) together with everything inside it. */
+function dropElement(html: string, id: string) {
+  const at = html.indexOf("elementor-element-" + id);
+  if (at < 0) return html;
+  const start = html.lastIndexOf("<div", at);
+  const re = /<(\/?)div\b/g;
+  re.lastIndex = start;
+  let depth = 0, m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    if (m[1]) { if (--depth === 0) return html.slice(0, start) + html.slice(html.indexOf(">", m.index) + 1); } else depth++;
+  }
+  return html;
+}
 
 function patchHero(prefix: string, h: Content["hero"]) {
   const at = prefix.indexOf("elementor-element-7eb3ae6");
@@ -114,19 +166,30 @@ function patchHero(prefix: string, h: Content["hero"]) {
   hero = hero.replace(/(<h3 class="elementor-heading-title elementor-size-default">)[^<]*(<\/h3>)/, (_, a, b) => a + esc(h.eyebrow) + b);
   hero = hero.replace(/(<h1 class="elementor-heading-title elementor-size-default">)[\s\S]*?(<\/h1>)/, (_, a, b) => a + rt(h.title, "span") + b);
   hero = hero.replace(/(elementor-widget-text-editor[\s\S]*?<p>)[\s\S]*?(<\/p>)/, (_, a, b) => a + esc(h.subtitle) + b);
+  // A button shows only when it has both a label and a link; otherwise the whole button is removed (no empty pill on the banner).
+  const shown = (text: unknown, link: unknown) => String(text ?? "").trim() !== "" && safeUrl(link) !== "";
   const button = (id: string, text: string, link: string) => {
+    if (!shown(text, link)) { hero = dropElement(hero, id); return; }
     const i = hero.indexOf("elementor-element-" + id);
     if (i < 0) return;
-    hero = hero.slice(0, i) + hero.slice(i).replace(/(<a href=")[^"]*(" class="ekit_creative_button[^>]*>\s*<span class="ekit_creative_button_text">)[^<]*(<\/span>)/, (_, a, b, d) => a + esc(safeUrl(link) || "#") + b + esc(text) + d);
+    hero = hero.slice(0, i) + hero.slice(i).replace(/(<a href=")[^"]*(" class="ekit_creative_button[^>]*>\s*<span class="ekit_creative_button_text">)[^<]*(<\/span>)/, (_, a, b, d) => a + esc(safeUrl(link)) + b + esc(text) + d);
   };
+  const btn1 = shown(h.btn1Text, h.btn1Link), btn2 = shown(h.btn2Text, h.btn2Link);
   button("75368f4", h.btn1Text, h.btn1Link);
   button("7c1ec2c", h.btn2Text, h.btn2Link);
+  if (!btn1 && !btn2) hero = dropElement(hero, "695cacc"); // the empty row that held the two buttons
   // take the video away from Elementor's own player (the key is renamed so it is ignored) and use ours
   hero = hero.replace("&quot;background_video_link&quot;", "&quot;zh_video_link&quot;");
-  // the banner's picture: the admin's images (one still image, or a slider) when there are any, otherwise the video
+  // the banner's picture: the admin's images (one still image, or a slider) when there are any, otherwise the MP4, otherwise the YouTube video
   const pics = imagesMarkup(h);
-  hero = hero.replace(/<div class="elementor-background-video-container">\s*<div class="elementor-background-video-embed" role="presentation"><\/div>\s*<\/div>/, () => (pics ? pics.layer : videoMarkup(h)));
-  hero = hero.replace('<div class="e-con-inner">', () => SUN + (pics ? pics.controls : "") + '<div class="e-con-inner">'); // sunlight sits between the picture and the text, the slider controls above the text
+  const mp4 = pics ? null : mp4Markup(h);
+  hero = hero.replace(/<div class="elementor-background-video-container">\s*<div class="elementor-background-video-embed" role="presentation"><\/div>\s*<\/div>/, () => (mp4 ? "" : pics ? pics.layer : videoMarkup(h)));
+  // the slider controls (or the MP4 and its sound button) go before the text block, so the text sits above them
+  hero = hero.replace('<div class="e-con-inner">', () => (mp4 ?? "") + (pics ? pics.controls : "") + '<div class="e-con-inner">');
+  if (mp4) {
+    const bare = ![h.eyebrow, h.title, h.subtitle].some((t) => String(t ?? "").trim()) && !btn1 && !btn2; // no text at all: the banner is just the video
+    hero = hero.replace("elementor-element-7eb3ae6 ", `elementor-element-7eb3ae6 zh-hero-vid${bare ? " zh-hero-bare" : ""} `);
+  }
   return pre + hero;
 }
 

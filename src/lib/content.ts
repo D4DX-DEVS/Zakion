@@ -80,7 +80,7 @@ export const SECTIONS: SectionDef[] = [
     key: "hero", title: "Home banner", page: "Home", help: "The banner at the top of the home page. Add 1 image for a still banner, or 2 to 4 images for a slider with arrows and dots. With no images it plays the video instead.",
     fields: [
       T("eyebrow", "Small heading"), T("title", "Main heading", "Use ==text== to colour a word amber."), TA("subtitle", "Paragraph"),
-      T("btn1Text", "Button 1 label"), T("btn1Link", "Button 1 link"), T("btn2Text", "Button 2 label"), T("btn2Link", "Button 2 link"),
+      T("btn1Text", "Button 1 label", "A button only shows when both its label and its link are filled in."), T("btn1Link", "Button 1 link", "Leave the label or the link empty to hide this button."), T("btn2Text", "Button 2 label", "A button only shows when both its label and its link are filled in."), T("btn2Link", "Button 2 link", "Leave the label or the link empty to hide this button."),
       {
         k: "images", label: "Banner images (up to 4)", type: "list", itemLabel: "image", max: 4,
         help: "Add 1 image for a still banner. Add 2 to 4 and the banner becomes a slider with arrows and dots. Leave this empty to show the video below instead.",
@@ -96,8 +96,8 @@ export const SECTIONS: SectionDef[] = [
       NUM("slideSeconds", "Seconds on each image", "Only used when there are 2 or more images. Between 3 and 20."),
       {
         k: "videoUrl", label: "Self-hosted video (MP4/WebM)", type: "video",
-        spec: "Video size: 1920 × 1080 px (width × height), landscape 16:9. Smallest that still looks sharp: 1280 × 720 px. MP4 (H.264), up to 15 MB, a short loop of 10 to 20 seconds.",
-        help: "Used when no banner images are added. Plays as a smooth, silent loop and replaces the YouTube video. The video fills the banner, so a little of the top and bottom is cropped on wide screens and the sides on phones. Keep the main subject in the middle.",
+        spec: "Video size: 1920 × 1080 px (width × height), landscape 16:9 is the usual choice, but any shape works. Smallest that still looks sharp: 1280 × 720 px. MP4 (H.264), up to 25 MB, a short loop of 10 to 20 seconds.",
+        help: "Used when no banner images are added. The banner is as tall as the video, so nothing is cropped. It plays again and again without a pause or jump (make the last frame close to the first for the smoothest loop). It plays with its sound where the browser allows it; otherwise it starts muted and the sound switches on at the visitor's first click or tap. A speaker button on the banner turns the sound on and off. Any heading, paragraph or button you fill in above sits over the video, so leave them all empty if the text is already in the video.",
       },
       T("youtube", "YouTube video link", "Used when there are no banner images and no MP4. It is looped with a cross-fade so there is no pause."),
     ],

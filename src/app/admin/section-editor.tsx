@@ -5,7 +5,7 @@
 import { useRef, useState } from "react";
 import type { Field } from "@/lib/content";
 import { Icon } from "./icons";
-import { MAX_UPLOAD, MAX_UPLOAD_LABEL } from "@/lib/upload";
+import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
 import { MenuEditor, type LinkOption } from "./menu-editor";
 import { PickerDialog, SubmitButton } from "./ui";
@@ -28,10 +28,11 @@ function MediaField({ f, value, set, pick, upload }: { f: Field; value: string; 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const chosen = e.target.files?.[0];
     if (!chosen) return;
-    if (chosen.size > MAX_UPLOAD) { setErr(`"${chosen.name}" is ${fmtBytes(chosen.size)}. Files can be up to ${MAX_UPLOAD_LABEL}.`); e.target.value = ""; return; }
+    const kind = isVideo ? "video/mp4" : chosen.type; // a video field takes videos only: its limit applies even if the browser reports no type
+    if (chosen.size > maxUpload(kind)) { setErr(`"${chosen.name}" is ${fmtBytes(chosen.size)}. ${isVideo || chosen.type.startsWith("video/") ? "Videos" : "Images and PDFs"} can be up to ${maxUploadLabel(kind)}.`); e.target.value = ""; return; }
     setBusy(true); setErr("");
     const fd = new FormData(); fd.set("file", chosen);
-    try { const r = await upload(fd); if (r.url) set(r.url); else setErr(r.error || "Upload failed."); } catch { setErr(`Upload failed. Check your connection and try again (files can be up to ${MAX_UPLOAD_LABEL}).`); }
+    try { const r = await upload(fd); if (r.url) set(r.url); else setErr(r.error || "Upload failed."); } catch { setErr(`Upload failed. Check your connection and try again (files can be up to ${maxUploadLabel(kind)}).`); }
     setBusy(false); e.target.value = "";
   }
   return (
