@@ -40,9 +40,9 @@ export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/": HOME_KEYS,
   "/about-us/": ["about", "track", "vision", "story", "why", "process"],
   "/services/": ["onGrid", "hybrid", "bess", "components", "aesthetics", "process"],
-  "/projects/": ["projects", "track", "testimonials", "partners", "cta"],
+  "/projects/": ["projects", "track", "testimonials"],
   "/contact/": ["contact"],
-  "/blog/": ["cta"],
+  "/blog/": [],
 };
 export const PAGE_TITLES: Record<string, string> = { "/": "Home", "/about-us/": "About Us", "/services/": "Solutions", "/projects/": "Projects", "/contact/": "Contact", "/blog/": "Blog" };
 
@@ -285,7 +285,7 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "partners", title: "Technology Partners (logo carousel)", page: "Home, Projects", help: "Scrolling logo carousel. Add, remove and reorder the logos here and choose how it moves.",
+    key: "partners", title: "Technology Partners (logo carousel)", page: "Home", help: "Scrolling logo carousel. Add, remove and reorder the logos here and choose how it moves.",
     fields: [T("title", "Heading", MARKUP_HELP), TA("subtitle", "Subheading"),
       NUM("rows", "Rows of logos (1 to 3)"), NUM("speed", "Seconds for one full loop", "Higher is slower. 30 is a calm pace."),
       SEL("direction", "Direction", ["left", "right"]), BOOL("pauseOnHover", "Pause when the mouse is over the carousel"),
@@ -323,7 +323,7 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "cta", title: "Call to action (Power Your Future)", page: "Home, Projects", help: MARKUP_HELP,
+    key: "cta", title: "Call to action (Power Your Future)", page: "Home", help: MARKUP_HELP,
     fields: [TA("title", "Heading"), T("sub", "Subheading"), TA("quote", "Quote"), T("btn1Text", "Button 1 label"), T("btn1Link", "Button 1 link"), T("btn2Text", "Button 2 label"), T("btn2Link", "Button 2 link"), IMG("image", "Photo")],
     data: { title: "Power Your Future\n==with Zakion==", sub: "Clean Energy Today. Sustainable Tomorrow.", quote: "\"Every solar installation is more than a project—it is a step towards energy independence, lower emissions, and a brighter future for generations to come. At Zakion Energy, we are proud to be your trusted partner in this journey.\"", btn1Text: "Book a free consultation", btn1Link: "/contact/", btn2Text: "Call +91 9188 944 337", btn2Link: "tel:+919188944337", image: "/zk/cta-worker.jpg" },
   },
