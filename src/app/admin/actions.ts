@@ -174,6 +174,12 @@ export async function uploadSectionFile(f: FormData): Promise<{ url?: string; er
 }
 
 const allPages = () => ["/", ...Object.keys(PAGE_PLAN).filter(p => p !== "/")];
+/** Every page and article on the site: a page banner can change any inner page, not only the ones with sections. */
+const everyPage = async () => {
+  const pages = await db().prepare("SELECT path FROM pages WHERE kind!='template'").all<{ path: string }>().then((r) => r.results.map((x) => x.path)).catch(() => []);
+  const posts = await db().prepare("SELECT slug FROM posts WHERE status='published'").all<{ slug: string }>().then((r) => r.results.map((x) => `/${x.slug}/`)).catch(() => []);
+  return [...new Set([...allPages(), ...pages, ...posts])];
+};
 
 export async function saveSection(f: FormData) {
   await requireAdmin();
@@ -185,7 +191,7 @@ export async function saveSection(f: FormData) {
     .prepare("INSERT INTO site_content (key,data,updated_at) VALUES (?,?,datetime('now')) ON CONFLICT(key) DO UPDATE SET data=excluded.data,updated_at=datetime('now')")
     .bind(key, JSON.stringify(sanitize(key, data)))
     .run();
-  await purgeSite(allPages());
+  await purgeSite(key === "banners" ? await everyPage() : allPages());
   redirect("/admin/studio?key=" + key + "&saved=1");
 }
 export async function resetSection(f: FormData) {
@@ -193,7 +199,7 @@ export async function resetSection(f: FormData) {
   const key = s(f, "key");
   if (!SECTION_BY_KEY[key]) redirect("/admin/studio");
   await db().prepare("DELETE FROM site_content WHERE key=?").bind(key).run();
-  await purgeSite(allPages());
+  await purgeSite(key === "banners" ? await everyPage() : allPages());
   redirect("/admin/studio?key=" + key + "&saved=reset");
 }
 
@@ -221,6 +227,19 @@ export async function moveSection(f: FormData) {
   const l = await readLayout();
   const i = l.order.indexOf(key), j = i + step;
   if (i >= 0 && j >= 0 && j < l.order.length) { [l.order[i], l.order[j]] = [l.order[j], l.order[i]]; await writeLayout(l); }
+  redirect(studioUrl(back, "layout"));
+}
+/** Sets the whole order of the home page sections in one go (a block dragged to a new place in Studio). Unknown keys are ignored and any
+ *  section the request leaves out keeps its place at the end, so a damaged request can never lose a section. */
+export async function reorderSections(f: FormData) {
+  await requireAdmin();
+  const back = s(f, "back");
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("keys") ?? "[]")); } catch { raw = []; }
+  const l = await readLayout();
+  const keys = [...new Set((Array.isArray(raw) ? raw.map(String) : []).filter((k) => l.order.includes(k)))];
+  const next = [...keys, ...l.order.filter((k) => !keys.includes(k))];
+  if (next.join() !== l.order.join()) { l.order = next; await writeLayout(l); }
   redirect(studioUrl(back, "layout"));
 }
 /** Shows or hides a home page section (the section stays editable while hidden). */

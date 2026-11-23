@@ -33,10 +33,12 @@ function carousels(){
   tr.addEventListener('scroll',function(){clearTimeout(tr._t);tr._t=setTimeout(mark,70)},{passive:true});
   tr.addEventListener('keydown',function(e){if(e.key==='ArrowRight'){go(idx()+1);e.preventDefault()}if(e.key==='ArrowLeft'){go(idx()-1);e.preventDefault()}});
   addEventListener('resize',build);build();
+  car.addEventListener('play',function(e){[].forEach.call(car.querySelectorAll('video'),function(v){if(v!==e.target)v.pause()})},true);
+  function playing(){return [].some.call(car.querySelectorAll('video'),function(v){return !v.paused&&!v.ended})}
   var hold=false,ms=(parseFloat(car.getAttribute('data-interval'))||7)*1000;
   ['mouseenter','focusin','touchstart'].forEach(function(n){car.addEventListener(n,function(){hold=true},{passive:true})});
   ['mouseleave','focusout'].forEach(function(n){car.addEventListener(n,function(){hold=false})});
-  if(car.getAttribute('data-auto')==='1'&&!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(function(){if(hold||d.hidden||pages()<=1)return;var i=idx();go(i>=pages()-1?0:i+1)},ms);
+  if(car.getAttribute('data-auto')==='1'&&!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(function(){if(hold||d.hidden||pages()<=1||playing())return;var i=idx();go(i>=pages()-1?0:i+1)},ms);
  });
 }
 function run(){
@@ -84,7 +86,6 @@ const about = (c: Content) => { const a = c.about; const feats: any[] = Array.is
 <div class="zh-about-clouds" aria-hidden="true"><i></i><i></i><i></i></div>
 <div class="zh-wrap zh-about-grid">
 <div class="zh-about-txt">
- <img class="zh-alogo zr zr-l" src="/media/2024/03/zak-logo.png" alt="Zakion Energy" width="260" height="62" loading="lazy" decoding="async">
  <span class="zh-rule zr zr-l"></span>
  <h2 class="zh-h2 zr zr-l">${rt(a.title)}</h2>
  <p class="zh-tag zr zr-l">${rt(a.tagline)}</p>
@@ -96,11 +97,17 @@ const about = (c: Content) => { const a = c.about; const feats: any[] = Array.is
 </div>
 ${ABOUT_WAVE}${ABOUT_ART}${ABOUT_LEAVES}</section>`; };
 
-const vision = (c: Content) => { const v = c.vision; const go = `<span class="zh-go">${ic("chev")}</span>`; return `<section class="zh zh-vm" id="vision-mission">
+// Vision and Mission: two cards built the same way (badge, title, rule, text) so the type is the same size in both; only the colours differ.
+const VM_EYE = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>`;
+const VM_TARGET = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg>`;
+const vision = (c: Content) => { const v = c.vision;
+  const card = (cls: string, icon: string, title: unknown, text: unknown, n: string) =>
+    `<article class="zh-vcard ${cls} zr"><span class="zh-vico">${icon}</span><h2>${rt(title)}</h2><span class="zh-vrule"></span><p>${rt(text)}</p><span class="zh-vnum" aria-hidden="true">${n}</span></article>`;
+  return `<section class="zh zh-vm" id="vision-mission">
 <div class="zh-vm-bg" data-zh-par=".05">${img(v.bg, "", 1924, 337)}</div>
 <div class="zh-wrap zh-vm-cards">
- <article class="zh-vcard zh-vcard--v zr"><h2>${rt(v.visionTitle)}</h2><p>${rt(v.visionText)}</p>${go}</article>
- <article class="zh-vcard zh-vcard--m zr"><h2>${rt(v.missionTitle)}</h2><p>${rt(v.missionText)}</p>${go}</article>
+ ${card("zh-vcard--v", VM_EYE, v.visionTitle, v.visionText, "01")}
+ ${card("zh-vcard--m", VM_TARGET, v.missionTitle, v.missionText, "02")}
 </div>
 <div class="zh-city zr zr-z">${img(v.city, "Illustration of a city powered by solar, wind and electric vehicles", 1924, 167)}</div>
 </section>`; };
@@ -280,7 +287,12 @@ ${head("", p.title, p.subtitle, "c")}
 
 const testimonials = (c: Content) => {
   const t = c.testimonials;
-  const card = (i: any) => `<figure class="zh-q"><div class="zh-q-in"><blockquote>${rt(i.quote)}</blockquote></div><span class="zh-q-tail" aria-hidden="true"></span><figcaption class="zh-q-who">${i.avatar ? img(i.avatar, i.name, 150, 145) : ""}<span><b>${esc(i.name)}</b><strong>${esc(i.role)}</strong><em>${esc(i.company)}</em></span></figcaption></figure>`;
+  // a testimonial is a quote, a video, or both; the video plays in the card (the first frame shows until then: #t=0.1)
+  const body = (i: any) => {
+    const video = safeUrl(i.video), poster = safeUrl(i.poster), quote = String(i.quote ?? "").trim();
+    return (video ? `<video class="zh-q-vid" src="${esc(video)}#t=0.1" controls playsinline preload="metadata"${poster ? ` poster="${esc(poster)}"` : ""} aria-label="Video testimonial from ${esc(i.name)}"></video>` : "") + (quote ? `<blockquote>${rt(i.quote)}</blockquote>` : "");
+  };
+  const card = (i: any) => `<figure class="zh-q${safeUrl(i.video) ? " zh-q--vid" : ""}"><div class="zh-q-in">${body(i)}</div><span class="zh-q-tail" aria-hidden="true"></span><figcaption class="zh-q-who">${i.avatar ? img(i.avatar, i.name, 150, 145) : ""}<span><b>${esc(i.name)}</b><strong>${esc(i.role)}</strong><em>${esc(i.company)}</em></span></figcaption></figure>`;
   return `<section class="zh zh-test" id="client-feedback"><div class="zh-wrap zh-test-grid">
 <header class="zh-head zr zr-l zh-test-h"><h2>${rt(t.title)}</h2><p class="zh-sub">${rt(t.subtitle)}</p><span class="zh-rule"></span></header>
 <div class="zh-tcar zr zr-r" data-auto="${t.autoplay ? 1 : 0}" data-interval="${Math.max(2, Number(t.interval) || 7)}">

@@ -1,5 +1,6 @@
 import { db } from "./env";
 import { improveBody, isPlaceholder, isStaging, seoHead } from "./seo";
+import { applyBanner } from "./banners";
 import { applyPage, HOME_HEAD, PAGE_PLAN } from "./home";
 import { type Content, loadContent } from "./content";
 import { BACK_TO_TOP, FONT_HEAD, LIGHT_JS, MOTION_EARLY, MOTION_JS } from "./chrome";
@@ -47,6 +48,7 @@ function document_(p: Page, body: string, c: Content, post?: Post) {
   const t = esc(p.title);
   const site = siteOf(c); // Site settings: theme, fonts, layout and the on/off switches
   const sameAs = socialOf(c).filter((x) => x.network !== "WhatsApp").map((x) => x.url); // wa.me is a chat link, not a profile
+  body = applyBanner(body, p.path, c, !!post); // the picture behind the page title (Studio > Page banners)
   if (!site.scrollAnimations) body = body.split(SCRIPT_EARLY).join(""); // the sections then never hide their content for the reveal
   // A chosen theme also recolours what the stored pages hard-code: inline colours, and the Elementor stylesheets (recoloured when they are
   // served, see the media route; the key in the link makes the browser fetch the recoloured copy).

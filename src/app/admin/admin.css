@@ -200,7 +200,14 @@ td a:not(.btn){display:inline-block;padding:10px 0;overflow-wrap:anywhere}
 .o-list{list-style:none;margin:0;padding:0}
 .o-cap{padding:14px 8px 6px;font:600 12px/1 var(--font-head);letter-spacing:.16em;text-transform:uppercase;color:#a29a86}
 .o-cap small{font:400 11px var(--font-body);letter-spacing:0;text-transform:none;margin-left:6px}
-.o-row{display:flex;align-items:center;gap:2px;border-radius:16px;transition:background .15s}
+.o-row{position:relative;display:flex;align-items:center;gap:2px;border-radius:16px;transition:background .15s}
+.o-grip{flex:none;width:18px;height:34px;display:grid;place-items:center;margin-left:2px;color:#b3ab97;opacity:0;cursor:grab;transition:opacity .15s}
+.o-row[data-sort]{cursor:grab}
+.o-row:hover .o-grip,.o-row.on .o-grip{opacity:1}
+.o-row.on .o-grip{color:#9fb6e6}
+.o-row.drag{opacity:.4}
+.o-row.over-a::before,.o-row.over-b::after{content:"";position:absolute;left:6px;right:6px;height:4px;border-radius:4px;background:var(--amber);z-index:2;pointer-events:none}
+.o-row.over-a::before{top:-3px}.o-row.over-b::after{bottom:-3px}
 .o-row:hover{background:var(--tint)}
 .o-row.on{background:var(--navy);box-shadow:0 10px 24px #0d2b5e40}
 .o-main{display:flex;align-items:center;gap:12px;flex:1;min-width:0;min-height:50px;padding:0 6px 0 8px;color:inherit;text-decoration:none}
@@ -485,6 +492,9 @@ details.hint summary{cursor:pointer;color:var(--blue-d);font-weight:500;min-heig
   .outline.sn .o-list{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px}
   .outline.sn .o-row{flex:none;background:var(--tint);border:1px solid var(--line)}
   .outline.sn .o-row.on{background:var(--navy);border-color:var(--navy)}
+  .outline.sn .o-grip{display:none}
+  .outline.sn .o-row.over-a::before,.outline.sn .o-row.over-b::after{top:4px;bottom:4px;width:4px;height:auto}
+  .outline.sn .o-row.over-a::before{left:-6px;right:auto}.outline.sn .o-row.over-b::after{right:-6px;left:auto}
   .outline.sn .o-main{min-height:46px;padding:0 14px 0 6px}
   .outline.sn .o-txt i{display:none}
   .outline.sn .o-txt b{white-space:nowrap}

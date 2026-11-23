@@ -32,14 +32,14 @@ const BOOL = (k: string, label: string, help?: string): Field => ({ k, label, ty
 const SEL = (k: string, label: string, options: string[], help?: string): Field => ({ k, label, type: "select", options, help });
 
 // The home page sections in their default order (the page plan in home.ts uses this too). The admin can reorder or hide them.
-export const HOME_KEYS = ["about", "vision", "story", "why", "renewable", "onGrid", "hybrid", "bess", "solarHome", "components", "aesthetics", "roi", "process", "track", "partners", "testimonials", "projects", "cta", "contact"];
+export const HOME_KEYS = ["about", "track", "vision", "story", "why", "renewable", "onGrid", "hybrid", "bess", "solarHome", "components", "aesthetics", "roi", "process", "partners", "testimonials", "projects", "cta", "contact"];
 
 // Which blocks each page shows by default, in order. The inner pages keep their own banner (page title and breadcrumb) on top.
 // The admin can reorder, remove and add blocks on every page (Site settings > Section order); the result is kept in the layout below.
 export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/": HOME_KEYS,
-  "/about-us/": ["about", "vision", "story", "why", "track", "testimonials", "partners", "cta"],
-  "/services/": ["onGrid", "hybrid", "bess", "solarHome", "components", "aesthetics", "process", "roi", "cta"],
+  "/about-us/": ["about", "track", "vision", "story", "why", "process"],
+  "/services/": ["onGrid", "hybrid", "bess", "components", "aesthetics", "process"],
   "/projects/": ["projects", "track", "testimonials", "partners", "cta"],
   "/contact/": ["contact"],
   "/blog/": ["cta"],
@@ -75,33 +75,49 @@ export function cleanLayout(input: unknown): Layout {
 
 export const MARKUP_HELP = "Use ==text== for the amber highlight and **text** for bold.";
 
+// The picture behind the title at the top of each inner page. "where" says which pages use it (the matching is in banners.ts); "image" is the
+// built-in picture, a photo from the media library, used until the admin picks another one (or empties the field).
+export const BANNER_PAGES: { key: string; label: string; where: string; image: string }[] = [
+  { key: "about", label: "About Us", where: "the About Us page", image: "/media/2024/03/post-1.jpg" },
+  { key: "solutions", label: "Solutions (main page)", where: "the Solutions page and any other page under it", image: "/media/2024/03/hero-2.jpg" },
+  { key: "pv", label: "Photovoltaic Solutions", where: "the Photovoltaic Solutions page", image: "/media/2024/03/header-banner.jpg" },
+  { key: "solarHome", label: "Solar Home", where: "the Solar Home page", image: "/zk/solarhome-photo.jpg" },
+  { key: "energy", label: "Energy Engineering", where: "the Energy Engineering page", image: "/media/2024/03/post-6.jpg" },
+  { key: "emobility", label: "EV Charging Infrastructure", where: "the EV Charging Infrastructure page", image: "/media/2024/03/emobility.webp" },
+  { key: "projects", label: "Projects", where: "the Projects page and every project page", image: "/media/2024/03/video-bg.jpg" },
+  { key: "contact", label: "Contact", where: "the Contact page", image: "/media/2024/03/post-2.jpg" },
+  { key: "blog", label: "Blog", where: "the Blog page, its categories and every article", image: "/media/2024/03/post-4.jpg" },
+  { key: "other", label: "Any other page", where: "every page that is not listed above", image: "/zk/page-hero.jpg" },
+];
+const BANNER_SPEC = "Image size: 1920 × 600 px (width × height), a wide strip. Smallest that still looks sharp: 1600 × 500 px. JPG or WebP, ideally under 500 KB so the page opens fast (up to 15 MB is accepted). The picture fills the strip behind the page title, so only a band across the middle shows: keep the main subject in the middle. The left side is darkened so the white title stays easy to read.";
+
 export const SECTIONS: SectionDef[] = [
   {
-    key: "hero", title: "Home banner", page: "Home", help: "The banner at the top of the home page. Add 1 image for a still banner, or 2 to 4 images for a slider with arrows and dots. With no images it plays the video instead.",
+    key: "hero", title: "Home banner", page: "Home", help: "The banner at the top of the home page, full width and as tall as its picture. Add slides: each one is an image or a video. One slide is a still banner (or a looping video). Two or more make a slider: an image stays for a few seconds, a video plays to its end, then the next slide appears by itself, and visitors can use the arrows and dots.",
     fields: [
       T("eyebrow", "Small heading"), T("title", "Main heading", "Use ==text== to colour a word amber."), TA("subtitle", "Paragraph"),
       T("btn1Text", "Button 1 label", "A button only shows when both its label and its link are filled in."), T("btn1Link", "Button 1 link", "Leave the label or the link empty to hide this button."), T("btn2Text", "Button 2 label", "A button only shows when both its label and its link are filled in."), T("btn2Link", "Button 2 link", "Leave the label or the link empty to hide this button."),
       {
-        k: "images", label: "Banner images (up to 4)", type: "list", itemLabel: "image", max: 4,
-        help: "Add 1 image for a still banner. Add 2 to 4 and the banner becomes a slider with arrows and dots. Leave this empty to show the video below instead.",
+        k: "slides", label: "Banner slides (up to 8)", type: "list", itemLabel: "slide", max: 8,
+        help: "Each slide is one image or one video: fill in the image or the video, not both (if both are filled in, the video is used). Use the up and down arrows to change the order. The banner is as wide as the page and as tall as the slide's own picture, so nothing is cropped; for a slider, give every slide the same shape (16:9 is best) so the banner does not change height.",
         fields: [
           {
             k: "image", label: "Image", type: "image",
-            spec: "Image size: 1920 × 1080 px (width × height), landscape 16:9. Smallest that still looks sharp: 1600 × 900 px. JPG or WebP, ideally under 500 KB so the page opens fast (up to 15 MB is accepted). Use the same size for every image.",
-            help: "The picture fills the banner, so a little of the top and bottom is cropped on wide screens and the sides on phones. Keep the main subject in the middle, and keep the left side calm because the heading sits there.",
+            spec: "Image size: 1920 × 1080 px (width × height), landscape 16:9. Smallest that still looks sharp: 1600 × 900 px. JPG or WebP, ideally under 500 KB so the page opens fast (up to 15 MB is accepted).",
+            help: "For an image slide. Leave the video below empty.",
           },
-          T("alt", "Description (for screen readers)", "Optional. A few words saying what the picture shows."),
+          {
+            k: "video", label: "Video (MP4/WebM)", type: "video",
+            spec: "Video size: 1920 × 1080 px (width × height), landscape 16:9 is the usual choice, but any shape works. Smallest that still looks sharp: 1280 × 720 px. MP4 (H.264), up to 25 MB.",
+            help: "For a video slide. In a slider the video plays once to its end and then the next slide appears; a banner with only this one video plays it again and again. It plays with sound where the browser allows it, otherwise it starts muted and the sound switches on at the visitor's first click or tap. Visitors can pause it and turn the sound on or off.",
+          },
+          T("alt", "Description (for screen readers)", "Optional. A few words saying what the slide shows."),
         ],
       },
-      NUM("slideSeconds", "Seconds on each image", "Only used when there are 2 or more images. Between 3 and 20."),
-      {
-        k: "videoUrl", label: "Self-hosted video (MP4/WebM)", type: "video",
-        spec: "Video size: 1920 × 1080 px (width × height), landscape 16:9 is the usual choice, but any shape works. Smallest that still looks sharp: 1280 × 720 px. MP4 (H.264), up to 25 MB, a short loop of 10 to 20 seconds.",
-        help: "Used when no banner images are added. The banner is as tall as the video, so nothing is cropped. It plays again and again without a pause or jump (make the last frame close to the first for the smoothest loop). It plays with its sound where the browser allows it; otherwise it starts muted and the sound switches on at the visitor's first click or tap. A speaker button on the banner turns the sound on and off. Any heading, paragraph or button you fill in above sits over the video, so leave them all empty if the text is already in the video.",
-      },
-      T("youtube", "YouTube video link", "Used when there are no banner images and no MP4. It is looped with a cross-fade so there is no pause."),
+      NUM("slideSeconds", "Seconds on each image", "Only for image slides in a slider (2 or more slides). Between 3 and 20. A video slide plays to its end."),
+      T("youtube", "YouTube video link", "Used only when there are no slides at all. It is looped with a cross-fade so there is no pause."),
     ],
-    data: { eyebrow: "Welcome to Zakion Energy", title: "Powering the Future With ==Renewable.==", subtitle: "Premium renewable energy solutions for a sustainable tomorrow. Powering homes. Empowering businesses. Building a sustainable future.", btn1Text: "Our Services", btn1Link: "/services/", btn2Text: "Contact Now", btn2Link: "/contact/", images: [], slideSeconds: 6, videoUrl: "", youtube: "https://www.youtube.com/watch?v=TzfnlPxCZv0" },
+    data: { eyebrow: "Welcome to Zakion Energy", title: "Powering the Future With ==Renewable.==", subtitle: "Premium renewable energy solutions for a sustainable tomorrow. Powering homes. Empowering businesses. Building a sustainable future.", btn1Text: "Our Services", btn1Link: "/services/", btn2Text: "Contact Now", btn2Link: "/contact/", slides: [], slideSeconds: 6, youtube: "https://www.youtube.com/watch?v=TzfnlPxCZv0" },
   },
   {
     key: "about", title: "About Zakion Energy", page: "Home, About Us", help: MARKUP_HELP,
@@ -197,7 +213,7 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "solarHome", title: "Solar Home (3 KW and 5 KW)", page: "Home, Solutions", help: "Two plans are shown side by side. The table uses the same two plans.",
+    key: "solarHome", title: "Solar Home (3 KW and 5 KW)", page: "Home", help: "Two plans are shown side by side. The table uses the same two plans.",
     fields: [T("title", "Heading"), TA("subtitle", "Subheading"), { ...IMG("photo", "House picture", "The picture on the right. The standard photo is animated: by day sunlight reaches the solar panels, then it turns to a dark night and the lights inside the house blink behind the windows. Any other picture is shown as it is. Clear it to show the drawn neon house instead."), spec: "Picture size: 1600 × 900 px (width × height), landscape 16:9, JPG or WebP, under 500 KB if you can. On a computer the middle of the picture is shown, so keep the house in the centre." },
       LIST("plans", "Plans (first two are shown)", "plan", [T("label", "Name (for example 3 KW)"), T("saving", "Bi-monthly saving"), T("units", "Daily units"), T("area", "Area needed")], 2, 2),
       T("powerTitle", "Table heading"),
@@ -241,7 +257,7 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "roi", title: "Return on Investment", page: "Home, Solutions", help: MARKUP_HELP,
+    key: "roi", title: "Return on Investment", page: "Home", help: MARKUP_HELP,
     fields: [TA("title", "Heading"), IMG("image", "Banner photo"), T("beforeTitle", "Before card heading"), LN("beforePoints", "Before card points"), T("afterTitle", "After card heading"), LN("afterPoints", "After card points"), T("conceptTitle", "Third card heading"), TA("conceptText", "Third card text"), T("note", "Note"),
       LIST("cards", "Benefit cards", "card", [SEL("icon", "Icon", ICONS), T("title", "Title"), TA("text", "Text")], 8)],
     data: {
@@ -256,7 +272,7 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "process", title: "Our Work Process", page: "Home, Solutions", help: MARKUP_HELP,
+    key: "process", title: "Our Work Process", page: "Home, About Us, Solutions", help: MARKUP_HELP,
     fields: [T("title", "Heading"), T("subtitle", "Subheading"), LIST("steps", "Steps", "step", [T("title", "Step name"), SEL("icon", "Icon", ["auto", ...ICONS], "Auto picks an icon that suits the step name.")], 16)],
     data: { title: "Our Work ==Process==", subtitle: "From First Assessment to Long-Term Performance in **8 Steps**", steps: ["Site Auditing", "Consulting", "Designing & Architecting", "Supply of Material", "Installation", "Testing", "Commissioning", "AMC"].map((title) => ({ title })) },
   },
@@ -269,7 +285,7 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "partners", title: "Technology Partners (logo carousel)", page: "Home, About Us, Projects", help: "Scrolling logo carousel. Add, remove and reorder the logos here and choose how it moves.",
+    key: "partners", title: "Technology Partners (logo carousel)", page: "Home, Projects", help: "Scrolling logo carousel. Add, remove and reorder the logos here and choose how it moves.",
     fields: [T("title", "Heading", MARKUP_HELP), TA("subtitle", "Subheading"),
       NUM("rows", "Rows of logos (1 to 3)"), NUM("speed", "Seconds for one full loop", "Higher is slower. 30 is a calm pace."),
       SEL("direction", "Direction", ["left", "right"]), BOOL("pauseOnHover", "Pause when the mouse is over the carousel"),
@@ -283,9 +299,13 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "testimonials", title: "Testimonials (carousel)", page: "Home, About Us, Projects", help: "Two testimonials show at a time on a computer, one on a phone. Add more and visitors can scroll through them.",
+    key: "testimonials", title: "Testimonials (carousel)", page: "Home, Projects", help: "Two testimonials show at a time on a computer, one on a phone. Add more and visitors can scroll through them. A testimonial can be a written quote, a video, or both: upload a video on the testimonial and it plays right in the card.",
     fields: [T("title", "Heading", MARKUP_HELP), TA("subtitle", "Subheading"), BOOL("autoplay", "Slide automatically"), NUM("interval", "Seconds between slides"),
-      LIST("items", "Testimonials", "testimonial", [T("name", "Name"), T("role", "Job title"), T("company", "Company or place"), TA("quote", "Testimonial", "Use **text** for bold."), IMG("avatar", "Photo")], 40)],
+      LIST("items", "Testimonials", "testimonial", [
+      T("name", "Name"), T("role", "Job title"), T("company", "Company or place"), TA("quote", "Testimonial", "Use **text** for bold. Optional when you add a video."), IMG("avatar", "Photo"),
+      { k: "video", label: "Video (optional)", type: "video", spec: "Video: MP4 (H.264) or WebM, up to 25 MB. Landscape 16:9 (1280 × 720 px) fits the card best; a portrait phone video also works and is shown with black bars.", help: "Visitors press play in the card; only one testimonial video plays at a time, and the carousel will not slide away while one is playing." },
+      IMG("poster", "Video cover picture (optional)", "The picture shown before the video plays. Leave it empty to show the first frame of the video."),
+    ], 40)],
     data: {
       title: "what our\n==clients say==", subtitle: "**Real Feedback** from\nOur Happy Customers", autoplay: true, interval: 7,
       items: [
@@ -303,7 +323,7 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "cta", title: "Call to action (Power Your Future)", page: "Home, About Us, Solutions, Projects", help: MARKUP_HELP,
+    key: "cta", title: "Call to action (Power Your Future)", page: "Home, Projects", help: MARKUP_HELP,
     fields: [TA("title", "Heading"), T("sub", "Subheading"), TA("quote", "Quote"), T("btn1Text", "Button 1 label"), T("btn1Link", "Button 1 link"), T("btn2Text", "Button 2 label"), T("btn2Link", "Button 2 link"), IMG("image", "Photo")],
     data: { title: "Power Your Future\n==with Zakion==", sub: "Clean Energy Today. Sustainable Tomorrow.", quote: "\"Every solar installation is more than a project—it is a step towards energy independence, lower emissions, and a brighter future for generations to come. At Zakion Energy, we are proud to be your trusted partner in this journey.\"", btn1Text: "Book a free consultation", btn1Link: "/contact/", btn2Text: "Call +91 9188 944 337", btn2Link: "tel:+919188944337", image: "/zk/cta-worker.jpg" },
   },
@@ -338,6 +358,12 @@ export const SECTIONS: SectionDef[] = [
       ],
       topEmail: "info@zakion.com", topPhone: "+91 9188 944 337", contactLabel: "Contact Us", contactUrl: "/contact/", showBrochure: true, brochureLabel: "Brochure", brochurePdf: "",
     },
+  },
+  {
+    key: "banners", title: "Page banners", page: "Inner pages",
+    help: "The picture behind the title at the top of each inner page (About Us, Solutions, Projects, Contact, Blog and the pages under them). Pick a different picture for each page. If you empty a field, that page goes back to its built-in picture.",
+    fields: BANNER_PAGES.map((b): Field => ({ k: b.key, label: b.label, type: "image", spec: BANNER_SPEC, help: `Shown on ${b.where}.` })),
+    data: Object.fromEntries(BANNER_PAGES.map((b) => [b.key, b.image])),
   },
   {
     key: "footer", title: "Site footer", page: "Every page", help: "The footer at the bottom of every page: description, contact cards, links, social icons, map and the credit line.",
@@ -401,7 +427,18 @@ export const sanitize = (key: string, input: unknown) => clean(SECTION_BY_KEY[ke
 function merge(def: SectionDef, saved: any) {
   const base = structuredClone(def.data) as Record<string, any>;
   if (saved && typeof saved === "object") for (const f of def.fields) if (f.k in saved) base[f.k] = saved[f.k];
+  if (def.key === "hero" && saved && typeof saved === "object") base.slides = heroSlides(saved, base.slides);
   return base;
+}
+
+/** The home banner used to keep "images" (a list) and "videoUrl" (one video) apart. Saved content in that form shows up as slides: the video
+ *  first (if there was one), then the images. Saving the banner drops the old keys. */
+function heroSlides(saved: any, slides: unknown): unknown {
+  if (Array.isArray(saved.slides) && saved.slides.length) return slides;
+  const v = safeUrl(saved.videoUrl);
+  const imgs = (Array.isArray(saved.images) ? saved.images : []).filter((it: any) => it && it.image).map((it: any) => ({ image: String(it.image), video: "", alt: String(it.alt ?? "") }));
+  const all = [...(v ? [{ image: "", video: v, alt: "" }] : []), ...imgs].slice(0, 8);
+  return all.length ? all : slides;
 }
 
 export async function loadContent(): Promise<Content> {

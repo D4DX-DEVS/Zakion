@@ -23,7 +23,9 @@
 .zi{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
 /* ---------- shared type ---------- */
-.zh h2{font-size:clamp(38px,calc(5.2*var(--u)),75px);font-weight:700;line-height:1.08;letter-spacing:-.012em;color:var(--navy)}
+/* one size for every section title (Our Story, About, Solar Home, Projects ...); change it here to change them all */
+:root{--zh-title:clamp(38px,calc(5.2*var(--u)),75px)}
+.zh h2{font-size:var(--zh-title);font-weight:700;line-height:1.08;letter-spacing:-.012em;color:var(--navy)}
 .zh h2 em{color:var(--amber)}
 .zh .zh-navy,.zh em.zh-navy{color:var(--navy)}
 .zh-head{margin-bottom:clamp(16px,calc(2.2*var(--u)),32px)}
@@ -73,9 +75,8 @@
 @keyframes zhCloud{from{translate:-4% 0}to{translate:8% 3%}}
 .zh-about-grid{display:grid;grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);gap:clamp(18px,calc(2.6*var(--u)),40px);align-items:stretch}
 .zh-about-txt{position:relative;z-index:3;display:flex;flex-direction:column;align-items:flex-start;padding-block:calc(var(--zpad)*.8) clamp(66px,calc(8.4*var(--u)),118px)}
-.zh-alogo{width:clamp(170px,calc(20*var(--u)),270px);height:auto}
 .zh-about .zh-rule{width:clamp(64px,calc(8*var(--u)),116px);height:3px;border-radius:3px;background:var(--amber);opacity:1;margin:clamp(8px,calc(1.2*var(--u)),16px) 0 clamp(8px,calc(1*var(--u)),14px)}
-.zh-about h2{font-size:clamp(34px,calc(4.7*var(--u)),68px);line-height:1.05;font-weight:700;color:var(--navy)}
+.zh-about h2{font-size:var(--zh-title);line-height:1.05;font-weight:700;color:var(--navy)}
 .zh-tag{margin-top:clamp(10px,calc(1.3*var(--u)),18px);color:var(--navy);font-size:clamp(18px,calc(1.9*var(--u)),28px);font-weight:500;line-height:1.28}
 .zh-tag b{font-weight:600;color:#2e9a2f;padding-bottom:6px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'%3E%3Cpath d='M1 6.500Q50 0 99 4' fill='none' stroke='%232e9a2f' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat 0 100%/100% 8px}
 .zh-about .zh-lead{margin-top:clamp(10px,calc(1.3*var(--u)),18px);color:var(--zc-2a3f66,#2a3f66);font-size:clamp(15px,calc(1.4*var(--u)),20px);font-weight:400;line-height:1.55;max-width:34em}
@@ -112,25 +113,33 @@
 .zh-vm{padding:0;background:linear-gradient(180deg,#fff 40%,var(--zc-f2f5fb,#f2f5fb))}
 .zh-vm-bg{position:absolute;inset:0 0 auto 0;height:clamp(170px,calc(21*var(--u)),310px);overflow:hidden}
 .zh-vm-bg img{position:absolute;left:0;top:-19%;width:100%;height:138%;object-fit:cover;transform:translate3d(0,var(--py,0),0)}
-.zh-vm-cards{display:grid;grid-template-columns:repeat(2,minmax(0,440px));justify-content:center;gap:clamp(18px,calc(3*var(--u)),48px);padding-top:clamp(84px,calc(11*var(--u)),170px);z-index:2}
-.zh-vcard{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:20px;min-height:clamp(230px,calc(21*var(--u)),310px);padding:clamp(22px,calc(2.4*var(--u)),36px);box-shadow:0 26px 60px rgba(var(--zr-082a5a,8,42,90),.28);border-radius:90px 150px 46px 46px}
-.zh-vcard h2{font-size:clamp(32px,calc(3.39*var(--u)),50px);font-weight:700}
-.zh-vcard p{margin-top:16px;font-weight:300}
-.zh-vcard--v{background:var(--amber-d)}
-.zh-vcard--v h2{color:var(--blue)}
-.zh-vcard--v p{font-size:clamp(20px,calc(2*var(--u)),28px);color:var(--navy);line-height:1.3}
-.zh-vcard--m{background:var(--zc-0b3978,#0b3978);border-radius:46px 150px 46px 46px}
+.zh-vm-cards{display:grid;grid-template-columns:repeat(2,minmax(0,500px));justify-content:center;gap:clamp(18px,calc(2.4*var(--u)),36px);padding-top:clamp(84px,calc(11*var(--u)),170px);z-index:2}
+/* Vision and Mission: two cards built the same way, so the title and the text are the same size in both (markup: vision in src/lib/sections.ts) */
+.zh-vcard{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;min-height:clamp(260px,calc(23*var(--u)),340px);padding:clamp(24px,calc(2.6*var(--u)),40px);border-radius:clamp(64px,calc(7*var(--u)),100px) 28px 28px 28px;box-shadow:0 26px 60px rgba(var(--zr-082a5a,8,42,90),.28);transition:transform .35s ease,box-shadow .35s ease}
+.zh-vcard:hover{transform:translateY(-4px);box-shadow:0 32px 70px rgba(var(--zr-082a5a,8,42,90),.34)}
+.zh-vcard--m{border-radius:28px clamp(64px,calc(7*var(--u)),100px) 28px 28px}
+.zh-vico{flex:none;display:grid;place-items:center;width:clamp(46px,calc(4*var(--u)),60px);aspect-ratio:1;border-radius:16px}
+.zh-vico svg{width:54%;height:54%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.zh-vcard h2{margin-top:clamp(14px,calc(1.5*var(--u)),22px);font-size:clamp(28px,calc(2.9*var(--u)),42px);line-height:1.1;font-weight:700}
+.zh-vrule{display:block;width:clamp(40px,calc(4*var(--u)),56px);height:3px;margin:clamp(10px,calc(1*var(--u)),14px) 0 clamp(12px,calc(1.3*var(--u)),18px);border-radius:3px}
+.zh-vcard p{position:relative;z-index:1;font-size:clamp(16px,calc(1.4*var(--u)),20px);line-height:1.65;font-weight:400}
+.zh-vnum{position:absolute;right:clamp(14px,calc(1.6*var(--u)),26px);bottom:clamp(-30px,calc(-2*var(--u)),-14px);font:800 clamp(90px,calc(10*var(--u)),150px)/1 var(--zk-head,Rajdhani),sans-serif;opacity:.1;pointer-events:none;user-select:none}
+.zh-vcard--v{background:var(--amber-d);color:var(--navy)}
+.zh-vcard--v h2{color:var(--navy)}
+.zh-vcard--v p{color:var(--navy)}
+.zh-vcard--v .zh-vico{background:var(--navy);color:var(--amber)}
+.zh-vcard--v .zh-vrule{background:var(--navy)}
+.zh-vcard--m{background:var(--zc-0b3978,#0b3978);color:#fff}
 .zh-vcard--m h2,.zh-vcard--m p{color:#fff}
-.zh-vcard--m p{font-size:clamp(14px,calc(1.3*var(--u)),18px);line-height:1.6}
-.zh-vcard--v .zh-go{background:#fff;color:var(--navy)}
-.zh-vcard--m .zh-go{background:#fff;color:var(--zc-0b3978,#0b3978)}
+.zh-vcard--m .zh-vico{background:var(--amber);color:var(--navy)}
+.zh-vcard--m .zh-vrule{background:var(--amber)}
 .zh-city{position:relative;z-index:1;margin-top:clamp(-120px,calc(-8*var(--u)),-60px)}
 .zh-city img{width:100%;height:auto;min-height:90px;object-fit:cover}
 
 /* ---------- 3 Story ---------- */
 .zh-story{background:linear-gradient(160deg,var(--zc-0a58bb,#0a58bb),var(--zc-0a3f8f,#0a3f8f) 55%,var(--zc-08306e,#08306e));color:#fff}
 .zh-story::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 50% at 85% 0%,rgba(255,255,255,.12),transparent),radial-gradient(50% 50% at 0% 100%,rgba(var(--zr-fec142,254,193,66),.12),transparent)}
-.zh-story h2{font-size:clamp(52px,calc(7.91*var(--u)),113px);line-height:1;color:#fff}
+.zh-story h2{font-size:var(--zh-title);line-height:1;color:#fff}
 .zh-story .zh-head{margin-bottom:0}
 .zh-story-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(14px,calc(2*var(--u)),32px);align-items:end;margin-top:clamp(28px,calc(3.6*var(--u)),52px)}
 .zh-scard{position:relative;display:flex;flex-direction:column;background:var(--sky);box-shadow:0 22px 50px rgba(var(--zr-020f2e,2,15,46),.35)}
@@ -199,7 +208,7 @@
 .zh-sys-txt{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
 .zh-pill{position:relative;display:inline-flex;align-items:center;gap:8px;overflow:hidden;padding:7px 15px;border-radius:999px;background:#fff;border:1px solid rgba(var(--zr-f5a800,245,168,0),.55);color:var(--zc-7a4a00,#7a4a00);font:600 13px/1 Rajdhani,sans-serif;letter-spacing:.14em;text-transform:uppercase}
 .zh-pill::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--amber-d)}
-.zh .zh-h2--sys{margin-top:clamp(10px,calc(1.2*var(--u)),16px);font-size:clamp(34px,calc(4.6*var(--u)),64px);font-weight:700;line-height:1.04;letter-spacing:-.01em;color:var(--navy)}
+.zh .zh-h2--sys{margin-top:clamp(10px,calc(1.2*var(--u)),16px);font-size:var(--zh-title);font-weight:700;line-height:1.04;letter-spacing:-.01em;color:var(--navy)}
 .zh-sys .zh-lead{margin-top:clamp(10px,calc(1.2*var(--u)),18px);font-size:clamp(15px,calc(1.4*var(--u)),19px);font-weight:400;line-height:1.6;max-width:34em}
 .zh-fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(10px,calc(1.2*var(--u)),16px);width:100%;max-width:680px;margin-top:clamp(16px,calc(2*var(--u)),28px)}
 .zh-fc{position:relative;display:flex;flex-direction:column;gap:6px;overflow:hidden;padding:clamp(14px,calc(1.5*var(--u)),20px);border-radius:18px;background:#fff;border:1px solid var(--edge);box-shadow:0 8px 22px rgba(var(--zr-103d7b,16,61,123),.06)}
@@ -224,7 +233,7 @@
 .zh-home{background:radial-gradient(46% 46% at 6% 4%,rgba(var(--zr-2f80e3,47,128,227),.3),transparent 72%),linear-gradient(168deg,var(--zc-0c57c8,#0c57c8) 0%,var(--zc-0a3f9c,#0a3f9c) 24%,var(--zc-071f5c,#071f5c) 54%,var(--zc-040f33,#040f33) 76%,var(--zc-020819,#020819) 100%);color:#fff}
 .zh-home::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(var(--zr-6ed6ff,110,214,255),.06) 1px,transparent 1px),linear-gradient(90deg,rgba(var(--zr-6ed6ff,110,214,255),.06) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(75% 70% at 30% 18%,#000,transparent 80%);mask-image:radial-gradient(75% 70% at 30% 18%,#000,transparent 80%)}
 .zh-home .zh-wrap{position:relative;z-index:1}
-.zh-home h2{font-size:clamp(50px,calc(6.78*var(--u)),99px);font-weight:800}
+.zh-home h2{font-size:var(--zh-title);font-weight:700}
 .zh-home .zh-head{margin-bottom:0}
 .zh-home .zh-sub{max-width:27em;font-size:clamp(16px,calc(1.5*var(--u)),21px);color:var(--zc-e3edff,#e3edff)}
 .zh-home-top{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);gap:clamp(20px,calc(2.4*var(--u)),44px);align-items:stretch}
@@ -363,7 +372,7 @@
 .zh-roi-hero img{position:absolute;left:0;top:-19%;width:100%;height:138%;object-fit:cover;object-position:center top;transform:translate3d(0,var(--py,0),0)}
 .zh-roi-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(var(--zr-062256,6,34,86),.82),rgba(var(--zr-062256,6,34,86),.15) 60%,transparent)}
 .zh-roi-hero .zh-wrap{display:block;z-index:2;padding:clamp(22px,calc(2.6*var(--u)),40px) 0 clamp(80px,calc(7.4*var(--u)),108px)}
-.zh-roi-t{color:#fff!important;font-size:clamp(30px,calc(3.9*var(--u)),56px)!important;font-weight:700!important;line-height:1!important}
+.zh-roi-t{color:#fff!important;font-size:var(--zh-title)!important;font-weight:700!important;line-height:1!important}
 .zh-roi-t::after{content:"";display:block;width:clamp(110px,calc(11*var(--u)),160px);height:5px;border-radius:5px;margin-top:12px;background:linear-gradient(90deg,var(--amber) 0 60%,rgba(255,255,255,.4) 60%)}
 .zh-roi-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) minmax(0,1fr);gap:clamp(10px,calc(1.2*var(--u)),18px);align-items:stretch;margin-top:clamp(-66px,calc(-5*var(--u)),-40px);position:relative;z-index:3}
 .zh-rbox{display:flex;align-items:flex-start;gap:clamp(12px,calc(1.6*var(--u)),22px);padding:clamp(18px,calc(2.2*var(--u)),34px);border-radius:28px;color:#fff;box-shadow:0 18px 44px rgba(var(--zr-082a5a,8,42,90),.25)}
@@ -433,7 +442,7 @@
 .zh-test{background:radial-gradient(60% 70% at 0% 0%,var(--zc-dfeafb,#dfeafb),transparent 70%),linear-gradient(135deg,var(--zc-eaf2fd,#eaf2fd),var(--zc-f7faff,#f7faff))}
 .zh-test-grid{display:grid;grid-template-columns:minmax(0,.62fr) minmax(0,1.7fr);gap:clamp(24px,calc(4*var(--u)),64px);align-items:center}
 .zh-test-h{margin:0}
-.zh-test-h h2{font-size:clamp(52px,calc(6.55*var(--u)),99px);font-weight:700;line-height:1;text-transform:lowercase}
+.zh-test-h h2{font-size:var(--zh-title);font-weight:700;line-height:1;text-transform:lowercase}
 .zh-test-h .zh-sub{margin-top:clamp(14px,calc(2*var(--u)),26px);font-size:clamp(18px,calc(1.9*var(--u)),27px);font-weight:300;color:var(--blue)}
 .zh-test-h .zh-sub b{color:var(--blue)}
 .zh-test-h .zh-rule{width:min(300px,70%);color:var(--blue);opacity:1;height:2px;margin-top:18px}
@@ -445,6 +454,8 @@
 .zh-q-in{background:var(--zc-2263c0,#2263c0);color:#fff;padding:19cqw 8cqw 6cqw;min-height:62cqw}
 .zh-q-tail{display:block;aspect-ratio:368/248;margin-top:-1px;background:var(--zc-2263c0,#2263c0);clip-path:polygon(53.8% 0,100% 0,59.8% 100%,13% 100%)}
 .zh-q blockquote{font-size:4cqw;line-height:1.55;font-weight:400}
+.zh-q-vid{display:block;width:100%;aspect-ratio:16/9;margin:0 0 5cqw;border-radius:2.4cqw;background:#000;object-fit:contain}
+.zh-q-vid:last-child{margin-bottom:0}
 .zh-q blockquote b{font-weight:700}
 .zh-q-who{position:absolute;left:5cqw;top:-13cqw;display:flex;align-items:flex-start;gap:3.4cqw;width:90cqw}
 .zh-q-who img{width:26cqw;height:26cqw;flex:none;border-radius:50%;object-fit:cover;border:4px solid #fff;box-shadow:0 10px 26px rgba(var(--zr-082a5a,8,42,90),.3);background:#fff}
@@ -468,7 +479,7 @@
 .zh-proj{background:linear-gradient(180deg,var(--zc-eef4fd,#eef4fd),var(--zc-e4edfa,#e4edfa))}
 .zh-proj::before{content:"";position:absolute;right:-8%;top:20%;width:calc(62*var(--u));height:62%;background:linear-gradient(120deg,var(--zc-2b72d4,#2b72d4),var(--zc-1c57ae,#1c57ae));border-radius:240px 0 0 240px;transform:rotate(-12deg)}
 .zh-proj-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr);gap:clamp(24px,calc(4*var(--u)),64px);align-items:center}
-.zh-proj h2{font-size:clamp(50px,calc(6.33*var(--u)),95px);line-height:1}
+.zh-proj h2{font-size:var(--zh-title);line-height:1}
 .zh-proj .zh-rule{color:var(--navy);opacity:1;width:min(380px,80%);margin:clamp(14px,calc(2*var(--u)),26px) 0 12px}
 .zh-proj-n b{display:block;font-size:clamp(64px,calc(8.6*var(--u)),128px);font-weight:800;line-height:1;color:var(--navy)}
 .zh-proj-n p{font-size:clamp(16px,calc(1.7*var(--u)),24px);font-weight:400;line-height:1.3;color:var(--navy)}
@@ -480,7 +491,7 @@
 .zh-cta{padding:0;background:linear-gradient(90deg,#fff,var(--zc-f3f6fc,#f3f6fc))}
 .zh-cta-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:clamp(24px,calc(4*var(--u)),64px);align-items:stretch}
 .zh-cta-txt{padding-block:var(--zpad)}
-.zh-cta h2{font-size:clamp(43px,calc(5.65*var(--u)),84px)}
+.zh-cta h2{font-size:var(--zh-title)}
 .zh-sub2{margin-top:14px;font-size:clamp(18px,calc(2*var(--u)),29px);font-weight:400}
 .zh-quote{max-width:30em;margin:clamp(14px,calc(1.8*var(--u)),26px) 0 clamp(12px,calc(1.6*var(--u)),20px);font-style:italic;font-size:clamp(16px,calc(1.75*var(--u)),25px);font-weight:400;line-height:1.55}
 .zh-wave{display:block;width:min(330px,70%);height:auto;fill:none;stroke:var(--amber);stroke-width:9;stroke-linecap:round}
@@ -498,7 +509,7 @@
 .zh-ct-bg i:nth-child(2){width:36%;aspect-ratio:1;left:-12%;bottom:-24%;background:radial-gradient(circle,rgba(var(--zr-2161b8,33,97,184),.16),transparent 68%);animation-duration:22s}
 .zh-ct-head{max-width:780px;margin-bottom:clamp(20px,calc(2.6*var(--u)),38px)}
 .zh-ct-eye{display:inline-block;margin-bottom:10px;font:600 14px/1 Rajdhani,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--zc-a96800,#a96800)}
-.zh .zh-ct-h{font-size:clamp(28px,calc(3.6*var(--u)),52px);line-height:1.08;font-weight:700;color:var(--navy);letter-spacing:0}
+.zh .zh-ct-h{font-size:var(--zh-title);line-height:1.08;font-weight:700;color:var(--navy);letter-spacing:0}
 .zh-ct-head .zh-amberbar{margin:16px 0 0;width:min(170px,50%)}
 .zh-ct-grid{display:grid;grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);gap:clamp(16px,calc(2*var(--u)),30px);align-items:stretch}
 .zh-ct-info{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:clamp(18px,calc(2*var(--u)),28px);padding:clamp(22px,calc(2.4*var(--u)),38px);border-radius:clamp(24px,calc(2.4*var(--u)),34px);color:#fff;
@@ -607,7 +618,8 @@
   .zh-afeats li+li{border-left:0}
   .zh-about-img{aspect-ratio:1/1}
   .zh-proj-photos{grid-template-columns:1fr 1fr}
-  .zh-vcard{border-radius:46px 90px 36px 36px!important}
+  .zh-vcard,.zh-vcard--m{border-radius:56px 24px 24px 24px!important}
+  .zh-vcard--m{border-radius:24px 56px 24px 24px!important}
 }
 
 /* ---------- Banner video: seamless loop (two players cross-fade) or a self-hosted MP4 ---------- */
@@ -640,36 +652,40 @@
 /* video controls (play/pause and sound), bottom right of the video. Icons only: no background, and no colour change on hover or press.
    They sit inside the video box but above the text block so they can always be clicked (the video box itself ignores the mouse). */
 .zh-vctl{pointer-events:auto;position:absolute;right:clamp(10px,2.4vw,32px);bottom:clamp(10px,2.4vw,32px);z-index:6;display:flex;align-items:center;gap:2px}
-.elementor .zh-vctl .zh-cbtn,.elementor .zh-vctl .zh-cbtn:hover,.elementor .zh-vctl .zh-cbtn:active,.elementor .zh-vctl .zh-cbtn:focus{appearance:none;-webkit-appearance:none;display:grid;place-items:center;width:46px;height:46px;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#fff;cursor:pointer;opacity:1;transform:none;transition:none;text-shadow:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
-.elementor .zh-vctl .zh-cbtn:focus-visible{outline:2px solid #fff;outline-offset:-3px;border-radius:10px}
+.elementor .zh-vauto .zh-cbtn,.elementor .zh-vauto .zh-cbtn:hover,.elementor .zh-vauto .zh-cbtn:active,.elementor .zh-vauto .zh-cbtn:focus{appearance:none;-webkit-appearance:none;display:grid;place-items:center;width:46px;height:46px;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#fff;cursor:pointer;opacity:1;transform:none;transition:none;text-shadow:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+.elementor .zh-vauto .zh-cbtn:focus-visible{outline:2px solid #fff;outline-offset:-3px;border-radius:10px}
 .zh-vctl .i-off,.zh-vol.is-muted .i-on{display:none}
 .zh-vol.is-muted .i-off{display:block}
 .zh-play .i-play,.zh-play.is-paused .i-pause{display:none}
 .zh-play.is-paused .i-play{display:block}
-@media (max-width:640px){.elementor .zh-vctl .zh-cbtn,.elementor .zh-vctl .zh-cbtn:hover,.elementor .zh-vctl .zh-cbtn:active,.elementor .zh-vctl .zh-cbtn:focus{width:42px;height:42px}}
+@media (max-width:640px){.elementor .zh-vauto .zh-cbtn,.elementor .zh-vauto .zh-cbtn:hover,.elementor .zh-vauto .zh-cbtn:active,.elementor .zh-vauto .zh-cbtn:focus{width:42px;height:42px}}
 
-/* ---------- Banner images: one still image, or a slider with arrows and dots (markup: imagesMarkup in src/lib/home.ts) ---------- */
-.zh-hs{position:absolute;inset:0;opacity:0;transition:opacity .9s ease}
-.zh-hs.on{opacity:1}
-.zh-hs img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;transform:scale(1.07);transition:transform 8s linear}
-.zh-hs.on img{transform:scale(1)}
-.zh-hs-wrap[data-n="1"] img{transform:none;transition:none}
-.zh-hc{position:absolute;left:50%;bottom:clamp(20px,3vw,40px);translate:-50% 0;z-index:6;display:flex;align-items:center;gap:12px;max-width:calc(100% - 24px);padding:8px 10px;border-radius:999px;background:rgba(var(--zr-04122b,4,18,43),.46);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 8px 28px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .4s ease}
-.zh-hc.ready{opacity:1;pointer-events:auto}
-.zh-hc .zh-hc-btn{appearance:none;-webkit-appearance:none;display:grid;place-items:center;flex:none;width:40px;height:40px;margin:0;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;font:inherit;line-height:1;cursor:pointer;transition:background .2s ease,color .2s ease,transform .2s ease}
-.zh-hc .zh-hc-btn:hover,.zh-hc .zh-hc-btn:focus-visible{background:var(--zc-f5a800,#f5a800);color:var(--zc-0d3d7b,#0d3d7b);transform:scale(1.08)}
-.zh-hc .zh-hc-btn:focus-visible,.zh-hc .zh-hc-dot:focus-visible{outline:2px solid #fff;outline-offset:2px}
-.zh-hc-dots{display:flex;align-items:center;gap:8px;padding:0 4px}
-.zh-hc .zh-hc-dot{appearance:none;-webkit-appearance:none;position:relative;flex:none;width:10px;height:10px;margin:0;padding:0;border:0;border-radius:999px;background:rgba(255,255,255,.6);cursor:pointer;transition:width .3s ease,background .3s ease}
-.zh-hc .zh-hc-dot::after{content:"";position:absolute;inset:-14px -4px}
-.zh-hc .zh-hc-dot:hover{background:#fff}
-.zh-hc .zh-hc-dot.on{width:28px;background:var(--zc-f5a800,#f5a800)}
-.zh-hc .i-play,.zh-hc.is-paused .i-pause{display:none}
-.zh-hc.is-paused .i-play{display:block}
-/* room under the buttons for the slider controls (the banner's own bottom padding is 60px on tablets and phones) */
-@media (max-width:1024px){.elementor .elementor-element.e-con:has(>.zh-hc){--padding-bottom:100px}}
-@media (max-width:640px){.zh-hc{gap:8px;padding:6px 8px}.zh-hc .zh-hc-btn{width:36px;height:36px}.zh-hc-dots{gap:6px;padding:0 2px}}
-@media (prefers-reduced-motion:reduce){.zh-hs{transition:none}.zh-hs img{transform:none;transition:none}}
+/* ---------- Banner slider (markup: sliderMarkup in src/lib/home.ts): images and videos, arrows, dots ----------
+   The slides are stacked in the video box and cross-fade; the box takes the shape of the slide on show (--zr, set by the script).
+   Arrows, dots and the play and sound icons are bare white icons: no background, no colour change on hover. */
+.zh-vauto .zh-cbtn[hidden]{display:none!important}
+.zh-sl{position:absolute;inset:0;opacity:0;transition:opacity .8s ease;background:var(--zc-04122b,#04122b)}
+.zh-sl.on{opacity:1}
+.zh-vauto .zh-sl img,.zh-vauto .zh-sl video{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;object-fit:cover}
+.zh-arrow{pointer-events:auto;position:absolute;top:50%;translate:0 -50%;z-index:6}
+.zh-prev{left:clamp(2px,1.4vw,22px)}
+.zh-next{right:clamp(2px,1.4vw,22px)}
+.zh-dots{pointer-events:auto;position:absolute;left:50%;bottom:clamp(14px,2.6vw,30px);translate:-50% 0;z-index:6;display:flex;align-items:center;gap:8px}
+.elementor .zh-dots .zh-dot,.elementor .zh-dots .zh-dot:hover,.elementor .zh-dots .zh-dot:focus{appearance:none;-webkit-appearance:none;position:relative;flex:none;width:10px;height:10px;margin:0;padding:0;border:0;border-radius:999px;background:rgba(255,255,255,.62);box-shadow:0 1px 3px rgba(0,0,0,.55);cursor:pointer;transition:width .25s ease,background-color .25s ease}
+.elementor .zh-dots .zh-dot.on,.elementor .zh-dots .zh-dot.on:hover,.elementor .zh-dots .zh-dot.on:focus{width:28px;background:var(--zc-f5a800,#f5a800)}
+.zh-dots .zh-dot::after{content:"";position:absolute;inset:-14px -4px}
+.elementor .zh-dots .zh-dot:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.zh-nav{display:contents}
+/* phones: the site header covers the top of the banner, so the arrows move to the bottom, either side of the dots, and everything gets a little smaller */
+@media (max-width:767px){
+  .zh-nav{display:flex;align-items:center;position:absolute;left:50%;bottom:6px;translate:-50% 0;z-index:6;pointer-events:none}
+  .zh-nav>*{position:static!important;translate:none!important;pointer-events:auto}
+  .zh-dots{gap:6px}
+  .elementor .zh-vauto .zh-cbtn,.elementor .zh-vauto .zh-cbtn:hover,.elementor .zh-vauto .zh-cbtn:active,.elementor .zh-vauto .zh-cbtn:focus{width:38px;height:38px}
+  .zh-vauto .zh-cbtn svg{width:24px;height:24px}
+  .zh-vctl{bottom:6px;right:6px}
+}
+@media (prefers-reduced-motion:reduce){.zh-sl{transition:none}}
 
 /* ---------- Heading font: Rajdhani (the logo's font) ---------- */
 .zh h2,.zh h3,.zh-eye,.zh-badge,.zh-now,.zh-scard b,.zh-scard i,.zh-stat b,.zh-stat strong,.zh-proj-n b,.zh-roi-t,.zh-tag b,.zh-upper{font-family:var(--zk-head,Rajdhani),sans-serif!important}

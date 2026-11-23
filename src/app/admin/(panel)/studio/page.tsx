@@ -1,9 +1,10 @@
 import { db, env } from "@/lib/env";
 import { BUILTIN_IMAGES, HOME_KEYS, loadContent, loadOne, SECTION_BY_KEY, type Layout } from "@/lib/content";
 import { ANCHORS } from "@/lib/home";
-import { moveSection, resetSection, saveSection, saveSectionSettings, toggleSection, uploadSectionFile } from "../../actions";
+import { moveSection, reorderSections, resetSection, saveSection, saveSectionSettings, toggleSection, uploadSectionFile } from "../../actions";
 import { fmtDate } from "../../format";
 import { Icon } from "../../icons";
+import { OutlineList } from "../../outline-sort";
 import { SectionEditor } from "../../section-editor";
 import { SEC_ICON } from "../../section-meta";
 import { PreviewPanel } from "../../studio-parts";
@@ -19,7 +20,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
   const rows = await db().prepare("SELECT key, updated_at FROM site_content").all<{ key: string; updated_at: string }>().then((r) => r.results).catch(() => []);
   const edited = new Map(rows.map((r) => [r.key, r.updated_at]));
   const hidden = new Set(layout.hidden);
-  const sel = SECTION_BY_KEY[key] && (key === "hero" || key === "header" || key === "footer" || HOME_KEYS.includes(key)) ? key : "";
+  const sel = SECTION_BY_KEY[key] && (key === "hero" || key === "header" || key === "footer" || key === "banners" || HOME_KEYS.includes(key)) ? key : "";
   const live = layout.order.length - hidden.size;
 
   const status = (k: string) => {
@@ -34,8 +35,9 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
     const def = SECTION_BY_KEY[k];
     const movable = i !== undefined;
     return (
-      <li key={k} className={"o-row" + (k === sel ? " on" : "") + (hidden.has(k) ? " off" : "")}>
-        <a className="o-main" href={`/admin/studio?key=${k}`} aria-current={k === sel ? "page" : undefined}>
+      <li key={k} className={"o-row" + (k === sel ? " on" : "") + (hidden.has(k) ? " off" : "")} {...(movable ? { draggable: true, "data-sort": "", "data-key": k } : {})}>
+        {movable && <span className="o-grip" aria-hidden="true" title="Drag to move"><Icon name="grip" size={16} /></span>}
+        <a className="o-main" draggable={false} href={`/admin/studio?key=${k}`} aria-current={k === sel ? "page" : undefined}>
           <span className="o-num" aria-hidden="true">{movable ? String(i + 1).padStart(2, "0") : <Icon name={SEC_ICON[k]} size={16} />}</span>
           <span className="o-txt"><b>{def.title}</b><i>{status(k)}</i></span>
           {edited.has(k) && <span className="o-dot" title="Edited" aria-hidden="true" />}
@@ -59,9 +61,9 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
     <div className="doc-empty">
       <span className="de-ico"><Icon name="layers" size={34} /></span>
       <h1>Home page studio</h1>
-      <p>Pick a block on the left to edit its text, images and settings. Use the arrows to reorder blocks and the eye to hide one without deleting it.</p>
+      <p>Pick a block on the left to edit its text, images and settings. Drag a block (or use its arrows) to reorder it, and use the eye to hide one without deleting it.</p>
       <div className="de-tips">
-        <span><Icon name="up" size={16} />Reorder</span><span><Icon name="eyeOff" size={16} />Hide or show</span><span><Icon name="sliders" size={16} />Spacing and animation</span><span><Icon name="monitor" size={16} />Live preview</span>
+        <span><Icon name="grip" size={16} />Drag to reorder</span><span><Icon name="eyeOff" size={16} />Hide or show</span><span><Icon name="sliders" size={16} />Spacing and animation</span><span><Icon name="monitor" size={16} />Live preview</span>
       </div>
       <a className="btn" href="/admin/studio?key=hero"><Icon name="pencil" size={18} />Start with the home banner</a>
     </div>
@@ -74,7 +76,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
     const onHome = HOME_KEYS.includes(sel);
     const st = layout.settings[sel] ?? { spacing: "standard", anim: "on" };
     const pos = layout.order.indexOf(sel) + 1;
-    const when = sel === "hero" ? "Top of the home page" : sel === "header" ? "Top of every page" : sel === "footer" ? "Bottom of every page" : `Block ${pos} of ${layout.order.length}`;
+    const when = sel === "hero" ? "Top of the home page" : sel === "header" ? "Top of every page" : sel === "footer" ? "Bottom of every page" : sel === "banners" ? "Top of every inner page" : `Block ${pos} of ${layout.order.length}`;
     const seg = (name: string, cur: string, opts: [string, string][]) => (
       <div className="seg" role="radiogroup">{opts.map(([v, l]) => <label key={v}><input type="radio" name={name} value={v} defaultChecked={cur === v} /><span>{l}</span></label>)}</div>
     );
@@ -117,18 +119,19 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
           <div><h2>Home page</h2><span>{live} of {layout.order.length} blocks shown</span></div>
           <a className="btn sec sm" href="/" target="_blank" rel="noreferrer"><Icon name="external" size={15} />View<span className="sr-only"> home page (opens in a new tab)</span></a>
         </div>
-        <ol className="o-list">
+        <OutlineList action={reorderSections} back={sel}>
           <li className="o-cap">Top</li>
           {item("hero")}
-          <li className="o-cap">Blocks <small>top to bottom</small></li>
+          <li className="o-cap">Blocks <small>drag to reorder</small></li>
           {layout.order.map((k, i) => item(k, i))}
           <li className="o-cap">Every page</li>
           {item("header")}
+          {item("banners")}
           {item("footer")}
-        </ol>
+        </OutlineList>
       </aside>
       <section className="canvas" aria-live="polite">{editor}</section>
-      {sel ? <PreviewPanel key={sel} src={"/" + (anchor ? "#" + anchor : "")} label={SECTION_BY_KEY[sel].title} /> : <div className="pv-ghost" aria-hidden="true" />}
+      {sel ? <PreviewPanel key={sel} src={sel === "banners" ? "/about-us/" : "/" + (anchor ? "#" + anchor : "")} label={SECTION_BY_KEY[sel].title} /> : <div className="pv-ghost" aria-hidden="true" />}
     </div>
   );
 }
