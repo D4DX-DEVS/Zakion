@@ -635,14 +635,14 @@
 .elementor .zh-hero-vid>.zh-vauto{position:relative;inset:auto;justify-self:start;width:calc(100% + var(--padding-left,0px) + var(--padding-right,0px));height:auto;margin-inline:calc(-1*var(--padding-left,0px)) calc(-1*var(--padding-right,0px));aspect-ratio:var(--zr,16/9);container-type:normal;overflow:hidden}
 .zh-hero-vid>.e-con-inner{position:relative;z-index:2}
 /* the text clears the header above it and sits low in the video; less padding than the old cropped-video layout, so the banner can stay as tall as the video */
-.elementor .elementor-element.e-con.zh-hero-vid{--padding-top:clamp(130px,13vw,190px);--padding-bottom:70px;background-color:var(--zc-04122b,#04122b)}
+.elementor[data-elementor-type="wp-page"]>.e-con.zh-hero-vid:first-child{--padding-top:clamp(32px,4vw,64px);--padding-bottom:clamp(32px,4vw,64px);background-color:var(--zc-04122b,#04122b)}
 /* the parallax photo that used to hide behind the cover video would show under the text on phones */
 .elementor .zh-hero-vid>.jarallax-container{display:none!important}
 /* if the text ever needs more room than the video is tall, the video grows to fill the banner (a little of its sides is cropped) */
 .elementor .zh-hero-vid>.zh-vauto{align-self:stretch}
 /* phones: a 16:9 video is too short to hold the text, so the text goes below the video on the navy banner colour */
 @media (max-width:767px){
-  .elementor .elementor-element.e-con.zh-hero-vid{display:flex!important;flex-direction:column;--padding-top:26px;--padding-bottom:40px}
+  .elementor[data-elementor-type="wp-page"]>.e-con.zh-hero-vid:first-child{display:flex!important;flex-direction:column;--padding-top:26px;--padding-bottom:40px}
   .elementor .zh-hero-vid>.zh-vauto{flex:none;align-self:flex-start}
 }
 .zh-hero-bare>.e-con-inner{display:none}

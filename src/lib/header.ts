@@ -92,6 +92,9 @@ export function applyHeader(body: string, c: Content, path: string): string {
     while ((t = re.exec(out))) { if (t[1]) { if (--depth === 0) { end = t.index + t[0].length; break; } } else depth++; }
     if (end > 0) out = drawer(out.slice(0, m.index) + menuHtml(m[0], h.menu, path) + out.slice(end), c);
   }
+  // The menu bar sticks by CSS (position: sticky, public/zk-wide.css). The theme's own sticky script would pull it out of the page flow
+  // and make the banner jump up when it fires, so its class and setting are removed.
+  out = out.replace("main-header ekit-sticky--top ", "main-header ").split("&quot;ekit_sticky&quot;:&quot;top&quot;").join("&quot;ekit_sticky&quot;:&quot;&quot;");
   out = button(out, "bf7f4fc", String(h.contactLabel || "Contact Us"), safeUrl(h.contactUrl) || "/contact/");
   const pdf = safeUrl(h.brochurePdf);
   out = button(out, "7b710eb", String(h.brochureLabel || "Brochure"), pdf || "/contact/", !!pdf);

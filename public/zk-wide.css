@@ -66,13 +66,20 @@ h1,h2,h3,.elementor-heading-title{font-weight:700}
 /* header buttons keep their label on one line, whatever the admin types */
 .main-header a.ekit_creative_button,.main-header .ekit_creative_button .ekit_creative_button_text{white-space:nowrap}
 
-/* ---------- Top of the page ----------
-   The banner slides up under the header with a negative margin that is set in the page's own CSS (-162px on the home banner).
-   The header is not always exactly that tall (167px at 1024px wide, 161px at 768px), so on some screens a strip of white was left
-   above the banner. The banner is pulled 32px higher and gets the same 32px back as padding: nothing moves, but it now always
-   reaches the top edge of the page. */
-.elementor[data-elementor-type="wp-page"]>.e-con-boxed:first-child{--margin-block-start:calc(var(--margin-top,0px) - 32px);padding-top:32px}
-/* a thin line in the logo colours (navy to amber) across the very top of every page, above the banner and the header */
+/* ---------- Top of the page: the header sits above the banner ----------
+   The header is a navy contact bar followed by a full-width white menu bar. The menu bar stays at the top of the screen while the page
+   scrolls (position: sticky; the theme's own sticky script is switched off in src/lib/header.ts). The banner starts right under the header,
+   so the pull-up the stored pages gave it (a negative top margin) and the tall top padding that kept its text clear of the old floating
+   header are gone. The two wrapper divs vanish from the layout (display: contents) so the menu bar can stay stuck for the whole page. */
+.ekit-template-content-header,.ekit-template-content-header>.elementor{display:contents}
+.elementor-692 .elementor-element-f5ba7bd{background-color:var(--zc-0d3d7b,#0d3d7b)}
+.main-header{position:sticky!important;top:0;z-index:9999;background-color:#fff;box-shadow:0 2px 18px rgba(8,26,63,.12)}
+.main-header .main-header-inner{background:transparent!important;border-radius:0!important;box-shadow:none!important}
+/* a slimmer bar: the pill had 10px of padding at every level, which made the stuck bar 100px tall */
+.main-header .main-header-inner>.e-con-inner{padding-block:4px}
+.main-header .main-header-inner>.e-con-inner>.e-con{padding-block:4px}
+.elementor[data-elementor-type="wp-page"]>.e-con-boxed:first-child{--margin-top:0px;--margin-block-start:0px;--padding-top:clamp(56px,6.5vw,96px);--padding-bottom:clamp(44px,5vw,80px);padding-top:0}
+/* a thin line in the logo colours (navy to amber) across the very top of every page, above the header */
 body::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;z-index:60;pointer-events:none;
   background:linear-gradient(90deg,var(--zc-0d3d7b,#0d3d7b) 0%,var(--zc-0d3d7b,#0d3d7b) 20%,var(--zc-f5a800,#f5a800) 80%,var(--zc-f5a800,#f5a800) 100%);
   background:linear-gradient(90deg in oklab,var(--zc-0d3d7b,#0d3d7b) 0%,var(--zc-0d3d7b,#0d3d7b) 20%,var(--zc-f5a800,#f5a800) 80%,var(--zc-f5a800,#f5a800) 100%)}
