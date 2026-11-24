@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { Icon, type IconName } from "./icons";
 
@@ -22,11 +22,14 @@ const NAV: Nav[] = [
 const isCur = (path: string, href: string) => (href === "/admin" ? path === "/admin" : path === href || path.startsWith(href + "/"));
 
 type Section = { key: string; title: string };
+type SitePage = { path: string; title: string };
+/** Where a page is edited: Home in Studio, every other page in its own section editor. */
+const pageHref = (p: SitePage) => (p.path === "/" ? "/admin/studio" : "/admin/pages/sections?page=" + encodeURIComponent(p.path));
 type SettingsTab = { id: string; label: string };
 type Cmd = { label: string; hint: string; href: string; icon: IconName };
 
 // Command palette: Ctrl/Cmd+K (or the search button) opens it; type to filter, arrows to move, Enter to go.
-function Palette({ open, onClose, sections, tabs }: { open: boolean; onClose: () => void; sections: Section[]; tabs: SettingsTab[] }) {
+function Palette({ open, onClose, sections, tabs, pages }: { open: boolean; onClose: () => void; sections: Section[]; tabs: SettingsTab[]; pages: SitePage[] }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [q, setQ] = useState("");
   const [at, setAt] = useState(0);
@@ -35,9 +38,10 @@ function Palette({ open, onClose, sections, tabs }: { open: boolean; onClose: ()
     { label: "Write a new blog post", hint: "Action", href: "/admin/posts/new", icon: "pen" },
     { label: "Add a project", hint: "Action", href: "/admin/projects/new", icon: "plus" },
     { label: "Upload to the library", hint: "Action", href: "/admin/media", icon: "upload" },
+    ...pages.map((p): Cmd => ({ label: `${p.title} page`, hint: "Pages: edit sections", href: pageHref(p), icon: "file" })),
     ...tabs.map((t): Cmd => ({ label: t.label, hint: "Site settings", href: "/admin/settings?tab=" + t.id, icon: "settings" })),
     ...sections.map((s): Cmd => ({ label: s.title, hint: "Studio section", href: "/admin/studio?key=" + s.key, icon: SEC_ICON[s.key] ?? "layers" })),
-  ], [sections, tabs]);
+  ], [sections, tabs, pages]);
   const shown = useMemo(() => { const w = q.toLowerCase().split(/\s+/).filter(Boolean); return all.filter((c) => w.every((x) => (c.label + " " + c.hint).toLowerCase().includes(x))).slice(0, 12); }, [all, q]);
   useEffect(() => {
     const d = dlg.current;
@@ -71,7 +75,34 @@ function Palette({ open, onClose, sections, tabs }: { open: boolean; onClose: ()
   );
 }
 
-export function Shell({ logout, user, sections, tabs, children }: { logout: () => Promise<void>; user: string; sections: Section[]; tabs: SettingsTab[]; children: React.ReactNode }) {
+// "Pages" in the left menu opens a list of the site's pages: each one goes straight to that page's section editor. The list is open while
+// you are anywhere under Pages and can be opened or closed with its arrow; it is left out when the menu is collapsed to icons and on phones
+// (the Pages screen itself lists the same pages there).
+function PagesMenu({ item, path, pages }: { item: Nav; path: string; pages: SitePage[] }) {
+  const sp = useSearchParams();
+  const inside = path === item.href || path.startsWith(item.href + "/");
+  const [open, setOpen] = useState(inside);
+  useEffect(() => { if (inside) setOpen(true); }, [inside]);
+  const onPage = path === "/admin/pages/sections" ? sp.get("page") : null;
+  const all = inside && onPage === null;
+  const cls = (on: boolean) => (on ? "page" : undefined);
+  return (
+    <li className={"dock-group" + (inside ? " has-cur" : "")}>
+      <div className="dock-row">
+        <a href={item.href} title={item.label} aria-current={cls(inside && !open)}><Icon name={item.icon} size={22} /><span>{item.label}</span></a>
+        <button type="button" className="dock-chev" aria-expanded={open} aria-controls="dock-pages" aria-label={open ? "Hide the list of pages" : "Show the list of pages"} title={open ? "Hide the list of pages" : "Show the list of pages"} onClick={() => setOpen((o) => !o)}><Icon name="chevron" size={16} /></button>
+      </div>
+      <ul className="dock-sub" id="dock-pages" hidden={!open} aria-label="Pages">
+        <li><a href={item.href} aria-current={cls(all)}><span>All pages</span></a></li>
+        {pages.map((p) => (
+          <li key={p.path}><a href={pageHref(p)} aria-current={cls(p.path !== "/" && onPage === p.path)}><span>{p.title}</span></a></li>
+        ))}
+      </ul>
+    </li>
+  );
+}
+
+export function Shell({ logout, user, sections, tabs, pages, children }: { logout: () => Promise<void>; user: string; sections: Section[]; tabs: SettingsTab[]; pages: SitePage[]; children: React.ReactNode }) {
   const path = usePathname();
   const cur = NAV.find((n) => isCur(path, n.href) && n.href !== "/admin") ?? NAV[0];
   const [cmd, setCmd] = useState(false);
@@ -92,7 +123,9 @@ export function Shell({ logout, user, sections, tabs, children }: { logout: () =
         <button type="button" className="dock-toggle" aria-expanded={open} aria-controls="dock" aria-label={open ? "Collapse menu" : "Expand menu"} title={open ? "Collapse menu" : "Expand menu"} onClick={toggle}><Icon name="chevron" size={16} /></button>
         <a className="dock-brand" href="/admin" aria-label="Zakion Studio home"><span className="dock-bolt"><Icon name="bolt" size={22} /></span><span className="dock-name">Zakion <b>Studio</b></span></a>
         <ul>
-          {NAV.map((n) => (
+          {NAV.map((n) => n.href === "/admin/pages" ? (
+            <Suspense key={n.href} fallback={<li><a href={n.href} title={n.label}><Icon name={n.icon} size={22} /><span>{n.label}</span></a></li>}><PagesMenu item={n} path={path} pages={pages} /></Suspense>
+          ) : (
             <li key={n.href}><a href={n.href} aria-current={n === cur && (path !== "/admin" || n.href === "/admin") ? "page" : undefined} title={n.label}><Icon name={n.icon} size={22} /><span>{n.label}</span></a></li>
           ))}
         </ul>
@@ -108,11 +141,11 @@ export function Shell({ logout, user, sections, tabs, children }: { logout: () =
           <a className="avatar" href="/admin/account" aria-label={`Account (${user})`} title={`Signed in as ${user}`}>{user.charAt(0)}</a>
         </header>
         <main className="page">
-          {!cur.bare && <div className="phead"><span className="eyebrow">{cur.group}</span><h1>{cur.label}</h1><p>{cur.sub}</p></div>}
+          {!cur.bare && path !== "/admin/pages/sections" && <div className="phead"><span className="eyebrow">{cur.group}</span><h1>{cur.label}</h1><p>{cur.sub}</p></div>}
           {children}
         </main>
       </div>
-      <Palette open={cmd} onClose={() => setCmd(false)} sections={sections} tabs={tabs} />
+      <Palette open={cmd} onClose={() => setCmd(false)} sections={sections} tabs={tabs} pages={pages} />
     </div>
   );
 }

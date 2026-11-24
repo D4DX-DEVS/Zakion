@@ -4,7 +4,7 @@
 // works out the new order and sends it to the server in one go. The up and down buttons stay for touch screens and keyboards.
 import { useRef } from "react";
 
-export function OutlineList({ children, action, back }: { children: React.ReactNode; action: (f: FormData) => Promise<void>; back: string }) {
+export function OutlineList({ children, action, back, extra }: { children: React.ReactNode; action: (f: FormData) => Promise<void>; back: string; extra?: Record<string, string> }) {
   const list = useRef<HTMLOListElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const keys = useRef<HTMLInputElement>(null);
@@ -59,6 +59,7 @@ export function OutlineList({ children, action, back }: { children: React.ReactN
       </ol>
       <form ref={form} action={action} hidden>
         <input type="hidden" name="back" value={back} />
+        {Object.entries(extra ?? {}).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
         <input type="hidden" name="keys" ref={keys} />
       </form>
     </>

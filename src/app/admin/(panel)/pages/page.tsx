@@ -1,4 +1,5 @@
 import { db } from "@/lib/env";
+import { PAGE_DEFAULTS, PAGE_TITLES } from "@/lib/content";
 import { duplicatePage } from "../../actions";
 import { fmtDate } from "../../format";
 import { Icon } from "../../icons";
@@ -9,8 +10,22 @@ type Row = { path: string; title: string; kind: string; status: string; updated_
 export default async function Pages() {
   const rows = (await db().prepare("SELECT path,title,kind,status,updated_at FROM pages ORDER BY kind, path").all<Row>()).results;
   const count = (s: string) => rows.filter(r => r.status === s).length;
+  // the pages that are built from sections: each opens its own section editor (Home is edited in Studio)
+  const built = Object.keys(PAGE_DEFAULTS).map((p) => ({ path: p, title: PAGE_TITLES[p] ?? p, href: p === "/" ? "/admin/studio" : "/admin/pages/sections?page=" + encodeURIComponent(p) }));
   return (
     <>
+      <section className="card" aria-labelledby="built-h">
+        <div className="card-h"><h2 id="built-h"><Icon name="layers" size={22} />Edit a page's sections</h2></div>
+        <p className="lead">Open a page to edit its sections, drag them into a new order, take off the ones you do not want and add others.</p>
+        <ul className="pg-tiles">
+          {built.map((b) => (
+            <li key={b.path}>
+              <a href={b.href}><span className="pg-ic" aria-hidden="true"><Icon name={b.path === "/" ? "home" : "file"} size={20} /></span><span className="pg-t"><b>{b.title}</b><i>{b.path === "/" ? "Opens Studio" : `${b.path}`}</i></span><Icon name="arrowRight" size={16} /></a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <section className="card" aria-labelledby="pages-h">
         <div className="card-h"><h2 id="pages-h"><Icon name="file" size={22} />All pages</h2></div>
         <TableTools
@@ -27,7 +42,9 @@ export default async function Pages() {
                   <td data-l="URL">{r.kind === "template" ? <span className="muted">{r.path}</span> : <a href={r.path} target="_blank" rel="noreferrer">{r.path}</a>}</td>
                   <td data-l="Status"><span className={"chip " + r.status}>{r.status}</span></td>
                   <td data-l="Updated" className="muted nw">{fmtDate(r.updated_at)}</td>
-                  <td className="act"><a className="btn sec sm" href={"/admin/pages/edit?path=" + encodeURIComponent(r.path)}><Icon name="pencil" size={16} />Edit<span className="sr-only"> {r.title || r.path}</span></a></td>
+                  <td className="act">
+                    {r.kind !== "template" && r.path !== "/" && PAGE_DEFAULTS[r.path] && <a className="btn sec sm" href={"/admin/pages/sections?page=" + encodeURIComponent(r.path)}><Icon name="layers" size={16} />Sections<span className="sr-only"> of {r.title || r.path}</span></a>}{" "}
+                    <a className="btn sec sm" href={"/admin/pages/edit?path=" + encodeURIComponent(r.path)}><Icon name="pencil" size={16} />Edit<span className="sr-only"> {r.title || r.path}</span></a></td>
                 </tr>
               ))}
             </tbody>

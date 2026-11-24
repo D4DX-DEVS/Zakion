@@ -46,10 +46,10 @@ export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/about-us/": ["about", "track", "vision", "story", "why", "process"],
   "/services/": ["onGrid", "hybrid", "bess", "components", "aesthetics", "amc"],
   "/projects/": ["projects", "portfolio"],
-  "/contact/": ["contact"],
   "/blog/": [],
+  "/contact/": ["contact"],
 };
-export const PAGE_TITLES: Record<string, string> = { "/": "Home", "/about-us/": "About Us", "/services/": "Solutions", "/projects/": "Projects", "/contact/": "Contact", "/blog/": "Blog" };
+export const PAGE_TITLES: Record<string, string> = { "/": "Home", "/about-us/": "About Us", "/services/": "Solutions", "/projects/": "Projects", "/blog/": "Blog", "/contact/": "Contact" };
 
 /** Home page layout kept by the admin in site_content under the key "_layout": section order, hidden sections, per-section settings,
  *  and (for the other pages) the blocks each one shows, in order. */

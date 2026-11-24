@@ -128,8 +128,8 @@ export function Fields({ fields, value, onChange, pick, upload, links }: { field
 
 // `reset` is the secondary button next to Save. For a page section it is "Reset to original"; the project editor passes its own wording
 // ("Delete project") and leaves it out for a project that has not been saved yet.
-export function SectionEditor({ sectionKey, fields, initial, images, save, reset, upload, resetLabel = "Reset to original", resetConfirm = "Discard all edits to this section and go back to the original text and images?", resetIcon = "reset" }: {
-  sectionKey: string; fields: Field[]; initial: Obj; images: string[];
+export function SectionEditor({ sectionKey, fields, initial, images, save, reset, upload, extra, resetLabel = "Reset to original", resetConfirm = "Discard all edits to this section and go back to the original text and images?", resetIcon = "reset" }: {
+  sectionKey: string; fields: Field[]; initial: Obj; images: string[]; extra?: Record<string, string>; // extra: more hidden fields for the actions, such as the page being edited
   save: (f: FormData) => Promise<void>; reset?: (f: FormData) => Promise<void>; upload: Upload;
   resetLabel?: string; resetConfirm?: string; resetIcon?: IconName;
 }) {
@@ -141,6 +141,7 @@ export function SectionEditor({ sectionKey, fields, initial, images, save, reset
     <>
       <form action={save} className="editor-one">
         <input type="hidden" name="key" value={sectionKey} />
+        {Object.entries(extra ?? {}).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
         <input type="hidden" name="data" value={JSON.stringify(data)} />
         <div className="card"><Fields fields={fields} value={data} onChange={setData} pick={pick} upload={upload} /></div>
         <div className="stickybar">

@@ -11,8 +11,9 @@ import { passwordProblem } from "@/lib/password";
 import { htmlToText } from "@/lib/html";
 import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
-import { type Field, ALL_KEYS, clean, cleanLayout, HOME_KEYS, CATEGORIES, NO_SYSTEM, PROJECT_FIELDS, LAYOUT_KEY, loadContent, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
+import { type Field, ALL_KEYS, BANNER_PAGES, clean, cleanLayout, HOME_KEYS, CATEGORIES, NO_SYSTEM, PROJECT_FIELDS, LAYOUT_KEY, loadContent, loadOne, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
 import { PAGE_PLAN } from "@/lib/home";
+import { bannerKey } from "@/lib/banners";
 import { CONTACT_NETS, cleanSite, SITE_DEFAULTS, siteOf, TAB_BY_ID } from "@/lib/site";
 
 // Browsers submit textarea newlines as \r\n; store \n so saves don't alter the HTML.
@@ -259,6 +260,10 @@ export async function uploadSectionFile(f: FormData): Promise<{ url?: string; er
 }
 
 const allPages = () => ["/", ...Object.keys(PAGE_PLAN).filter(p => p !== "/")];
+/** A page whose blocks are edited under Pages > that page: every page with its own block list except Home (Studio edits Home). */
+const blockPage = (p: string) => p !== "/" && !!PAGE_DEFAULTS[p];
+/** The address of a page's block editor, optionally with one block picked and a query note ("saved=1", "error=1" ...). */
+const pageUrl = (path: string, key = "", q = "") => `/admin/pages/sections?page=${encodeURIComponent(path)}${key ? "&key=" + encodeURIComponent(key) : ""}${q ? "&" + q : ""}`;
 /** Every page and article on the site: a page banner can change any inner page, not only the ones with sections. */
 const everyPage = async () => {
   const pages = await db().prepare("SELECT path FROM pages WHERE kind!='template'").all<{ path: string }>().then((r) => r.results.map((x) => x.path)).catch(() => []);
@@ -266,26 +271,31 @@ const everyPage = async () => {
   return [...new Set([...allPages(), ...pages, ...posts])];
 };
 
+/** Where to go after saving or resetting a section: back to the page it was opened from (Pages > a page), else to Studio. */
+const sectionUrl = (f: FormData, key: string, q: string) => {
+  const page = s(f, "page");
+  return blockPage(page) ? pageUrl(page, key, q) : `/admin/studio?key=${key}&${q}`;
+};
 export async function saveSection(f: FormData) {
   await requireAdmin();
   const key = s(f, "key");
-  if (!SECTION_BY_KEY[key]) redirect("/admin/studio");
+  if (!SECTION_BY_KEY[key]) redirect(blockPage(s(f, "page")) ? pageUrl(s(f, "page")) : "/admin/studio");
   let data: unknown;
-  try { data = JSON.parse(String(f.get("data") ?? "{}")); } catch { redirect("/admin/studio?key=" + key + "&error=1"); }
+  try { data = JSON.parse(String(f.get("data") ?? "{}")); } catch { redirect(sectionUrl(f, key, "error=1")); }
   await db()
     .prepare("INSERT INTO site_content (key,data,updated_at) VALUES (?,?,datetime('now')) ON CONFLICT(key) DO UPDATE SET data=excluded.data,updated_at=datetime('now')")
     .bind(key, JSON.stringify(sanitize(key, data)))
     .run();
   await purgeSite(key === "banners" ? await everyPage() : allPages());
-  redirect("/admin/studio?key=" + key + "&saved=1");
+  redirect(sectionUrl(f, key, "saved=1"));
 }
 export async function resetSection(f: FormData) {
   await requireAdmin();
   const key = s(f, "key");
-  if (!SECTION_BY_KEY[key]) redirect("/admin/studio");
+  if (!SECTION_BY_KEY[key]) redirect(blockPage(s(f, "page")) ? pageUrl(s(f, "page")) : "/admin/studio");
   await db().prepare("DELETE FROM site_content WHERE key=?").bind(key).run();
   await purgeSite(key === "banners" ? await everyPage() : allPages());
-  redirect("/admin/studio?key=" + key + "&saved=reset");
+  redirect(sectionUrl(f, key, "saved=reset"));
 }
 
 // ---- home page layout (order, hidden sections, per-section settings), kept in site_content under "_layout" ----
@@ -421,14 +431,9 @@ export async function resetSettings(f: FormData) {
   redirect(settingsUrl(tab.id, "reset"));
 }
 
-/** Which blocks a page shows and in which order. Home keeps its order and hidden list (Studio reads those); the other pages keep their list. */
-export async function savePageLayout(f: FormData) {
-  await requireAdmin();
-  const path = s(f, "path");
-  if (!PAGE_DEFAULTS[path]) redirect("/admin/settings?tab=sections");
-  let raw: unknown;
-  try { raw = JSON.parse(String(f.get("keys") ?? "[]")); } catch { redirect(`/admin/settings?tab=sections&page=${encodeURIComponent(path)}&error=1`); }
-  const keys = [...new Set((Array.isArray(raw) ? raw.map(String) : []).filter(k => (path === "/" ? HOME_KEYS : ALL_KEYS).includes(k)))];
+/** Writes the list of blocks a page shows. Home keeps its order and hidden list (Studio reads those); the other pages keep their list. */
+async function setPageKeys(path: string, list: string[]) {
+  const keys = [...new Set(list.filter(k => (path === "/" ? HOME_KEYS : ALL_KEYS).includes(k)))];
   const l = await readLayout();
   if (path === "/") {
     l.order = [...keys, ...HOME_KEYS.filter(k => !keys.includes(k))];
@@ -437,5 +442,87 @@ export async function savePageLayout(f: FormData) {
     l.pages[path] = keys;
   }
   await writeLayout(l);
+}
+/** The blocks a page shows right now, in order (its own list, or the built-in plan until the admin changes it). */
+async function pageKeysNow(path: string) { return [...((await readLayout()).pages[path] ?? PAGE_DEFAULTS[path] ?? [])]; } // a copy: callers reorder it
+
+/** Which blocks a page shows and in which order (Site settings > Section order). */
+export async function savePageLayout(f: FormData) {
+  await requireAdmin();
+  const path = s(f, "path");
+  if (!PAGE_DEFAULTS[path]) redirect("/admin/settings?tab=sections");
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("keys") ?? "[]")); } catch { redirect(`/admin/settings?tab=sections&page=${encodeURIComponent(path)}&error=1`); }
+  await setPageKeys(path, Array.isArray(raw) ? raw.map(String) : []);
   redirect(`/admin/settings?tab=sections&page=${encodeURIComponent(path)}&saved=layout`);
 }
+
+// ---- Pages > a page: its blocks one change at a time (move, drag, remove, add) and its banner ----
+// "back" is the block that was open in the editor (or "banner"); it stays open after the change. Removing a block only takes it off this page:
+// its text and images stay in Studio and it can be added again.
+
+const openKey = (k: string, path: string) => (k === "banner" ? (bannerKey(path) ? "banner" : "") : ALL_KEYS.includes(k) ? k : "");
+function pageForm(f: FormData) {
+  const path = s(f, "page");
+  if (!blockPage(path)) redirect("/admin/pages");
+  return { path, back: openKey(s(f, "back"), path) };
+}
+
+/** Moves a block one place up or down on a page. */
+export async function movePageSection(f: FormData) {
+  await requireAdmin();
+  const { path, back } = pageForm(f);
+  const key = s(f, "key"), step = s(f, "dir") === "up" ? -1 : 1;
+  const keys = await pageKeysNow(path);
+  const i = keys.indexOf(key), j = i + step;
+  if (i >= 0 && j >= 0 && j < keys.length) { [keys[i], keys[j]] = [keys[j], keys[i]]; await setPageKeys(path, keys); }
+  redirect(pageUrl(path, back, "saved=layout"));
+}
+/** Sets the whole order of a page's blocks (a block dragged to a new place). Unknown keys are ignored and a block the request leaves out
+ *  keeps its place at the end, so a damaged request can never take a block off the page. */
+export async function reorderPageSections(f: FormData) {
+  await requireAdmin();
+  const { path, back } = pageForm(f);
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("keys") ?? "[]")); } catch { raw = []; }
+  const now = await pageKeysNow(path);
+  const keys = [...new Set((Array.isArray(raw) ? raw.map(String) : []).filter(k => now.includes(k)))];
+  const next = [...keys, ...now.filter(k => !keys.includes(k))];
+  if (next.join() !== now.join()) await setPageKeys(path, next);
+  redirect(pageUrl(path, back, "saved=layout"));
+}
+/** Takes a block off a page. */
+export async function removePageSection(f: FormData) {
+  await requireAdmin();
+  const { path, back } = pageForm(f);
+  const key = s(f, "key");
+  await setPageKeys(path, (await pageKeysNow(path)).filter(k => k !== key));
+  redirect(pageUrl(path, back === key ? "" : back, "saved=removed"));
+}
+/** Adds a block to the end of a page and opens it for editing. */
+export async function addPageSection(f: FormData) {
+  await requireAdmin();
+  const { path } = pageForm(f);
+  const key = s(f, "key");
+  const now = await pageKeysNow(path);
+  if (!ALL_KEYS.includes(key)) redirect(pageUrl(path));
+  if (!now.includes(key)) await setPageKeys(path, [...now, key]);
+  redirect(pageUrl(path, key, "saved=added"));
+}
+
+/** Saves the banner picture of one page (the picture behind its title). The other pages' banners are kept as they are. */
+async function putBanner(f: FormData, reset: boolean) {
+  await requireAdmin();
+  const path = s(f, "page"), key = s(f, "key");
+  if (!blockPage(path) || key !== bannerKey(path)) redirect("/admin/pages");
+  let data: Record<string, unknown> = {};
+  try { const v = JSON.parse(String(f.get("data") ?? "{}")); if (v && typeof v === "object") data = v; } catch { redirect(pageUrl(path, "banner", "error=1")); }
+  const fallback = BANNER_PAGES.find(b => b.key === key)?.image ?? "";
+  const now = (await loadOne("banners")).data as Record<string, unknown>;
+  const merged = { ...now, [key]: reset ? fallback : typeof data[key] === "string" ? data[key] : "" };
+  await upsert("banners", sanitize("banners", merged));
+  await purgeSite(await everyPage());
+  redirect(pageUrl(path, "banner", reset ? "saved=reset" : "saved=1"));
+}
+export async function savePageBanner(f: FormData) { await putBanner(f, false); }
+export async function resetPageBanner(f: FormData) { await putBanner(f, true); }
