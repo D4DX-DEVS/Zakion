@@ -906,11 +906,30 @@
 .zh-q-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--tg);row-gap:clamp(64px,7vw,96px);align-items:start;padding-top:clamp(56px,calc(5.4*var(--u)),76px)}
 @media (max-width:900px){.zh-q-grid{grid-template-columns:1fr}}
 @media (max-width:1024px){.zh-test-grid{grid-template-columns:1fr}}
+/* phones: a compact block. The card is a little narrower than the screen (the next one peeks in, which shows it can be swiped), the photo, text
+   and padding are smaller, and the quote tail is much shorter. Sizes are in px here: the text does not shrink with the card on a small screen. */
 @media (max-width:640px){
-  .zh-q blockquote{font-size:max(14px,4cqw)}
-  .zh-q-who b{font-size:max(15px,4.6cqw)}
-  .zh-q-who strong{font-size:max(13px,3.9cqw)}
-  .zh-q-who em{font-size:max(12.5px,3.3cqw)}
+  .zh-test-h h2{font-size:28px}
+  .zh-test-h .zh-sub{margin-top:10px;font-size:16px}
+  .zh-test-h .zh-rule{margin-top:12px;width:140px}
+  .zh-ttrack{padding-top:44px;padding-bottom:8px;align-items:stretch} /* equal heights: the blue block grows, so there is no gap before the arrows */
+  .zh-q{flex-basis:88%}
+  .zh-q-in{flex:1 1 auto}
+  .zh-q-in{padding:60px 18px 16px;min-height:0}
+  .zh-q--long .zh-q-in{padding-top:76px}
+  .zh-q blockquote{font-size:13.5px;line-height:1.5}
+  .zh-q-tail{aspect-ratio:368/140}
+  .zh-q-who{left:16px;top:-28px;gap:12px;width:calc(100% - 32px)}
+  .zh-q-who img,.zh-q-init{width:56px;height:56px;border-width:3px}
+  .zh-q-init{font-size:20px}
+  .zh-q-who span{padding-top:30px}
+  .zh-q-who b{font-size:15px}
+  .zh-q-who strong{font-size:12.5px}
+  .zh-q-who em{font-size:12px}
+  .zh .zh-q button.zh-q-media{margin-bottom:12px;border-radius:10px!important}
+  .zh-q-play{width:46px;height:46px;margin:-23px 0 0 -23px}
+  .zh .zh-tnav{margin-top:6px;gap:12px}
+  .zh button.zh-tprev,.zh button.zh-tnext{width:40px;height:40px}
 }
 /* the player a video opens in */
 dialog.zh-vlb{width:min(960px,94vw);max-height:92vh;padding:0;border:0;border-radius:16px;overflow:visible;background:transparent}
