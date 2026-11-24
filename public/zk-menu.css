@@ -45,3 +45,25 @@
   .main-header .zk-mm-i:hover{color:var(--e-global-color-accent)}
 }
 @media (prefers-reduced-motion:reduce){.main-header .elementskit-menu-container.elementskit-menu-offcanvas-elements{transition:none!important}}
+
+/* Phones: a slimmer header. The contact bar and the logo bar are shorter, the logo is smaller and sits at the left edge, and the text and the
+   menu button are smaller. The stored header sets its padding in several nested boxes, so these need !important to win. */
+@media (max-width:767px){
+  /* contact bar (email and phone) */
+  .e-parent:has(.topbar-contact-info){min-height:0!important;padding:0 12px!important}
+  .e-parent:has(.topbar-contact-info) .e-con-inner{padding:0!important;gap:0 14px!important}
+  .e-parent:has(.topbar-contact-info) .e-child{padding:0!important;min-height:0!important}
+  .topbar-contact-info a.ekit_global_links{min-height:28px}
+  .topbar-contact-info .elementskit-info-box-title{font-size:12px!important;line-height:1.2!important;margin:0!important}
+  .topbar-contact-info .elementkit-infobox-icon{font-size:11.5px!important}
+  .topbar-contact-info .elementskit-box-header{margin:0 6px 0 0!important}
+  /* logo bar: shorter, logo smaller and at the left, smaller menu button */
+  .main-header{min-height:0!important;padding:0 12px!important}
+  .main-header .e-child{padding:0!important;min-height:0!important}
+  .main-header .e-con-inner{padding-top:0!important;padding-bottom:0!important}
+  .main-header .e-child.main-header-inner{padding:8px 0!important}
+  .main-header .ata-site-logo-container,.main-header .ata-site-logo,.main-header .elementor-widget-container{text-align:left!important}
+  .main-header img.ata-site-logo-img{width:128px!important;max-width:128px!important;height:auto!important}
+  .main-header .elementskit-menu-hamburger{padding:10px 8px!important;border-radius:8px!important}
+  .main-header .elementskit-menu-hamburger .elementskit-menu-hamburger-ico{width:18px!important}
+}

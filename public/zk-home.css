@@ -882,3 +882,11 @@
 @media (prefers-reduced-motion:reduce){.zh-sc,.zh-sc-ring{animation:none}.zh-sc:hover{transform:none}}
 /* other solutions under a system's page sit on a light band: the same dark cards, centred in their own column */
 .zh-sd-other .zh-pf-grid{margin-top:clamp(8px,1vw,14px)}
+
+/* ---------- AMC block: video or the built-in cleaning animation in the picture frame (markup: amc in src/lib/sections.ts, art in src/lib/amc-art.ts) ---------- */
+.zh-amc-img video,.zh-amc-img .zh-amc-art{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;background:#0b2a63}
+.zh-amc-art .dp{fill:#c9e8ff;opacity:0;animation:amcDrop 1.15s ease-in infinite}
+.zh-amc-art .sp{transform-box:fill-box;transform-origin:center;transform:scale(.4);animation:amcSpark 1.5s ease-in-out infinite}
+@keyframes amcDrop{0%{transform:translateY(0);opacity:0}15%{opacity:.95}100%{transform:translateY(46px);opacity:0}}
+@keyframes amcSpark{0%,100%{transform:scale(.35) rotate(0);opacity:.5}50%{transform:scale(1.15) rotate(45deg);opacity:1}}
+@media (prefers-reduced-motion:reduce){.zh-amc-art .dp,.zh-amc-art .sp{animation:none}.zh-amc-art .sp{transform:scale(.8)}}

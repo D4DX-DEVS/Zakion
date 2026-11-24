@@ -3,6 +3,7 @@ import { CATEGORIES, Content, ICONS, parseFeatures, parseGallery, type Project, 
 import { richOrText } from "./html";
 import { ic, SPRITE } from "./sprite";
 import { NEON_HOUSE, PHOTO_FX } from "./neon-house";
+import { AMC_ART, AMC_ART_FREEZE } from "./amc-art";
 
 // ---- text helpers: every admin-entered string is escaped; ==x== (accent) and **x** (bold) are the only markup ----
 export const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -441,12 +442,23 @@ ${others.length ? `<section class="zh zh-pf zh-sd-other"><div class="zh-wrap">
 };
 
 // AMC (Annual Maintenance Contract): text, a picture, what is included, and a row of service cards. Edited in Studio (section "amc").
+// The video plays only while it is on screen; for visitors who prefer reduced motion it does not autoplay (it gets controls) and the
+// animation stops on a clean frame.
+const AMC_JS = `<script>(function(){var f=document.querySelector('#amc .zh-amc-img');if(!f)return;var rm=matchMedia('(prefers-reduced-motion: reduce)').matches,v=f.querySelector('video'),a=f.querySelector('svg');
+if(a&&rm&&a.pauseAnimations){a.pauseAnimations();a.setCurrentTime(${AMC_ART_FREEZE})}
+if(!v)return;if(rm){v.removeAttribute('autoplay');v.pause();v.controls=true;return}
+if('IntersectionObserver' in window)new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting){var p=v.play();if(p&&p.catch)p.catch(function(){})}else v.pause()})},{threshold:.2}).observe(v)})();</script>`;
+
 const amc = (c: Content) => {
   const a = c.amc;
   const included = lines(a.included);
   const feats: any[] = Array.isArray(a.features) ? a.features : [];
   const button = (text: unknown, link: unknown, cls: string) => (String(text ?? "").trim() && safeUrl(link) ? `<a class="zh-btn ${cls}" href="${url(link)}">${esc(text)}</a>` : ""); // both label and link, or no button
   const buttons = button(a.btn1Text, a.btn1Link, "") + button(a.btn2Text, a.btn2Link, "zh-btn--line");
+  // beside the text: the video if there is one (silent, looping, paused while off screen), else the picture, else the built-in cleaning animation
+  const media = safeUrl(a.video)
+    ? `<video src="${url(a.video)}"${safeUrl(a.image) ? ` poster="${url(a.image)}"` : ""} autoplay muted loop playsinline preload="metadata" aria-label="Solar panel cleaning and maintenance"></video>`
+    : safeUrl(a.image) ? img(a.image, "Technician cleaning and checking solar panels", 800, 600) : AMC_ART;
   return `<section class="zh zh-amc" id="amc"><div class="zh-wrap">
 <div class="zh-amc-top">
  <div class="zh-amc-txt">
@@ -456,10 +468,10 @@ const amc = (c: Content) => {
   ${included.length ? `<ul class="zh-amc-list">${included.map((t) => `<li class="zr">${ic("check")}<span>${rt(t)}</span></li>`).join("")}</ul>` : ""}
   ${buttons ? `<div class="zh-amc-btns zr">${buttons}</div>` : ""}
  </div>
- ${safeUrl(a.image) ? `<figure class="zh-amc-img zr zr-r">${img(a.image, "Technician cleaning and checking solar panels", 800, 600)}</figure>` : ""}
+ <figure class="zh-amc-img zr zr-r">${media}</figure>
 </div>
 ${feats.length ? `<div class="zh-amc-grid">${feats.map((f) => `<article class="zh-amc-card zr"><span class="zh-amc-ic">${ic(ICONS.includes(f.icon) ? f.icon : "wrench")}</span><h3>${rt(f.title)}</h3><p>${rt(f.text)}</p></article>`).join("")}</div>` : ""}
-</div></section>`;
+</div>${AMC_JS}</section>`;
 };
 
 const cta = (c: Content) => { const a = c.cta; return `<section class="zh zh-cta" id="power-your-future"><div class="zh-wrap zh-cta-grid">
