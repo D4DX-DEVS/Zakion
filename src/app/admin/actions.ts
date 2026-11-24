@@ -11,7 +11,7 @@ import { passwordProblem } from "@/lib/password";
 import { htmlToText } from "@/lib/html";
 import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
-import { type Field, ALL_KEYS, BANNER_PAGES, clean, cleanLayout, HOME_KEYS, CATEGORIES, NO_SYSTEM, PROJECT_FIELDS, LAYOUT_KEY, loadContent, loadOne, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
+import { type Field, ALL_KEYS, BANNER_PAGES, clean, cleanLayout, HOME_KEYS, CATEGORIES, NO_SYSTEM, PROJECT_FIELDS, SYSTEM_FIELDS, LAYOUT_KEY, loadContent, loadOne, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
 import { PAGE_PLAN } from "@/lib/home";
 import { bannerKey } from "@/lib/banners";
 import { CONTACT_NETS, cleanSite, SITE_DEFAULTS, siteOf, TAB_BY_ID } from "@/lib/site";
@@ -247,6 +247,87 @@ async function projectPaths(slugs: string[]) {
   return [...new Set(["/projects/", ...slugs, ...all].map((x) => (x === "/projects/" ? x : `/projects/${x}/`)))];
 }
 
+// ---- systems (table "systems"): the cards on the Solutions page and each system's own page (/services/<slug>/) ----
+
+/** The editor sends the system as one JSON field (see SYSTEM_FIELDS in lib/content.ts); "key" is the system's id, or "new". */
+export async function saveSystem(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "key");
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("data") ?? "{}")); } catch { redirect("/admin/systems/" + encodeURIComponent(id) + "?error=1"); }
+  const d = clean(SYSTEM_FIELDS, raw, {}) as Record<string, any>;
+  const title = String(d.title).trim().slice(0, 160) || "Untitled system";
+  const base = slugify(String(d.slug) || title) || "system";
+  // the address must be free among the systems and must not be one of the stored pages under /services/ (those are shown first)
+  const taken = async (x: string) =>
+    !!(await db().prepare("SELECT id FROM systems WHERE slug=? AND id IS NOT ?").bind(x, id === "new" ? null : Number(id)).first()) ||
+    !!(await db().prepare("SELECT path FROM pages WHERE path=?").bind(`/services/${x}/`).first());
+  let slug = base;
+  for (let n = 2; await taken(slug); n++) slug = `${base}-${n}`;
+  const features = JSON.stringify((Array.isArray(d.features) ? d.features : []).filter((x: { title: string; text: string }) => x.title.trim() || x.text.trim()).slice(0, 8));
+  const details = htmlToText(d.details) || /<(img|table)\b/i.test(d.details) ? String(d.details).trim() : ""; // an editor left with only empty lines is no text
+  const v = [slug, title, String(d.thumb), String(d.badge).trim(), String(d.heading).trim(), String(d.text).trim(), String(d.image), String(d.image2), features, details, d.visible === "Hidden" ? "draft" : "published", Math.round(Number(d.sort)) || 0];
+  if (id === "new") {
+    const r = await db().prepare("INSERT INTO systems (slug,title,thumb,badge,heading,text,image,image2,features,details,status,sort) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(...v).run();
+    await purgeSite(await systemPaths([slug]));
+    redirect("/admin/systems/" + r.meta.last_row_id + "?saved=1");
+  }
+  const old = await db().prepare("SELECT slug FROM systems WHERE id=?").bind(id).first<{ slug: string }>();
+  if (!old) redirect("/admin/systems");
+  await db().prepare("UPDATE systems SET slug=?,title=?,thumb=?,badge=?,heading=?,text=?,image=?,image2=?,features=?,details=?,status=?,sort=?,updated_at=datetime('now') WHERE id=?").bind(...v, id).run();
+  await purgeSite(await systemPaths([slug, old.slug]));
+  redirect("/admin/systems/" + id + "?saved=1");
+}
+export async function deleteSystem(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "key");
+  const old = await db().prepare("SELECT slug FROM systems WHERE id=?").bind(id).first<{ slug: string }>();
+  await db().prepare("DELETE FROM systems WHERE id=?").bind(id).run();
+  await purgeSite(await systemPaths(old ? [old.slug] : []));
+  redirect("/admin/systems?deleted=1");
+}
+const systemIds = () => db().prepare("SELECT id FROM systems ORDER BY sort, id").all<{ id: number }>().then((r) => r.results.map((x) => x.id));
+/** Renumbers the systems 1, 2, 3 ... in the given order; any system not listed keeps its place at the end. */
+async function renumberSystems(first: number[]) {
+  const all = await systemIds();
+  const order = [...first.filter((id) => all.includes(id)), ...all.filter((id) => !first.includes(id))];
+  if (order.length) await db().batch(order.map((id, i) => db().prepare("UPDATE systems SET sort=? WHERE id=?").bind(i + 1, id)));
+}
+/** Moves a system one place up or down the Solutions page (the arrows in the list). */
+export async function moveSystem(f: FormData) {
+  await requireAdmin();
+  const id = Number(s(f, "key")), step = s(f, "dir") === "up" ? -1 : 1;
+  const order = await systemIds();
+  const i = order.indexOf(id), j = i + step;
+  if (i >= 0 && j >= 0 && j < order.length) { [order[i], order[j]] = [order[j], order[i]]; await renumberSystems(order); await purgeSite(await systemPaths([])); }
+  redirect("/admin/systems");
+}
+/** Sets the whole order in one go (a row dragged to a new place in the list). */
+export async function reorderSystems(f: FormData) {
+  await requireAdmin();
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("keys") ?? "[]")); } catch { raw = []; }
+  await renumberSystems((Array.isArray(raw) ? raw : []).map(Number).filter((n) => Number.isInteger(n)));
+  await purgeSite(await systemPaths([]));
+  redirect("/admin/systems");
+}
+/** Hides a shown system or shows a hidden one (the system is kept either way). */
+export async function toggleSystem(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "key");
+  const x = await db().prepare("SELECT slug, status FROM systems WHERE id=?").bind(id).first<{ slug: string; status: string }>();
+  if (x) {
+    await db().prepare("UPDATE systems SET status=?, updated_at=datetime('now') WHERE id=?").bind(x.status === "published" ? "draft" : "published", id).run();
+    await purgeSite(await systemPaths([x.slug]));
+  }
+  redirect("/admin/systems?toggled=" + (x?.status === "published" ? "hidden" : "shown"));
+}
+/** Every page a change to a system can show on: the Solutions page, the system's own page, and every other system's page (the "other solutions" cards). */
+async function systemPaths(slugs: string[]) {
+  const all = await db().prepare("SELECT slug FROM systems").all<{ slug: string }>().then((r) => r.results.map((x) => x.slug)).catch(() => []);
+  return [...new Set(["/services/", ...[...slugs, ...all].map((x) => `/services/${x}/`)])];
+}
+
 // ---- page sections (src/lib/content.ts): one JSON document per section, merged over the built-in defaults ----
 
 /** Called from the section editor to upload an image or video; returns the public URL. */
@@ -271,6 +352,8 @@ const everyPage = async () => {
   return [...new Set([...allPages(), ...pages, ...posts])];
 };
 
+/** The pages to refresh after a section changes: the banners show on every page, and the system cards' text also shows on each system's own page. */
+const sectionPaths = async (key: string) => (key === "banners" ? await everyPage() : key === "systems" ? [...allPages(), ...(await systemPaths([]))] : allPages());
 /** Where to go after saving or resetting a section: back to the page it was opened from (Pages > a page), else to Studio. */
 const sectionUrl = (f: FormData, key: string, q: string) => {
   const page = s(f, "page");
@@ -286,7 +369,7 @@ export async function saveSection(f: FormData) {
     .prepare("INSERT INTO site_content (key,data,updated_at) VALUES (?,?,datetime('now')) ON CONFLICT(key) DO UPDATE SET data=excluded.data,updated_at=datetime('now')")
     .bind(key, JSON.stringify(sanitize(key, data)))
     .run();
-  await purgeSite(key === "banners" ? await everyPage() : allPages());
+  await purgeSite(await sectionPaths(key));
   redirect(sectionUrl(f, key, "saved=1"));
 }
 export async function resetSection(f: FormData) {
@@ -294,7 +377,7 @@ export async function resetSection(f: FormData) {
   const key = s(f, "key");
   if (!SECTION_BY_KEY[key]) redirect(blockPage(s(f, "page")) ? pageUrl(s(f, "page")) : "/admin/studio");
   await db().prepare("DELETE FROM site_content WHERE key=?").bind(key).run();
-  await purgeSite(key === "banners" ? await everyPage() : allPages());
+  await purgeSite(await sectionPaths(key));
   redirect(sectionUrl(f, key, "saved=reset"));
 }
 

@@ -76,7 +76,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
     const onHome = HOME_KEYS.includes(sel);
     const st = layout.settings[sel] ?? { spacing: "standard", anim: "on" };
     const pos = layout.order.indexOf(sel) + 1;
-    const when = sel === "hero" ? "Top of the home page" : sel === "header" ? "Top of every page" : sel === "footer" ? "Bottom of every page" : sel === "banners" ? "Top of every inner page" : sel === "portfolio" ? "Projects page" : sel === "amc" ? "Solutions page" : `Block ${pos} of ${layout.order.length}`;
+    const when = sel === "hero" ? "Top of the home page" : sel === "header" ? "Top of every page" : sel === "footer" ? "Bottom of every page" : sel === "banners" ? "Top of every inner page" : sel === "portfolio" ? "Projects page" : sel === "amc" || sel === "systems" ? "Solutions page" : `Block ${pos} of ${layout.order.length}`;
     const seg = (name: string, cur: string, opts: [string, string][]) => (
       <div className="seg" role="radiogroup">{opts.map(([v, l]) => <label key={v}><input type="radio" name={name} value={v} defaultChecked={cur === v} /><span>{l}</span></label>)}</div>
     );
@@ -130,11 +130,12 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
           <li className="o-cap">Inner pages</li>
           {item("banners")}
           {item("portfolio")}
+          {item("systems")}
           {item("amc")}
         </OutlineList>
       </aside>
       <section className="canvas" aria-live="polite">{editor}</section>
-      {sel ? <PreviewPanel key={sel} src={sel === "banners" ? "/about-us/" : sel === "portfolio" ? "/projects/" : sel === "amc" ? "/services/#amc" : "/" + (anchor ? "#" + anchor : "")} label={SECTION_BY_KEY[sel].title} /> : <div className="pv-ghost" aria-hidden="true" />}
+      {sel ? <PreviewPanel key={sel} src={sel === "banners" ? "/about-us/" : sel === "portfolio" ? "/projects/" : sel === "amc" ? "/services/#amc" : sel === "systems" ? "/services/#our-systems" : "/" + (anchor ? "#" + anchor : "")} label={SECTION_BY_KEY[sel].title} /> : <div className="pv-ghost" aria-hidden="true" />}
     </div>
   );
 }

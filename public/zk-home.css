@@ -841,3 +841,13 @@
 .zh-amc-card p{margin:0;font-size:15px;line-height:1.6;color:var(--zc-3b4a63,#3b4a63)}
 @media (max-width:1024px){.zh-amc-top{grid-template-columns:1fr}.zh-amc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.zh-amc-img{max-width:620px}}
 @media (max-width:640px){.zh-amc-grid{grid-template-columns:1fr}}
+
+/* ---------- A system's own page: /services/<slug>/ (markup: systemDetail in src/lib/sections.ts) ---------- */
+.zh-sd .zh-pd-back{margin-bottom:clamp(18px,2.4vw,32px)}
+.zh-sd-more{margin-top:clamp(26px,3.4vw,48px);padding:clamp(20px,2.6vw,36px);border-radius:24px;background:#fff;border:1px solid var(--edge);box-shadow:0 10px 30px rgba(var(--zr-082a5a,8,42,90),.07);font-size:clamp(15px,1.25vw,17px);line-height:1.65}
+.zh-sd-more.zh-prose img{max-width:100%;height:auto;border-radius:14px}
+.zh-sd-more.zh-prose table{border-collapse:collapse;max-width:100%}
+.zh-sd-more.zh-prose th,.zh-sd-more.zh-prose td{padding:8px 12px;border:1px solid var(--edge)}
+.zh-sd-cta{margin-top:clamp(24px,3vw,40px)}
+.zh a.zh-sd-cta-btn,.zh-sd-cta .zh-pc-btn{margin-top:0;padding:14px 30px;font-size:16px}
+.zh-sd-other .zh-pd-rh{margin-bottom:0}

@@ -37,14 +37,15 @@ export const HOME_KEYS = ["about", "track", "vision", "story", "why", "renewable
 
 // Which blocks each page shows by default, in order. The inner pages keep their own banner (page title and breadcrumb) on top.
 // The admin can reorder, remove and add blocks on every page (Site settings > Section order); the result is kept in the layout below.
-// Blocks that only make sense on inner pages (they have no place in the home page's own order): the Projects page's tabs and cards, and the AMC block.
-export const INNER_KEYS = ["portfolio", "amc"];
+// Blocks that only make sense on inner pages (they have no place in the home page's own order): the Projects page's tabs and cards, the AMC block,
+// and the system cards of the Solutions page (the Home page keeps showing the full On Grid, Hybrid and BESS blocks).
+export const INNER_KEYS = ["portfolio", "amc", "systems"];
 export const ALL_KEYS = [...HOME_KEYS, ...INNER_KEYS];
 
 export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/": HOME_KEYS,
   "/about-us/": ["about", "track", "vision", "story", "why", "process"],
-  "/services/": ["onGrid", "hybrid", "bess", "components", "aesthetics", "amc"],
+  "/services/": ["systems", "components", "aesthetics", "amc"],
   "/projects/": ["projects", "portfolio"],
   "/blog/": [],
   "/contact/": ["contact"],
@@ -395,6 +396,12 @@ export const SECTIONS: SectionDef[] = [
     data: { eyebrow: "", title: "", subtitle: "", allLabel: "All", readMore: "Read More", empty: "New projects are being added. Please check back soon." },
   },
   {
+    key: "systems", title: "System cards (Solutions page)", page: "Solutions",
+    help: "The cards on the Solutions page: one for each system type, with its picture, name and a Read More button that opens the system's own page. The systems themselves (name, thumbnail, details) are added and edited under Systems in the left menu. Leave the heading empty to show only the cards.",
+    fields: [T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("subtitle", "Paragraph"), T("readMore", "Card button text"), T("quoteText", "Button text on each system's page", "The button under a system's details; it opens the Contact page. Leave it empty to hide the button."), T("empty", "Text shown when there are no systems yet")],
+    data: { eyebrow: "Our Solutions", title: "Choose your ==solar system==", subtitle: "Pick a system to see how it works and what you get.", readMore: "Read More", quoteText: "Get a Free Quote", empty: "Our systems are being added. Please check back soon." },
+  },
+  {
     key: "banners", title: "Page banners", page: "Inner pages",
     help: "The picture behind the title at the top of each inner page (About Us, Solutions, Projects, Contact, Blog and the pages under them). Pick a different picture for each page. If you empty a field, that page goes back to its built-in picture.",
     fields: BANNER_PAGES.map((b): Field => ({ k: b.key, label: b.label, type: "image", spec: BANNER_SPEC, help: `Shown on ${b.where}.` })),
@@ -461,6 +468,37 @@ export const PROJECT_FIELDS: Field[] = [
   NUM("sort", "Order", "Lower numbers come first on the Projects page. Projects with the same number are listed newest first."),
 ];
 
+// ---- systems (table "systems", managed under Systems in the admin): the cards on the Solutions page and each system's own page ----
+
+export type System = {
+  id: number; slug: string; title: string; thumb: string; badge: string; heading: string; text: string; image: string; image2: string;
+  features: string; details: string; status: string; sort: number;
+};
+export type Feature = { icon: string; title: string; text: string };
+/** The features column is a JSON list of {icon, title, text}; a damaged value is an empty list. */
+export function parseFeatures(v: unknown): Feature[] {
+  try {
+    const a = JSON.parse(String(v ?? "[]"));
+    return Array.isArray(a) ? a.filter((x) => x && typeof x === "object").map((x) => ({ icon: String(x.icon ?? "auto"), title: String(x.title ?? ""), text: String(x.text ?? "") })) : [];
+  } catch { return []; }
+}
+const SYSTEM_THUMB_SPEC = "Image size: 1600 × 1000 px (width × height), landscape 16:10 works best. Smallest that still looks sharp: 1200 × 750 px. JPG or WebP, ideally under 500 KB (up to 15 MB is accepted). The card shows it cropped to fit, so keep the main subject in the middle.";
+/** The fields of the system editor (Admin > Systems). */
+export const SYSTEM_FIELDS: Field[] = [
+  T("title", "System name", "Shown on the card and as the heading of the system's page."),
+  T("slug", "Web address (optional)", "Letters, numbers and dashes. Leave it empty to make it from the name. The system's page will be at /services/<this>/."),
+  SEL("visible", "Show on the website", ["Shown", "Hidden"], "Hidden systems are saved but not shown. You can also hide or show a system from the Systems list."),
+  { k: "thumb", label: "Thumbnail", type: "image", spec: SYSTEM_THUMB_SPEC, help: "The picture on the system's card on the Solutions page." },
+  T("badge", "Small label above the heading (optional)", "For example: 01 · Grid connected"),
+  T("heading", "Heading on the system's page (optional)", MARKUP_HELP + " Leave it empty to use the system name."),
+  TA("text", "Paragraph", "Shown under the heading on the system's page."),
+  IMG("image", "Main picture", "The picture beside the text on the system's page: a diagram or a photo."),
+  IMG("image2", "Second picture (optional)", "Shown under the main picture."),
+  LIST("features", "Benefits", "benefit", [SEL("icon", "Icon", ["auto", ...ICONS], "Auto picks an icon that suits the title."), T("title", "Title"), TA("text", "Text")], 8),
+  { k: "details", label: "More details (optional)", type: "html", help: "Extra text under the benefits on the system's page. Use the toolbar for headings, bold, lists, links, tables and images." },
+  NUM("sort", "Order", "Lower numbers come first on the Solutions page."),
+];
+
 // ---- reading and cleaning saved content ----
 
 const URLISH = /^(\/(?!\/)|https?:\/\/|mailto:|tel:|#)/i;
@@ -517,6 +555,8 @@ export async function loadContent(): Promise<Content> {
   for (const r of rows) { try { saved[r.key] = JSON.parse(r.data); } catch { /* ignore a damaged row */ } }
   let projects: Project[] = [];
   try { projects = (await db().prepare("SELECT * FROM projects WHERE status='published' ORDER BY sort, id DESC").all<Project>()).results; } catch { /* table not created yet: no projects */ }
-  return { ...Object.fromEntries(SECTIONS.map((d) => [d.key, merge(d, saved[d.key])])), _layout: cleanLayout(saved[LAYOUT_KEY]), [SITE_KEY]: saved[SITE_KEY] ?? null, _projects: projects };
+  let systems: System[] = [];
+  try { systems = (await db().prepare("SELECT * FROM systems WHERE status='published' ORDER BY sort, id").all<System>()).results; } catch { /* table not created yet: no systems */ }
+  return { ...Object.fromEntries(SECTIONS.map((d) => [d.key, merge(d, saved[d.key])])), _layout: cleanLayout(saved[LAYOUT_KEY]), [SITE_KEY]: saved[SITE_KEY] ?? null, _projects: projects, _systems: systems };
 }
 export async function loadOne(key: string) { const d = SECTION_BY_KEY[key]; const r = await db().prepare("SELECT data FROM site_content WHERE key=?").bind(key).first<{ data: string }>().catch(() => null); let s: unknown = null; try { s = r ? JSON.parse(r.data) : null; } catch { /* default */ } return { def: d, data: merge(d, s), customised: !!r }; }

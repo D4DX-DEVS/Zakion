@@ -4,7 +4,7 @@ import { applyBanner } from "./banners";
 import { htmlToText } from "./html";
 import { stripLegacyBlocks } from "./legacy-blocks";
 import { applyPage, HOME_HEAD, PAGE_PLAN, replaceMain } from "./home";
-import { type Content, loadContent, type Project } from "./content";
+import { type Content, loadContent, type Project, type System } from "./content";
 import { BACK_TO_TOP, FONT_HEAD, LIGHT_JS, MOTION_EARLY, MOTION_JS } from "./chrome";
 import { swapFooter } from "./footer";
 import { applyHeader } from "./header";
@@ -46,7 +46,7 @@ img,video,iframe{max-width:100%}
 // keeps scrolling on the main thread. Native scrolling is smoother, so the script tag is removed from every page.
 const noSmoothScroll = (h: string) => h.replace(/<script[^>]*id=["']SmoothScroll-js["'][^>]*><\/script>/g, "");
 
-function document_(p: Page, body: string, c: Content, post?: Post) {
+function document_(p: Page, body: string, c: Content, post?: Post, deck = false) { // deck: the page is built from the home page's section styles even though its address is not in the page plan
   const t = esc(p.title);
   const site = siteOf(c); // Site settings: theme, fonts, layout and the on/off switches
   const sameAs = socialOf(c).filter((x) => x.network !== "WhatsApp").map((x) => x.url); // wa.me is a chat link, not a profile
@@ -64,7 +64,7 @@ function document_(p: Page, body: string, c: Content, post?: Post) {
   return `<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${site.scrollAnimations ? MOTION_EARLY : ""}<title>${t}</title>` +
     (p.description ? `<meta name="description" content="${esc(p.description)}">` : "") +
     `<meta property="og:title" content="${t}">` + seoHead(p, post, isPlaceholder(body), sameAs.length ? sameAs : undefined) +
-    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${head}${PUBLIC_CSS}<link rel="stylesheet" href="/zk-deck.css?v=15">${FONT_HEAD}<link rel="stylesheet" href="/zk-wide.css?v=10">${p.path in PAGE_PLAN || p.path.startsWith("/projects/") ? HOME_HEAD : ""}<link rel="stylesheet" href="/zk-footer.css?v=2"><link rel="stylesheet" href="/zk-motion.css?v=12"><link rel="stylesheet" href="/zk-menu.css?v=7">${siteHead(site)}</head>` +
+    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${head}${PUBLIC_CSS}<link rel="stylesheet" href="/zk-deck.css?v=15">${FONT_HEAD}<link rel="stylesheet" href="/zk-wide.css?v=10">${p.path in PAGE_PLAN || p.path.startsWith("/projects/") || deck ? HOME_HEAD : ""}<link rel="stylesheet" href="/zk-footer.css?v=2"><link rel="stylesheet" href="/zk-motion.css?v=12"><link rel="stylesheet" href="/zk-menu.css?v=7">${siteHead(site)}</head>` +
     `<body class="${esc(p.body_class)}">${improveBody(swapFooter(noSmoothScroll(applyHeader(body, c, p.path)), c), post ? post.title : p.title.split(/ [–|] /)[0])}${site.scrollAnimations ? MOTION_JS : ""}${site.imageShine ? LIGHT_JS : ""}${noSmoothScroll(foot)}${FORM_JS}${site.backToTop ? BACK_TO_TOP : ""}<script src="/zk-deck.js?v=12" defer></script></body></html>`;
 }
 
@@ -115,6 +115,17 @@ export async function renderPath(path: string): Promise<Response> {
       const content = await loadContent();
       const body = replaceMain(shell.body_html, renderSections(["projectDetail"], { ...content, _project: project }));
       return html(document_({ ...shell, path: norm, title: `${project.title} | Zakion Energy`, description: clip(htmlToText(project.summary)), og_image: project.image }, body, content));
+    }
+  }
+  // a system's own page: the Solutions page's header and footer around the system (Admin > Systems). The stored pages under /services/ are tried first above.
+  const sm = /^\/services\/([^/]+)\/$/.exec(norm);
+  if (sm) {
+    const system = await d.prepare("SELECT * FROM systems WHERE slug=? AND status='published'").bind(sm[1]).first<System>().catch(() => null);
+    const shell = system && (await d.prepare("SELECT * FROM pages WHERE path='/services/' AND kind!='template'").first<Page>());
+    if (system && shell) {
+      const content = await loadContent();
+      const body = replaceMain(shell.body_html, renderSections(["systemDetail"], { ...content, _system: system }));
+      return html(document_({ ...shell, path: norm, title: `${system.title} | Zakion Energy`, description: clip(system.text.replace(/==|\*\*/g, "")), og_image: system.thumb || system.image }, body, content, undefined, true));
     }
   }
   const slug = norm.slice(1, -1);

@@ -1,5 +1,5 @@
 // HTML builders for the page sections. Each one renders from the editable content in lib/content.ts (defaults + admin edits).
-import { CATEGORIES, Content, ICONS, parseGallery, type Project, safeUrl, SYSTEM_NOTES } from "./content";
+import { CATEGORIES, Content, ICONS, parseFeatures, parseGallery, type Project, safeUrl, type System, SYSTEM_NOTES } from "./content";
 import { richOrText } from "./html";
 import { ic, SPRITE } from "./sprite";
 import { NEON_HOUSE, PHOTO_FX } from "./neon-house";
@@ -386,6 +386,50 @@ ${related.length ? `<div class="zh-pd-rh"><h2 class="zh-pd-h">Related Projects</
 </div></section>`;
 };
 
+// ---- the Solutions page: one card per system type (picture, name, Read More), and each system's own page (/services/<slug>/) ----
+
+const systemUrl = (x: Pick<System, "slug">) => `/services/${esc(x.slug)}/`;
+const systemCard = (x: System, readMore: string) =>
+  `<article class="zh-pc zh-sc"><a class="zh-pc-img" href="${systemUrl(x)}" tabindex="-1" aria-hidden="true">${x.thumb || x.image ? img(x.thumb || x.image, "", 640, 400) : ""}</a>` +
+  `<div class="zh-pc-b"><h3><a href="${systemUrl(x)}">${esc(x.title)}</a></h3>` +
+  `<a class="zh-pc-btn" href="${systemUrl(x)}" aria-label="${esc(readMore)}: ${esc(x.title)}">${esc(readMore)}${ARROW_R}</a></div></article>`;
+
+const systems = (c: Content) => {
+  const p = c.systems, list: System[] = c._systems ?? [];
+  const intro = p.title || p.eyebrow || p.subtitle ? head(p.eyebrow, p.title, p.subtitle) : "";
+  return `<section class="zh zh-pf zh-sc-sec" id="our-systems"><div class="zh-wrap">${intro}
+${list.length ? `<div class="zh-pf-grid">${list.map((x) => systemCard(x, String(p.readMore || "Read More"))).join("")}</div>` : `<p class="zh-pf-none">${esc(p.empty)}</p>`}
+</div></section>`;
+};
+
+// A system's page: the same look as the system blocks on the Home page (label, heading, text, benefit cards, picture), with a back link,
+// optional extra details, a quote button, and the other systems as cards underneath.
+const systemDetail = (c: Content) => {
+  const x: System = c._system, all: System[] = c._systems ?? [], p = c.systems ?? {};
+  const features = parseFeatures(x.features);
+  const others = all.filter((o) => o.id !== x.id).slice(0, 3);
+  const media = (x.image ? img(x.image, x.title, undefined, undefined, "zh-simg") : "") +
+    (x.image2 ? (x.image ? `<span class="zh-stage-rule" aria-hidden="true"></span>` : "") + img(x.image2, x.title, undefined, undefined, "zh-simg zh-simg--b") : "");
+  return `<section class="zh zh-sys zh-sys--grid zh-sd" id="system"><div class="zh-wrap">
+<a class="zh-pd-back" href="/services/">${ARROW_L}<span>Back to Solutions</span></a>
+<div class="zh-sys-grid">
+ <div class="zh-sys-txt">
+  ${x.badge ? `<span class="zh-pill">${esc(x.badge)}</span>` : ""}
+  <h1 class="zh-h2 zh-h2--sys">${rt(x.heading || x.title)}</h1>
+  ${x.text ? `<p class="zh-lead">${rt(x.text)}</p>` : ""}
+  ${features.length ? feats(features) : ""}
+ </div>
+ ${media ? `<div class="zh-sys-media"><div class="zh-stage">${media}</div></div>` : ""}
+</div>
+${x.details ? `<div class="zh-sd-more zh-prose">${richOrText(x.details)}</div>` : ""}
+${p.quoteText ? `<div class="zh-sd-cta"><a class="zh-pc-btn" href="/contact/">${esc(p.quoteText)}${ARROW_R}</a></div>` : ""}
+</div></section>
+${others.length ? `<section class="zh zh-pf zh-sd-other"><div class="zh-wrap">
+<div class="zh-pd-rh"><h2 class="zh-pd-h">Other Solutions</h2><a class="zh-pd-all" href="/services/">View All Solutions${ARROW_R}</a></div>
+<div class="zh-pf-grid">${others.map((o) => systemCard(o, String(p.readMore || "Read More"))).join("")}</div>
+</div></section>` : ""}`;
+};
+
 // AMC (Annual Maintenance Contract): text, a picture, what is included, and a row of service cards. Edited in Studio (section "amc").
 const amc = (c: Content) => {
   const a = c.amc;
@@ -455,7 +499,7 @@ ${o.map && safeUrl(k.map) ? `<div class="zh-ct-map zr zr-z"><iframe src="${url(k
 };
 
 export const BUILD: Record<string, (c: Content, o?: { map?: boolean }) => string> = {
-  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail, amc,
+  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail, amc, systems, systemDetail,
 };
 
 /** The deck sections for a page, in order, with the icon sprite and the animation script. */
