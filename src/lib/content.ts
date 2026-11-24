@@ -83,14 +83,14 @@ export const MARKUP_HELP = "Use ==text== for the amber highlight and **text** fo
 // built-in picture, a photo from the media library, used until the admin picks another one (or empties the field).
 export const BANNER_PAGES: { key: string; label: string; where: string; image: string }[] = [
   { key: "about", label: "About Us", where: "the About Us page", image: "/media/2024/03/post-1.jpg" },
-  { key: "solutions", label: "Solutions (main page)", where: "the Solutions page and any other page under it", image: "/media/2024/03/hero-2.jpg" },
+  { key: "solutions", label: "Solutions (main page)", where: "the Solutions page and any other page under it", image: "/media/2024/03/post-4.jpg" },
   { key: "pv", label: "Photovoltaic Solutions", where: "the Photovoltaic Solutions page", image: "/media/2024/03/header-banner.jpg" },
   { key: "solarHome", label: "Solar Home", where: "the Solar Home page", image: "/zk/solarhome-photo.jpg" },
   { key: "energy", label: "Energy Engineering", where: "the Energy Engineering page", image: "/media/2024/03/post-6.jpg" },
   { key: "emobility", label: "EV Charging Infrastructure", where: "the EV Charging Infrastructure page", image: "/media/2024/03/emobility.webp" },
-  { key: "projects", label: "Projects", where: "the Projects page and every project page", image: "/media/2024/03/video-bg.jpg" },
+  { key: "projects", label: "Projects", where: "the Projects page and every project page", image: "/media/2024/03/hero.jpg" },
   { key: "contact", label: "Contact", where: "the Contact page", image: "/media/2024/03/post-2.jpg" },
-  { key: "blog", label: "Blog", where: "the Blog page, its categories and every article", image: "/media/2024/03/post-4.jpg" },
+  { key: "blog", label: "Blog", where: "the Blog page, its categories and every article", image: "/media/2024/03/hero-2.jpg" },
   { key: "other", label: "Any other page", where: "every page that is not listed above", image: "/zk/page-hero.jpg" },
 ];
 const BANNER_SPEC = "Image size: 1920 × 600 px (width × height), a wide strip. Smallest that still looks sharp: 1600 × 500 px. JPG or WebP, ideally under 500 KB so the page opens fast (up to 15 MB is accepted). The picture fills the strip behind the page title, so only a band across the middle shows: keep the main subject in the middle. The left side is darkened so the white title stays easy to read.";

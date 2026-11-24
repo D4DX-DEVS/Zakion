@@ -23,8 +23,7 @@
 .zi{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
 /* ---------- shared type ---------- */
-/* one size for every section title (Our Story, About, Solar Home, Projects ...); change it here to change them all */
-:root{--zh-title:clamp(38px,calc(5.2*var(--u)),75px)}
+/* every section title uses --zh-title, set in zk-wide.css */
 .zh h2{font-size:var(--zh-title);font-weight:700;line-height:1.08;letter-spacing:-.012em;color:var(--navy)}
 .zh h2 em{color:var(--amber)}
 .zh .zh-navy,.zh em.zh-navy{color:var(--navy)}

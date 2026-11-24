@@ -8,6 +8,8 @@
    it is 1/80 of the content width (type and spacing scale with the 70% container); on tablets and phones it is plain 1vw. */
 :root{--u:1vw}
 @media(min-width:1024px){:root{--u:calc(var(--zk-w)/80)}}
+/* the size of every section title on every page (Our Story, About, Projects, the service pages ...): change it here to change them all */
+:root{--zh-title:clamp(30px,calc(3.8*var(--u)),54px)}
 
 .e-con{--content-width:var(--zk-w)!important}
 .e-con>.e-con-inner{max-width:var(--zk-w)!important}

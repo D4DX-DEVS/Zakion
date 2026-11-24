@@ -16,7 +16,7 @@
 .zk-head.c{margin-left:auto;margin-right:auto;text-align:center}
 .zk-eye{display:inline-block;font:600 13px/1 Rubik,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--zc-a96800,#a96800);margin-bottom:14px}
 .zk--navy .zk-eye{color:var(--amber)}
-.zk-h2{font-size:clamp(32px,4.4vw,52px);line-height:1.08;font-weight:700;color:var(--navy)}
+.zk-h2{font-size:var(--zh-title,clamp(30px,3.8vw,54px));line-height:1.08;font-weight:700;color:var(--navy)}
 .zk--navy .zk-h2{color:#fff}
 .zk-h2 em{font-style:normal;color:var(--amber)}
 .zk-sub{margin-top:14px;font-size:18px;color:var(--mut)}
@@ -118,7 +118,7 @@
 /* PV systems */
 .zk-sys{padding:70px 0}
 .zk-sys + .zk-sys{border-top:1px solid var(--line)}
-.zk-sys-t{font-size:clamp(34px,4.6vw,56px);font-weight:700;color:var(--navy);line-height:1}
+.zk-sys-t{font-size:var(--zh-title,clamp(30px,3.8vw,54px));font-weight:700;color:var(--navy);line-height:1}
 .zk-sys-t em{font-style:normal;color:var(--amber)}
 .zk-feats{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:30px;border-top:1px solid var(--line)}
 .zk-feats div{padding:18px 20px 18px 0;border-bottom:1px solid var(--line)}
