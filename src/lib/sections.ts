@@ -3,7 +3,6 @@ import { CATEGORIES, Content, ICONS, parseFeatures, parseGallery, type Project, 
 import { richOrText } from "./html";
 import { ic, SPRITE } from "./sprite";
 import { NEON_HOUSE, PHOTO_FX } from "./neon-house";
-import { AMC_ART, AMC_ART_FREEZE } from "./amc-art";
 
 // ---- text helpers: every admin-entered string is escaped; ==x== (accent) and **x** (bold) are the only markup ----
 export const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -402,23 +401,21 @@ ${others.length ? `<section class="zh zh-pf zh-sd-other"><div class="zh-wrap">
 </div></section>` : ""}`;
 };
 
-// ---- Testimonials: a looping carousel on the Home page (the latest few) and a list of all of them on the Testimonials page ----
-// A testimonial is a written quote, a video, or both. A video shows its cover (or first frame) with a play button and opens in a larger player.
-const QUOTE_MARK = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M10 6H6.5A2.5 2.5 0 0 0 4 8.5V13a2.5 2.5 0 0 0 2.5 2.5H8c0 1.7-.9 2.8-2.5 3.5l.7 1.5C9 19.3 10.5 17 10.5 13.5V6zM20 6h-3.5A2.5 2.5 0 0 0 14 8.5V13a2.5 2.5 0 0 0 2.5 2.5H18c0 1.7-.9 2.8-2.5 3.5l.7 1.5c2.8-1.2 4.3-3.5 4.3-7V6z"/></svg>`;
+// ---- Testimonials: blue quote blocks in a looping carousel on the Home page (the latest few) and all of them on the Testimonials page ----
+// A testimonial is a written quote, a video, or both. A video shows its cover (or first frame) with a play button inside the block and opens in
+// a larger player. The testimonials come from the "testimonials" table (Admin > Testimonials), newest first.
 const PLAY_MARK = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>`;
 const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
-// `full`: on the carousel a long quote is cut short (CSS) and a link leads to the whole text on the Testimonials page
-const testimonialCard = (t: Testimonial, full = false) => {
+const testimonialCard = (t: Testimonial) => {
   const video = safeUrl(t.video), poster = safeUrl(t.poster), quote = String(t.quote ?? "").trim();
   const media = video
-    ? `<button type="button" class="zh-tc-media" data-tc-video="${url(video)}" data-tc-name="${esc(t.name)}" aria-label="Play the video testimonial from ${esc(t.name)}">${poster ? img(poster, "", 640, 360) : `<video src="${url(video)}#t=0.1" muted playsinline preload="metadata" tabindex="-1" aria-hidden="true"></video>`}<span class="zh-tc-play">${PLAY_MARK}</span></button>`
+    ? `<button type="button" class="zh-q-media" data-tc-video="${url(video)}" data-tc-name="${esc(t.name)}" aria-label="Play the video testimonial from ${esc(t.name)}">${poster ? img(poster, "", 640, 360) : `<video src="${url(video)}#t=0.1" muted playsinline preload="metadata" tabindex="-1" aria-hidden="true"></video>`}<span class="zh-q-play">${PLAY_MARK}</span></button>`
     : "";
-  return `<figure class="zh-tc${video ? " zh-tc--vid" : ""}${video && !quote ? " zh-tc--only" : ""}" id="testimonial-${t.id}">${media}<div class="zh-tc-b">` +
-    (quote ? `<span class="zh-tc-qi" aria-hidden="true">${QUOTE_MARK}</span><blockquote>${rt(quote)}</blockquote>` : "") +
-    (full && quote.length > 230 ? `<a class="zh-tc-full" href="/testimonials/#testimonial-${t.id}">Read full testimonial${ARROW_R}</a>` : "") +
-    `<figcaption class="zh-tc-who">${safeUrl(t.avatar) ? img(t.avatar, t.name, 112, 112) : `<span class="zh-tc-init" aria-hidden="true">${esc(initials(t.name))}</span>`}` +
-    `<span><b>${esc(t.name)}</b>${t.role ? `<strong>${esc(t.role)}</strong>` : ""}${t.company ? `<em>${esc(t.company)}</em>` : ""}</span></figcaption></div></figure>`;
+  const long = `${t.role}${t.company}`.length > 40; // a long job title and company wrap onto more lines: the block gets a little more room on top
+  return `<figure class="zh-q${video ? " zh-q--vid" : ""}${long ? " zh-q--long" : ""}" id="testimonial-${t.id}"><div class="zh-q-in">${media}${quote ? `<blockquote>${rt(quote)}</blockquote>` : ""}</div><span class="zh-q-tail" aria-hidden="true"></span>` +
+    `<figcaption class="zh-q-who">${safeUrl(t.avatar) ? img(t.avatar, t.name, 150, 145) : `<div class="zh-q-init" aria-hidden="true">${esc(initials(t.name))}</div>`}` +
+    `<span><b>${esc(t.name)}</b><strong>${esc(t.role)}</strong><em>${esc(t.company)}</em></span></figcaption></figure>`;
 };
 
 // The carousel slides one card at a time, by itself, and loops without a jump: when there are more testimonials than fit on screen, a second copy
@@ -427,9 +424,9 @@ const testimonialCard = (t: Testimonial, full = false) => {
 const TC_JS = `<script>(function(){var d=document;
 function dlg(){var x=d.getElementById('zh-tc-dlg');if(x)return x;x=d.createElement('dialog');x.id='zh-tc-dlg';x.className='zh-vlb';x.innerHTML='<button type="button" class="zh-vlb-x" aria-label="Close">&times;</button><video controls playsinline></video>';d.body.appendChild(x);var v=x.querySelector('video');x.querySelector('.zh-vlb-x').onclick=function(){x.close()};x.addEventListener('click',function(e){if(e.target===x)x.close()});x.addEventListener('close',function(){v.pause();v.removeAttribute('src');v.load()});return x}
 if(!d.__zhTc){d.__zhTc=1;d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-tc-video]');if(!b)return;var x=dlg(),v=x.querySelector('video');v.src=b.getAttribute('data-tc-video');x.setAttribute('aria-label','Video testimonial from '+(b.getAttribute('data-tc-name')||''));x.showModal();var p=v.play();if(p&&p.catch)p.catch(function(){})})}
-[].forEach.call(d.querySelectorAll('.zh-tcr:not([data-ready])'),function(car){
+[].forEach.call(d.querySelectorAll('.zh-tcar:not([data-ready])'),function(car){
  car.setAttribute('data-ready','1');
- var tr=car.querySelector('.zh-tcr-track'),orig=[].slice.call(tr.children),n=orig.length,prev=car.querySelector('.zh-tcr-prev'),next=car.querySelector('.zh-tcr-next'),dots=car.querySelector('.zh-tcr-dots'),clones=[];
+ var tr=car.querySelector('.zh-ttrack'),orig=[].slice.call(tr.children),n=orig.length,prev=car.querySelector('.zh-tprev'),next=car.querySelector('.zh-tnext'),dots=car.querySelector('.zh-tdots'),clones=[];
  function per(){return parseInt(getComputedStyle(tr).getPropertyValue('--per'),10)||1}
  function step(){var s=tr.children[0],cs=getComputedStyle(tr);return s.getBoundingClientRect().width+(parseFloat(cs.columnGap)||parseFloat(cs.gap)||0)}
  function loops(){return n>per()}
@@ -460,30 +457,29 @@ const testimonials = (c: Content) => {
   const t = c.testimonials, how = Math.min(12, Math.max(1, Math.round(Number(t.count)) || 6));
   const list: Testimonial[] = (c._testimonials ?? []).slice(0, how); // newest first
   if (!list.length) return "";
-  const intro = t.title || t.subtitle ? head("", t.title, t.subtitle, "c") : "";
-  const more = String(t.moreText ?? "").trim() ? `<div class="zh-tc-more zr"><a class="zh-btn" href="/testimonials/">${esc(t.moreText)}</a></div>` : "";
-  return `<section class="zh zh-tcs" id="client-feedback"><div class="zh-wrap">${intro}
-<div class="zh-tcr zr" data-auto="${t.autoplay ? 1 : 0}" data-interval="${Math.max(2, Number(t.interval) || 5)}">
- <div class="zh-tcr-track" tabindex="0" role="region" aria-label="Customer testimonials">${list.map((x) => testimonialCard(x, true)).join("")}</div>
- <div class="zh-tcr-nav"><button type="button" class="zh-tcr-prev" aria-label="Previous testimonial">${ic("chev")}</button><span class="zh-tcr-dots"></span><button type="button" class="zh-tcr-next" aria-label="Next testimonial">${ic("chev")}</button></div>
-</div>${more}
-</div></section>${TC_JS}`;
+  const more = String(t.moreText ?? "").trim() ? `<div class="zh-tc-more"><a class="zh-btn" href="/testimonials/">${esc(t.moreText)}</a></div>` : "";
+  return `<section class="zh zh-test" id="client-feedback"><div class="zh-wrap zh-test-grid">
+<header class="zh-head zr zr-l zh-test-h"><h2>${rt(t.title)}</h2><p class="zh-sub">${rt(t.subtitle)}</p><span class="zh-rule"></span></header>
+<div class="zh-tcol zr zr-r">
+ <div class="zh-tcar" data-auto="${t.autoplay ? 1 : 0}" data-interval="${Math.max(2, Number(t.interval) || 5)}">
+  <div class="zh-ttrack" tabindex="0" role="region" aria-label="Customer testimonials">${list.map(testimonialCard).join("")}</div>
+  <div class="zh-tnav"><button type="button" class="zh-tprev" aria-label="Previous testimonial">${ic("chev")}</button><span class="zh-tdots"></span><button type="button" class="zh-tnext" aria-label="Next testimonial">${ic("chev")}</button></div>
+ </div>${more}
+</div></div></section>${TC_JS}`;
 };
 
 const testimonialsAll = (c: Content) => {
   const t = c.testimonialsAll, list: Testimonial[] = c._testimonials ?? [];
   const intro = t.title || t.eyebrow || t.subtitle ? head(t.eyebrow, t.title, t.subtitle, "c") : "";
-  return `<section class="zh zh-tcs zh-tcs--all" id="all-testimonials"><div class="zh-wrap">${intro}
-${list.length ? `<div class="zh-tc-grid">${list.map((x) => testimonialCard(x)).join("")}</div>` : `<p class="zh-pf-none">${esc(t.empty)}</p>`}
+  return `<section class="zh zh-test zh-test--all" id="all-testimonials"><div class="zh-wrap">${intro}
+${list.length ? `<div class="zh-q-grid">${list.map(testimonialCard).join("")}</div>` : `<p class="zh-pf-none">${esc(t.empty)}</p>`}
 </div></section>${TC_JS}`;
 };
 
 // AMC (Annual Maintenance Contract): text, a picture, what is included, and a row of service cards. Edited in Studio (section "amc").
-// The video plays only while it is on screen; for visitors who prefer reduced motion it does not autoplay (it gets controls) and the
-// animation stops on a clean frame.
-const AMC_JS = `<script>(function(){var f=document.querySelector('#amc .zh-amc-img');if(!f)return;var rm=matchMedia('(prefers-reduced-motion: reduce)').matches,v=f.querySelector('video'),a=f.querySelector('svg');
-if(a&&rm&&a.pauseAnimations){a.pauseAnimations();a.setCurrentTime(${AMC_ART_FREEZE})}
-if(!v)return;if(rm){v.removeAttribute('autoplay');v.pause();v.controls=true;return}
+// A video added in Studio plays only while it is on screen; for visitors who prefer reduced motion it does not autoplay (it gets controls).
+const AMC_JS = `<script>(function(){var v=document.querySelector('#amc .zh-amc-img video');if(!v)return;
+if(matchMedia('(prefers-reduced-motion: reduce)').matches){v.removeAttribute('autoplay');v.pause();v.controls=true;return}
 if('IntersectionObserver' in window)new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting){var p=v.play();if(p&&p.catch)p.catch(function(){})}else v.pause()})},{threshold:.2}).observe(v)})();</script>`;
 
 const amc = (c: Content) => {
@@ -492,10 +488,10 @@ const amc = (c: Content) => {
   const feats: any[] = Array.isArray(a.features) ? a.features : [];
   const button = (text: unknown, link: unknown, cls: string) => (String(text ?? "").trim() && safeUrl(link) ? `<a class="zh-btn ${cls}" href="${url(link)}">${esc(text)}</a>` : ""); // both label and link, or no button
   const buttons = button(a.btn1Text, a.btn1Link, "") + button(a.btn2Text, a.btn2Link, "zh-btn--line");
-  // beside the text: the video if there is one (silent, looping, paused while off screen), else the picture, else the built-in cleaning animation
+  // beside the text: the video if one was added (silent, looping, paused while off screen), else the picture
   const media = safeUrl(a.video)
     ? `<video src="${url(a.video)}"${safeUrl(a.image) ? ` poster="${url(a.image)}"` : ""} autoplay muted loop playsinline preload="metadata" aria-label="Solar panel cleaning and maintenance"></video>`
-    : safeUrl(a.image) ? img(a.image, "Technician cleaning and checking solar panels", 800, 600) : AMC_ART;
+    : safeUrl(a.image) ? img(a.image, "Technician cleaning and checking solar panels", 800, 600) : "";
   return `<section class="zh zh-amc" id="amc"><div class="zh-wrap">
 <div class="zh-amc-top">
  <div class="zh-amc-txt">
@@ -505,10 +501,10 @@ const amc = (c: Content) => {
   ${included.length ? `<ul class="zh-amc-list">${included.map((t) => `<li class="zr">${ic("check")}<span>${rt(t)}</span></li>`).join("")}</ul>` : ""}
   ${buttons ? `<div class="zh-amc-btns zr">${buttons}</div>` : ""}
  </div>
- <figure class="zh-amc-img zr zr-r">${media}</figure>
+ ${media ? `<figure class="zh-amc-img zr zr-r">${media}</figure>` : ""}
 </div>
 ${feats.length ? `<div class="zh-amc-grid">${feats.map((f) => `<article class="zh-amc-card zr"><span class="zh-amc-ic">${ic(ICONS.includes(f.icon) ? f.icon : "wrench")}</span><h3>${rt(f.title)}</h3><p>${rt(f.text)}</p></article>`).join("")}</div>` : ""}
-</div>${AMC_JS}</section>`;
+</div>${safeUrl(a.video) ? AMC_JS : ""}</section>`;
 };
 
 const cta = (c: Content) => { const a = c.cta; return `<section class="zh zh-cta" id="power-your-future"><div class="zh-wrap zh-cta-grid">

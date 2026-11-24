@@ -366,12 +366,12 @@ export const SECTIONS: SectionDef[] = [
   },
   {
     key: "amc", title: "AMC (Annual Maintenance Contract)", page: "Solutions",
-    help: "The maintenance-contract block on the Solutions page: a heading and short text, a video or picture (or the built-in solar cleaning animation), what the contract includes, and a row of service cards. Buttons only show when both their label and their link are filled in.",
+    help: "The maintenance-contract block on the Solutions page: a heading and short text, a picture (or a video), what the contract includes, and a row of service cards. Buttons only show when both their label and their link are filled in.",
     fields: [
       T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("intro", "Paragraph"),
       LN("included", "What the contract includes", "One item per line. Each one gets a tick."),
-      { k: "video", label: "Video (optional)", type: "video", spec: "Video: MP4 (H.264) or WebM, up to 25 MB. Landscape 4:3 (for example 1280 × 960 px) or 16:9 fits best; it is cropped to the frame. It plays by itself, silently, in a loop.", help: "Shown beside the text instead of the picture. Leave the video and the picture empty to show the built-in solar cleaning animation." },
-      IMG("image", "Picture (optional)", "Shown beside the text when there is no video. A landscape picture around 1200 × 900 px works best. Leave it empty to show the built-in solar cleaning animation."),
+      IMG("image", "Picture", "Shown beside the text. A landscape picture around 1200 × 900 px works best."),
+      { k: "video", label: "Video (optional)", type: "video", spec: "Video: MP4 (H.264) or WebM, up to 25 MB. Landscape 4:3 (for example 1280 × 960 px) or 16:9 fits best; it is cropped to the frame. It plays by itself, silently, in a loop.", help: "Optional. A video plays beside the text instead of the picture; the picture then shows until the video loads." },
       LIST("features", "Service cards", "card", [SEL("icon", "Icon", ICONS), T("title", "Title"), TA("text", "Text")], 8),
       T("btn1Text", "Button 1 label"), T("btn1Link", "Button 1 link"), T("btn2Text", "Button 2 label"), T("btn2Link", "Button 2 link"),
     ],
@@ -379,7 +379,7 @@ export const SECTIONS: SectionDef[] = [
       eyebrow: "After-sales care", title: "Annual Maintenance\n==Contract (AMC)==",
       intro: "A solar plant keeps paying you back for years, as long as it is looked after. Our AMC keeps your system clean, checked and performing, so you get the energy you were promised long after commissioning.",
       included: "Periodic site visits by trained technicians\nInverter, cabling and earthing checks\nGeneration and performance report\nPriority support when something needs attention",
-      video: "", image: "",
+      image: "/media/2024/03/post-5.jpg", video: "",
       features: [
         { icon: "wash", title: "Panel cleaning", text: "Scheduled cleaning keeps dust and dirt from cutting your output." },
         { icon: "search", title: "Inspection and testing", text: "Electrical, inverter and mounting-structure checks on every visit." },
