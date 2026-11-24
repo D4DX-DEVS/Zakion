@@ -438,41 +438,6 @@
 @media (prefers-reduced-motion:reduce){.zh-mtrack{width:auto;flex-wrap:wrap;justify-content:center}.zh-mhalf{flex-wrap:wrap;justify-content:center}.zh-mhalf[aria-hidden]{display:none}.zh-marq{-webkit-mask-image:none;mask-image:none}}
 
 /* ---------- 16 Testimonials: carousel ---------- */
-.zh-test{background:radial-gradient(60% 70% at 0% 0%,var(--zc-dfeafb,#dfeafb),transparent 70%),linear-gradient(135deg,var(--zc-eaf2fd,#eaf2fd),var(--zc-f7faff,#f7faff))}
-.zh-test-grid{display:grid;grid-template-columns:minmax(0,.62fr) minmax(0,1.7fr);gap:clamp(24px,calc(4*var(--u)),64px);align-items:center}
-.zh-test-h{margin:0}
-.zh-test-h h2{font-size:var(--zh-title);font-weight:700;line-height:1;text-transform:lowercase}
-.zh-test-h .zh-sub{margin-top:clamp(14px,calc(2*var(--u)),26px);font-size:clamp(18px,calc(1.9*var(--u)),27px);font-weight:300;color:var(--blue)}
-.zh-test-h .zh-sub b{color:var(--blue)}
-.zh-test-h .zh-rule{width:min(300px,70%);color:var(--blue);opacity:1;height:2px;margin-top:18px}
-.zh-tcar{--tg:clamp(16px,calc(2.6*var(--u)),44px);position:relative;min-width:0}
-.zh-ttrack{display:flex;gap:var(--tg);align-items:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:clamp(56px,calc(5.4*var(--u)),76px) 6px 14px;margin:0 -6px;outline:0}
-.zh-ttrack::-webkit-scrollbar{display:none}
-.zh-ttrack:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:12px}
-.zh-q{position:relative;container-type:inline-size;flex:0 0 calc((100% - var(--tg))/2);scroll-snap-align:start;display:flex;flex-direction:column}
-.zh-q-in{background:var(--zc-2263c0,#2263c0);color:#fff;padding:19cqw 8cqw 6cqw;min-height:62cqw}
-.zh-q-tail{display:block;aspect-ratio:368/248;margin-top:-1px;background:var(--zc-2263c0,#2263c0);clip-path:polygon(53.8% 0,100% 0,59.8% 100%,13% 100%)}
-.zh-q blockquote{font-size:4cqw;line-height:1.55;font-weight:400}
-.zh-q-vid{display:block;width:100%;aspect-ratio:16/9;margin:0 0 5cqw;border-radius:2.4cqw;background:#000;object-fit:contain}
-.zh-q-vid:last-child{margin-bottom:0}
-.zh-q blockquote b{font-weight:700}
-.zh-q-who{position:absolute;left:5cqw;top:-13cqw;display:flex;align-items:flex-start;gap:3.4cqw;width:90cqw}
-.zh-q-who img{width:26cqw;height:26cqw;flex:none;border-radius:50%;object-fit:cover;border:4px solid #fff;box-shadow:0 10px 26px rgba(var(--zr-082a5a,8,42,90),.3);background:#fff}
-.zh-q-who span{display:block;color:#fff;line-height:1.25;padding-top:15cqw}
-.zh-q-who b{display:block;font-size:4.6cqw;font-weight:700;font-family:var(--zk-head,Rajdhani),sans-serif}
-.zh-q-who strong{display:block;font-size:3.9cqw;font-weight:600}
-.zh-q-who em{display:block;font-size:3.3cqw;font-weight:300}
-.zh-tnav{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:clamp(10px,calc(2*var(--u)),22px)}
-.zh-tprev,.zh-tnext{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;border:2px solid var(--blue);background:#fff;color:var(--blue);font-size:24px;cursor:pointer;transition:background .25s,color .25s,transform .25s,opacity .25s}
-.zh-tprev .zi,.zh-tnext .zi{stroke-width:2.4}
-.zh-tprev .zi{transform:rotate(180deg)}
-.zh-tprev:hover:not(:disabled),.zh-tnext:hover:not(:disabled){background:var(--blue);color:#fff;transform:scale(1.08)}
-.zh-tprev:disabled,.zh-tnext:disabled{opacity:.35;cursor:default}
-.zh-tdots{display:flex;align-items:center;gap:8px}
-.zh-tdots button{width:10px;height:10px;padding:0;border:0;border-radius:6px;background:var(--zc-b4c9e8,#b4c9e8);cursor:pointer;transition:width .3s,background .3s}
-.zh-tdots button.on{width:30px;background:var(--amber)}
-.zh-tcar.single .zh-tnav{display:none}
-@media (max-width:900px){.zh-q{flex-basis:100%}}
 
 /* ---------- 17 Projects ---------- */
 .zh-proj{background:linear-gradient(180deg,var(--zc-eef4fd,#eef4fd),var(--zc-e4edfa,#e4edfa))}
@@ -571,7 +536,6 @@
   .zh-ps:nth-child(2n)::after{display:none}
   .zh-logos{grid-template-columns:repeat(4,minmax(0,1fr))}
   .zh-logo:nth-child(n){background:#f1f2f4}
-  .zh-test-grid{grid-template-columns:1fr}
 }
 @media (max-width:900px){
   .zh{font-size:16px}
@@ -695,10 +659,6 @@
   .zh-tbl th{font-size:12px}
   .zh-tbl td{font-size:17px}
   .zh-note{font-size:13px}
-  .zh-q blockquote{font-size:max(14px,4cqw)}
-  .zh-q-who b{font-size:max(15px,4.6cqw)}
-  .zh-q-who strong{font-size:max(13px,3.9cqw)}
-  .zh-q-who em{font-size:max(12.5px,3.3cqw)}
   .zh-perks li{font-size:14px}
   .zh-kw-col li{font-size:14px}
   .zh-aft{font-size:14px}
@@ -890,3 +850,74 @@
 @keyframes amcDrop{0%{transform:translateY(0);opacity:0}15%{opacity:.95}100%{transform:translateY(46px);opacity:0}}
 @keyframes amcSpark{0%,100%{transform:scale(.35) rotate(0);opacity:.5}50%{transform:scale(1.15) rotate(45deg);opacity:1}}
 @media (prefers-reduced-motion:reduce){.zh-amc-art .dp,.zh-amc-art .sp{animation:none}.zh-amc-art .sp{transform:scale(.8)}}
+
+/* ---------- Testimonials: a looping carousel (Home) and the list of all (Testimonials page) ---------- */
+/* markup: testimonials, testimonialsAll and testimonialCard in src/lib/sections.ts; the script is TC_JS there */
+.zh-tcs{--per:3;--tg:clamp(16px,2vw,30px);background:radial-gradient(55% 60% at 0% 0%,var(--zc-dfeafb,#dfeafb),transparent 70%),radial-gradient(45% 50% at 100% 100%,rgba(var(--zr-fec142,254,193,66),.16),transparent 70%),linear-gradient(180deg,var(--zc-f3f7ff,#f3f7ff),#fff)}
+.zh-tcs .zh-head{margin-bottom:clamp(24px,3vw,44px)}
+.zh-tcs .zh-head h2{font-size:var(--zh-title);font-weight:700;line-height:1.02;text-transform:lowercase}
+.zh-tcs .zh-sub{margin-left:auto;margin-right:auto;max-width:34em}
+.zh-tcs .zh-sub b{color:var(--blue)}
+@media (max-width:1100px){.zh-tcs{--per:2}}
+@media (max-width:700px){.zh-tcs{--per:1}}
+.zh-tcr{position:relative;min-width:0}
+.zh-tcr-track{display:flex;gap:var(--tg);align-items:stretch;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:3px;padding:14px 3px 30px;margin:-14px -3px -12px;scrollbar-width:none}
+.zh-tcr-track::-webkit-scrollbar{display:none}
+.zh-tcr-track:focus-visible{outline:3px solid var(--amber);outline-offset:-3px;border-radius:14px}
+.zh-tcr-track .zh-tc{flex:0 0 calc((100% - (var(--per) - 1)*var(--tg))/var(--per));scroll-snap-align:start}
+.zh-tcr-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:clamp(8px,1.4vw,18px)}
+/* these are <button>s: the theme gives every button an amber pill, so the resets need extra weight */
+.zh button.zh-tcr-prev,.zh button.zh-tcr-next{display:grid;place-items:center;width:46px;height:46px;min-width:0;padding:0!important;border:2px solid var(--blue)!important;border-radius:50%!important;background:#fff!important;color:var(--blue)!important;cursor:pointer;transition:background-color .2s,color .2s,transform .2s}
+.zh-tcr-prev .zi,.zh-tcr-next .zi{width:20px;height:20px;stroke-width:2.4}
+.zh-tcr-prev .zi{transform:rotate(180deg)}
+.zh button.zh-tcr-prev:hover,.zh button.zh-tcr-next:hover{background:var(--blue)!important;color:#fff!important;transform:scale(1.06)}
+.zh-tcr-dots{display:flex;align-items:center;gap:8px}
+.zh .zh-tcr-dots button{width:10px;height:10px;min-width:0;padding:0!important;border:0!important;border-radius:6px!important;background:var(--zc-b4c9e8,#b4c9e8);cursor:pointer;transition:width .25s,background-color .25s}
+.zh .zh-tcr-dots button.on{width:30px;background:var(--amber)}
+.zh-tcr.single .zh-tcr-nav{display:none}
+.zh-tcr.single .zh-tcr-track{justify-content:center}
+.zh-tc-more{display:flex;justify-content:center;margin-top:clamp(18px,2.4vw,32px)}
+.zh-tc-grid{display:grid;grid-template-columns:repeat(var(--per),minmax(0,1fr));gap:var(--tg);align-items:stretch}
+
+/* a testimonial card: a video (when there is one) on top, then the quote, then who said it */
+.zh-tc{position:relative;display:flex;flex-direction:column;overflow:hidden;margin:0;border-radius:22px;background:#fff;border-top:4px solid var(--amber);box-shadow:0 12px 34px rgba(var(--zr-082a5a,8,42,90),.1);transition:transform .3s ease,box-shadow .3s ease}
+.zh-tc:hover{transform:translateY(-4px);box-shadow:0 18px 42px rgba(var(--zr-082a5a,8,42,90),.16)}
+.zh button.zh-tc-media{position:relative;display:block;width:100%;aspect-ratio:16/9;min-width:0;padding:0!important;border:0!important;border-radius:0!important;background:#06173a!important;cursor:pointer;overflow:hidden}
+.zh-tc-media img,.zh-tc-media video{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s ease;pointer-events:none}
+.zh-tc-media:hover img,.zh-tc-media:hover video{transform:scale(1.05)}
+.zh-tc-media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(6,23,58,.55))}
+.zh-tc-play{position:absolute;z-index:1;left:50%;top:50%;display:grid;place-items:center;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:var(--amber);color:var(--navy-d);box-shadow:0 0 0 0 color-mix(in srgb,var(--amber) 60%,transparent);animation:zhTcPulse 2.2s ease-out infinite;transition:transform .2s}
+.zh-tc-media:hover .zh-tc-play{transform:scale(1.1)}
+.zh-tc-media:focus-visible{outline:3px solid var(--amber);outline-offset:-3px}
+.zh-tc-play svg{width:28px;height:28px;margin-left:3px}
+/* a card that is only a video: the picture takes the height the other cards need, instead of leaving a gap */
+.zh .zh-tc--only button.zh-tc-media{flex:1 1 auto;aspect-ratio:auto;min-height:210px}
+.zh-tc--only .zh-tc-media img,.zh-tc--only .zh-tc-media video{position:absolute;inset:0}
+.zh-tc--only .zh-tc-b{flex:0 0 auto}
+@keyframes zhTcPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--amber) 55%,transparent)}70%,100%{box-shadow:0 0 0 20px transparent}}
+.zh-tc-b{display:flex;flex:1;flex-direction:column;gap:14px;padding:clamp(20px,2vw,28px)}
+.zh-tc-qi{display:grid;place-items:center;flex:none;width:46px;height:46px;border-radius:14px;background:var(--navy);color:var(--amber)}
+.zh-tc-qi svg{width:24px;height:24px}
+.zh-tc blockquote{margin:0;font-size:clamp(15px,1.15vw,17px);line-height:1.7;color:var(--zc-243a5e,#243a5e)}
+.zh-tc blockquote b{color:var(--navy);font-weight:700}
+/* on the carousel a long quote stops after eight lines; a link leads to the whole text */
+.zh-tcr .zh-tc blockquote{display:-webkit-box;-webkit-line-clamp:8;-webkit-box-orient:vertical;overflow:hidden}
+.zh .zh-tc a.zh-tc-full{display:inline-flex;align-items:center;align-self:flex-start;gap:8px;font-size:14px;font-weight:600;color:var(--blue);text-decoration:none}
+.zh-tc-full svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.zh .zh-tc a.zh-tc-full:hover{color:var(--navy)}
+.zh-tc-full:hover svg{transform:translateX(3px)}
+.zh-tc-who{display:flex;align-items:center;gap:14px;margin-top:auto;padding-top:16px;border-top:1px solid var(--zc-e3eaf6,#e3eaf6)}
+.zh-tc-who img,.zh-tc-init{width:56px;height:56px;flex:none;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--amber)}
+.zh-tc-who img{object-fit:cover}
+.zh-tc-init{display:grid;place-items:center;background:var(--navy);color:#fff;font:700 20px var(--zk-head,Rajdhani),sans-serif}
+.zh-tc-who span{min-width:0;line-height:1.3}
+.zh-tc-who b{display:block;font:700 clamp(18px,1.5vw,21px)/1.2 var(--zk-head,Rajdhani),sans-serif;color:var(--navy)}
+.zh-tc-who strong{display:block;font-size:14px;font-weight:600;color:var(--blue)}
+.zh-tc-who em{display:block;font-style:normal;font-size:13px;color:var(--zc-5a6b88,#5a6b88)}
+/* the player a video opens in */
+dialog.zh-vlb{width:min(960px,94vw);max-height:92vh;padding:0;border:0;border-radius:16px;overflow:visible;background:transparent}
+dialog.zh-vlb::backdrop{background:rgba(5,15,35,.85)}
+dialog.zh-vlb video{display:block;width:100%;max-height:86vh;border-radius:16px;background:#000}
+dialog.zh-vlb .zh-vlb-x{position:absolute;right:-6px;top:-46px;display:grid;place-items:center;width:40px;height:40px;min-width:0;padding:0!important;border:0!important;border-radius:50%!important;background:#fff!important;color:#0d2b5e!important;font:400 28px/1 sans-serif;cursor:pointer}
+dialog.zh-vlb .zh-vlb-x:hover{background:#fec142!important}
+@media (prefers-reduced-motion:reduce){.zh-tc-play{animation:none}.zh-tc,.zh-tc-media img,.zh-tc-media video{transition:none}.zh-tc:hover{transform:none}}

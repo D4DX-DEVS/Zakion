@@ -22,6 +22,7 @@ const NOTES: Record<string, string> = {
   "/services/": "The page title banner stays at the top. Blocks you remove are only taken off this page.",
   "/projects/": "The page title banner stays at the top. Blocks you remove are only taken off this page.",
   "/contact/": "The page title banner stays at the top. The map is shown with the Contact details block on this page.",
+  "/testimonials/": "The page title banner stays at the top. The testimonials themselves are added under Testimonials in the left menu.",
   "/blog/": "The list of blog posts stays where it is. These blocks appear below it.",
 };
 

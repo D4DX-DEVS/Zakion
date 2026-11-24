@@ -39,7 +39,7 @@ export const HOME_KEYS = ["about", "track", "vision", "story", "why", "renewable
 // The admin can reorder, remove and add blocks on every page (Site settings > Section order); the result is kept in the layout below.
 // Blocks that only make sense on inner pages (they have no place in the home page's own order): the Projects page's tabs and cards, the AMC block,
 // and the system cards of the Solutions page (the Home page keeps showing the full On Grid, Hybrid and BESS blocks).
-export const INNER_KEYS = ["portfolio", "amc", "systems"];
+export const INNER_KEYS = ["portfolio", "amc", "systems", "testimonialsAll"];
 export const ALL_KEYS = [...HOME_KEYS, ...INNER_KEYS];
 
 export const PAGE_DEFAULTS: Record<string, string[]> = {
@@ -47,10 +47,11 @@ export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/about-us/": ["about", "track", "vision", "story", "why", "process"],
   "/services/": ["systems", "aesthetics", "amc", "components"],
   "/projects/": ["projects", "portfolio"],
+  "/testimonials/": ["testimonialsAll"],
   "/blog/": [],
   "/contact/": ["contact"],
 };
-export const PAGE_TITLES: Record<string, string> = { "/": "Home", "/about-us/": "About Us", "/services/": "Solutions", "/projects/": "Projects", "/blog/": "Blog", "/contact/": "Contact" };
+export const PAGE_TITLES: Record<string, string> = { "/": "Home", "/about-us/": "About Us", "/services/": "Solutions", "/projects/": "Projects", "/testimonials/": "Testimonials", "/blog/": "Blog", "/contact/": "Contact" };
 
 /** Home page layout kept by the admin in site_content under the key "_layout": section order, hidden sections, per-section settings,
  *  and (for the other pages) the blocks each one shows, in order. */
@@ -91,6 +92,7 @@ export const BANNER_PAGES: { key: string; label: string; where: string; image: s
   { key: "energy", label: "Energy Engineering", where: "the Energy Engineering page", image: "/media/2024/03/post-6.jpg" },
   { key: "emobility", label: "EV Charging Infrastructure", where: "the EV Charging Infrastructure page", image: "/media/2024/03/emobility.webp" },
   { key: "projects", label: "Projects", where: "the Projects page and every project page", image: "/media/2024/03/hero.jpg" },
+  { key: "testimonials", label: "Testimonials", where: "the Testimonials page", image: "/media/2024/03/post-1.jpg" },
   { key: "contact", label: "Contact", where: "the Contact page", image: "/media/2024/03/post-2.jpg" },
   { key: "blog", label: "Blog", where: "the Blog page, its categories and every article", image: "/media/2024/03/hero-2.jpg" },
   { key: "other", label: "Any other page", where: "every page that is not listed above", image: "/zk/page-hero.jpg" },
@@ -305,20 +307,17 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "testimonials", title: "Testimonials (carousel)", page: "Home", help: "Two testimonials show at a time on a computer, one on a phone. Add more and visitors can scroll through them. A testimonial can be a written quote, a video, or both: upload a video on the testimonial and it plays right in the card.",
-    fields: [T("title", "Heading", MARKUP_HELP), TA("subtitle", "Subheading"), BOOL("autoplay", "Slide automatically"), NUM("interval", "Seconds between slides"),
-      LIST("items", "Testimonials", "testimonial", [
-      T("name", "Name"), T("role", "Job title"), T("company", "Company or place"), TA("quote", "Testimonial", "Use **text** for bold. Optional when you add a video."), IMG("avatar", "Photo"),
-      { k: "video", label: "Video (optional)", type: "video", spec: "Video: MP4 (H.264) or WebM, up to 25 MB. Landscape 16:9 (1280 × 720 px) fits the card best; a portrait phone video also works and is shown with black bars.", help: "Visitors press play in the card; only one testimonial video plays at a time, and the carousel will not slide away while one is playing." },
-      IMG("poster", "Video cover picture (optional)", "The picture shown before the video plays. Leave it empty to show the first frame of the video."),
-    ], 40)],
-    data: {
-      title: "what our\n==clients say==", subtitle: "**Real Feedback** from\nOur Happy Customers", autoplay: true, interval: 7,
-      items: [
-        { name: "Rahees", role: "Managing Director", company: "Wins Autos, Calicut", quote: "Electricity costs were a major recurring expense that affected our monthly margins. We needed a reliable and sustainable power solution to reduce these costs effectively. Choosing **Zakion Energy** was the best decision we made. Their team handled everything seamlessly—from evaluating our energy needs to smooth installation and completing all the necessary paperwork without any hassle.", avatar: "/zk/avatar-rahees.jpg" },
-        { name: "Mohammed Yousuf", role: "Admin Officer", company: "Markazul Uloom English School, Kondotty", quote: "Managing electricity costs was once a major struggle for our institution. By adopting Zakion Energy's solar system, our bill dropped by around 90%. From timely installation to handling all KSEB paperwork, Zakion Energy delivered outstanding service and true energy freedom.", avatar: "/zk/avatar-yousuf.jpg" },
-      ],
-    },
+    key: "testimonials", title: "Testimonials (carousel)", page: "Home",
+    help: "A carousel of the latest customer testimonials: written quotes and video testimonials side by side, sliding by itself and looping. The testimonials themselves (name, photo, text, video) are added and edited under Testimonials in the left menu; the newest comes first. The View More button opens the Testimonials page with all of them.",
+    fields: [T("title", "Heading", MARKUP_HELP), TA("subtitle", "Subheading"), NUM("count", "How many of the latest testimonials to show", "Between 1 and 12. The Testimonials page always shows all of them."), BOOL("autoplay", "Slide automatically"), NUM("interval", "Seconds between slides"),
+      T("moreText", "View More button text", "The button under the carousel; it opens the Testimonials page. Leave it empty to hide the button.")],
+    data: { title: "what our\n==clients say==", subtitle: "**Real Feedback** from\nOur Happy Customers", count: 6, autoplay: true, interval: 5, moreText: "View More Testimonials" },
+  },
+  {
+    key: "testimonialsAll", title: "All testimonials (Testimonials page)", page: "Testimonials",
+    help: "The heading above the list of all testimonials on the Testimonials page. The testimonials themselves are added and edited under Testimonials in the left menu. Leave the heading empty to show only the list.",
+    fields: [T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("subtitle", "Paragraph"), T("empty", "Text shown when there are no testimonials yet")],
+    data: { eyebrow: "Testimonials", title: "What our ==customers say==", subtitle: "Real feedback from the people we have worked with.", empty: "Testimonials are coming soon. Please check back." },
   },
   {
     key: "projects", title: "Projects We've Delivered", page: "Home, Projects", help: "The photo grid. Each photo can link to a page.",
@@ -500,6 +499,19 @@ export const SYSTEM_FIELDS: Field[] = [
   NUM("sort", "Order", "Lower numbers come first on the Solutions page."),
 ];
 
+// ---- testimonials (table "testimonials", managed under Testimonials in the admin): the Home page carousel and the Testimonials page ----
+
+export type Testimonial = { id: number; name: string; role: string; company: string; quote: string; avatar: string; video: string; poster: string; status: string; created_at: string };
+/** The fields of the testimonial editor (Admin > Testimonials). */
+export const TESTIMONIAL_FIELDS: Field[] = [
+  T("name", "Name"), T("role", "Job title"), T("company", "Company or place"),
+  SEL("visible", "Show on the website", ["Shown", "Hidden"], "Hidden testimonials are saved but not shown. You can also hide or show one from the Testimonials list."),
+  TA("quote", "Testimonial", "Use **text** for bold. Optional when you add a video."),
+  { k: "avatar", label: "Photo", type: "image", spec: "Image size: 400 × 400 px, a square. It is shown as a circle, so keep the face in the middle. JPG or WebP, ideally under 200 KB (up to 15 MB is accepted)." },
+  { k: "video", label: "Video (optional)", type: "video", spec: "Video: MP4 (H.264) or WebM, up to 25 MB. Landscape 16:9 (1280 × 720 px) fits the card best; a portrait phone video also works and is shown with black bars.", help: "Visitors press play on the card and the video opens in a larger player." },
+  { k: "poster", label: "Video cover picture (optional)", type: "image", spec: "Image size: 1280 × 720 px (16:9). The picture shown on the card before the video plays.", help: "Leave it empty to show the first frame of the video." },
+];
+
 // ---- reading and cleaning saved content ----
 
 const URLISH = /^(\/(?!\/)|https?:\/\/|mailto:|tel:|#)/i;
@@ -558,6 +570,8 @@ export async function loadContent(): Promise<Content> {
   try { projects = (await db().prepare("SELECT * FROM projects WHERE status='published' ORDER BY sort, id DESC").all<Project>()).results; } catch { /* table not created yet: no projects */ }
   let systems: System[] = [];
   try { systems = (await db().prepare("SELECT * FROM systems WHERE status='published' ORDER BY sort, id").all<System>()).results; } catch { /* table not created yet: no systems */ }
-  return { ...Object.fromEntries(SECTIONS.map((d) => [d.key, merge(d, saved[d.key])])), _layout: cleanLayout(saved[LAYOUT_KEY]), [SITE_KEY]: saved[SITE_KEY] ?? null, _projects: projects, _systems: systems };
+  let testimonials: Testimonial[] = [];
+  try { testimonials = (await db().prepare("SELECT * FROM testimonials WHERE status='published' ORDER BY created_at DESC, id DESC LIMIT 200").all<Testimonial>()).results; } catch { /* table not created yet: no testimonials */ }
+  return { ...Object.fromEntries(SECTIONS.map((d) => [d.key, merge(d, saved[d.key])])), _layout: cleanLayout(saved[LAYOUT_KEY]), [SITE_KEY]: saved[SITE_KEY] ?? null, _projects: projects, _systems: systems, _testimonials: testimonials };
 }
 export async function loadOne(key: string) { const d = SECTION_BY_KEY[key]; const r = await db().prepare("SELECT data FROM site_content WHERE key=?").bind(key).first<{ data: string }>().catch(() => null); let s: unknown = null; try { s = r ? JSON.parse(r.data) : null; } catch { /* default */ } return { def: d, data: merge(d, s), customised: !!r }; }

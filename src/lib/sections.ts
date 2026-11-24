@@ -1,5 +1,5 @@
 // HTML builders for the page sections. Each one renders from the editable content in lib/content.ts (defaults + admin edits).
-import { CATEGORIES, Content, ICONS, parseFeatures, parseGallery, type Project, safeUrl, type System, SYSTEM_NOTES } from "./content";
+import { CATEGORIES, Content, ICONS, parseFeatures, parseGallery, type Project, safeUrl, type System, SYSTEM_NOTES, type Testimonial } from "./content";
 import { richOrText } from "./html";
 import { ic, SPRITE } from "./sprite";
 import { NEON_HOUSE, PHOTO_FX } from "./neon-house";
@@ -21,30 +21,7 @@ const head = (eyebrow: string, title: string, sub = "", cls = "") =>
 export const SCRIPT_EARLY = `<script>(function(){var d=document.documentElement;if('IntersectionObserver' in window&&!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('zh-js')})()</script>`;
 export const SCRIPT_MAIN = `<script>(function(){
 var d=document;
-function carousels(){
- [].forEach.call(d.querySelectorAll('.zh-tcar'),function(car){
-  var tr=car.querySelector('.zh-ttrack'),slides=[].slice.call(tr.children),prev=car.querySelector('.zh-tprev'),next=car.querySelector('.zh-tnext'),dots=car.querySelector('.zh-tdots');
-  function per(){return innerWidth>900?2:1}
-  function step(){var s=slides[0];if(!s)return 1;var cs=getComputedStyle(tr);return s.getBoundingClientRect().width+(parseFloat(cs.columnGap)||parseFloat(cs.gap)||0)}
-  function pages(){return Math.max(1,slides.length-per()+1)}
-  function idx(){return Math.round(tr.scrollLeft/step())}
-  function go(i){tr.scrollTo({left:Math.max(0,Math.min(i,pages()-1))*step(),behavior:'smooth'})}
-  function mark(){var i=idx();[].forEach.call(dots.children,function(b,j){b.className=j===i?'on':''});prev.disabled=i<=0;next.disabled=i>=pages()-1}
-  function build(){dots.innerHTML='';var n=pages();car.classList.toggle('single',n<=1);for(var i=0;i<n;i++){(function(i){var b=d.createElement('button');b.type='button';b.setAttribute('aria-label','Show testimonials from '+(i+1));b.onclick=function(){go(i)};dots.appendChild(b)})(i)}mark()}
-  prev.onclick=function(){go(idx()-1)};next.onclick=function(){go(idx()+1)};
-  tr.addEventListener('scroll',function(){clearTimeout(tr._t);tr._t=setTimeout(mark,70)},{passive:true});
-  tr.addEventListener('keydown',function(e){if(e.key==='ArrowRight'){go(idx()+1);e.preventDefault()}if(e.key==='ArrowLeft'){go(idx()-1);e.preventDefault()}});
-  addEventListener('resize',build);build();
-  car.addEventListener('play',function(e){[].forEach.call(car.querySelectorAll('video'),function(v){if(v!==e.target)v.pause()})},true);
-  function playing(){return [].some.call(car.querySelectorAll('video'),function(v){return !v.paused&&!v.ended})}
-  var hold=false,ms=(parseFloat(car.getAttribute('data-interval'))||7)*1000;
-  ['mouseenter','focusin','touchstart'].forEach(function(n){car.addEventListener(n,function(){hold=true},{passive:true})});
-  ['mouseleave','focusout'].forEach(function(n){car.addEventListener(n,function(){hold=false})});
-  if(car.getAttribute('data-auto')==='1'&&!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(function(){if(hold||d.hidden||pages()<=1||playing())return;var i=idx();go(i>=pages()-1?0:i+1)},ms);
- });
-}
 function run(){
- carousels();
  if(!d.documentElement.classList.contains('zh-js'))return;
  var els=[].slice.call(d.querySelectorAll('.zh .zr'));
  els.forEach(function(el){var i=0,p=el.previousElementSibling;while(p){if(p.classList.contains('zr'))i++;p=p.previousElementSibling}el.style.setProperty('--i',Math.min(i,8))});
@@ -287,22 +264,6 @@ ${head("", p.title, p.subtitle, "c")}
 </section>`;
 };
 
-const testimonials = (c: Content) => {
-  const t = c.testimonials;
-  // a testimonial is a quote, a video, or both; the video plays in the card (the first frame shows until then: #t=0.1)
-  const body = (i: any) => {
-    const video = safeUrl(i.video), poster = safeUrl(i.poster), quote = String(i.quote ?? "").trim();
-    return (video ? `<video class="zh-q-vid" src="${esc(video)}#t=0.1" controls playsinline preload="metadata"${poster ? ` poster="${esc(poster)}"` : ""} aria-label="Video testimonial from ${esc(i.name)}"></video>` : "") + (quote ? `<blockquote>${rt(i.quote)}</blockquote>` : "");
-  };
-  const card = (i: any) => `<figure class="zh-q${safeUrl(i.video) ? " zh-q--vid" : ""}"><div class="zh-q-in">${body(i)}</div><span class="zh-q-tail" aria-hidden="true"></span><figcaption class="zh-q-who">${i.avatar ? img(i.avatar, i.name, 150, 145) : ""}<span><b>${esc(i.name)}</b><strong>${esc(i.role)}</strong><em>${esc(i.company)}</em></span></figcaption></figure>`;
-  return `<section class="zh zh-test" id="client-feedback"><div class="zh-wrap zh-test-grid">
-<header class="zh-head zr zr-l zh-test-h"><h2>${rt(t.title)}</h2><p class="zh-sub">${rt(t.subtitle)}</p><span class="zh-rule"></span></header>
-<div class="zh-tcar zr zr-r" data-auto="${t.autoplay ? 1 : 0}" data-interval="${Math.max(2, Number(t.interval) || 7)}">
- <div class="zh-ttrack" tabindex="0" role="region" aria-label="Customer testimonials">${t.items.map(card).join("")}</div>
- <div class="zh-tnav"><button type="button" class="zh-tprev" aria-label="Previous testimonial">${ic("chev")}</button><span class="zh-tdots"></span><button type="button" class="zh-tnext" aria-label="Next testimonial">${ic("chev")}</button></div>
-</div></div></section>`;
-};
-
 const projects = (c: Content) => { const p = c.projects; return `<section class="zh zh-proj" id="projects-delivered"><div class="zh-wrap zh-proj-grid">
 <div class="zh-proj-l"><h2 class="zh-h2 zr zr-l">${rt(p.title)}</h2><span class="zh-rule zr zr-l"></span>
  <div class="zh-proj-n zr zr-l">${(() => { const m = /^(\d+)(.*)$/.exec(String(p.count).trim()); return m ? `<b data-zh-count="${parseInt(m[1], 10)}"${m[2] ? ` data-zh-suffix="${esc(m[2])}"` : ""}>${esc(p.count)}</b>` : `<b>${esc(p.count)}</b>`; })()}<p>${rt(p.caption)}</p></div></div>
@@ -441,6 +402,82 @@ ${others.length ? `<section class="zh zh-pf zh-sd-other"><div class="zh-wrap">
 </div></section>` : ""}`;
 };
 
+// ---- Testimonials: a looping carousel on the Home page (the latest few) and a list of all of them on the Testimonials page ----
+// A testimonial is a written quote, a video, or both. A video shows its cover (or first frame) with a play button and opens in a larger player.
+const QUOTE_MARK = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M10 6H6.5A2.5 2.5 0 0 0 4 8.5V13a2.5 2.5 0 0 0 2.5 2.5H8c0 1.7-.9 2.8-2.5 3.5l.7 1.5C9 19.3 10.5 17 10.5 13.5V6zM20 6h-3.5A2.5 2.5 0 0 0 14 8.5V13a2.5 2.5 0 0 0 2.5 2.5H18c0 1.7-.9 2.8-2.5 3.5l.7 1.5c2.8-1.2 4.3-3.5 4.3-7V6z"/></svg>`;
+const PLAY_MARK = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>`;
+const initials = (n: string) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+
+// `full`: on the carousel a long quote is cut short (CSS) and a link leads to the whole text on the Testimonials page
+const testimonialCard = (t: Testimonial, full = false) => {
+  const video = safeUrl(t.video), poster = safeUrl(t.poster), quote = String(t.quote ?? "").trim();
+  const media = video
+    ? `<button type="button" class="zh-tc-media" data-tc-video="${url(video)}" data-tc-name="${esc(t.name)}" aria-label="Play the video testimonial from ${esc(t.name)}">${poster ? img(poster, "", 640, 360) : `<video src="${url(video)}#t=0.1" muted playsinline preload="metadata" tabindex="-1" aria-hidden="true"></video>`}<span class="zh-tc-play">${PLAY_MARK}</span></button>`
+    : "";
+  return `<figure class="zh-tc${video ? " zh-tc--vid" : ""}${video && !quote ? " zh-tc--only" : ""}" id="testimonial-${t.id}">${media}<div class="zh-tc-b">` +
+    (quote ? `<span class="zh-tc-qi" aria-hidden="true">${QUOTE_MARK}</span><blockquote>${rt(quote)}</blockquote>` : "") +
+    (full && quote.length > 230 ? `<a class="zh-tc-full" href="/testimonials/#testimonial-${t.id}">Read full testimonial${ARROW_R}</a>` : "") +
+    `<figcaption class="zh-tc-who">${safeUrl(t.avatar) ? img(t.avatar, t.name, 112, 112) : `<span class="zh-tc-init" aria-hidden="true">${esc(initials(t.name))}</span>`}` +
+    `<span><b>${esc(t.name)}</b>${t.role ? `<strong>${esc(t.role)}</strong>` : ""}${t.company ? `<em>${esc(t.company)}</em>` : ""}</span></figcaption></div></figure>`;
+};
+
+// The carousel slides one card at a time, by itself, and loops without a jump: when there are more testimonials than fit on screen, a second copy
+// follows the cards and the position is moved back by one whole set as soon as it has scrolled into the copy. It stops while the pointer or the
+// keyboard is on it, while a video is open, while it is off screen, and for visitors who prefer reduced motion (the arrows and dots still work).
+const TC_JS = `<script>(function(){var d=document;
+function dlg(){var x=d.getElementById('zh-tc-dlg');if(x)return x;x=d.createElement('dialog');x.id='zh-tc-dlg';x.className='zh-vlb';x.innerHTML='<button type="button" class="zh-vlb-x" aria-label="Close">&times;</button><video controls playsinline></video>';d.body.appendChild(x);var v=x.querySelector('video');x.querySelector('.zh-vlb-x').onclick=function(){x.close()};x.addEventListener('click',function(e){if(e.target===x)x.close()});x.addEventListener('close',function(){v.pause();v.removeAttribute('src');v.load()});return x}
+if(!d.__zhTc){d.__zhTc=1;d.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-tc-video]');if(!b)return;var x=dlg(),v=x.querySelector('video');v.src=b.getAttribute('data-tc-video');x.setAttribute('aria-label','Video testimonial from '+(b.getAttribute('data-tc-name')||''));x.showModal();var p=v.play();if(p&&p.catch)p.catch(function(){})})}
+[].forEach.call(d.querySelectorAll('.zh-tcr:not([data-ready])'),function(car){
+ car.setAttribute('data-ready','1');
+ var tr=car.querySelector('.zh-tcr-track'),orig=[].slice.call(tr.children),n=orig.length,prev=car.querySelector('.zh-tcr-prev'),next=car.querySelector('.zh-tcr-next'),dots=car.querySelector('.zh-tcr-dots'),clones=[];
+ function per(){return parseInt(getComputedStyle(tr).getPropertyValue('--per'),10)||1}
+ function step(){var s=tr.children[0],cs=getComputedStyle(tr);return s.getBoundingClientRect().width+(parseFloat(cs.columnGap)||parseFloat(cs.gap)||0)}
+ function loops(){return n>per()}
+ function idx(){return Math.round(tr.scrollLeft/step())}
+ function jump(x){tr.style.scrollSnapType='none';tr.scrollLeft=x;requestAnimationFrame(function(){tr.style.scrollSnapType=''})}
+ function go(i){tr.scrollTo({left:i*step(),behavior:'smooth'})}
+ function norm(){if(!loops())return;var w=n*step();if(tr.scrollLeft>=w-2)jump(tr.scrollLeft-w)}
+ function mark(){var i=idx()%n;[].forEach.call(dots.children,function(b,j){b.className=j===i?'on':''})}
+ function build(){clones.forEach(function(c){c.remove()});clones=[];tr.scrollLeft=0;
+  if(loops())orig.forEach(function(s){var c=s.cloneNode(true);c.removeAttribute('id');c.setAttribute('aria-hidden','true');c.setAttribute('inert','');tr.appendChild(c);clones.push(c)});
+  car.classList.toggle('single',!loops());dots.innerHTML='';
+  if(loops())for(var i=0;i<n;i++){(function(i){var b=d.createElement('button');b.type='button';b.setAttribute('aria-label','Show testimonial '+(i+1));b.onclick=function(){norm();go(i)};dots.appendChild(b)})(i)}
+  mark()}
+ prev.onclick=function(){norm();if(tr.scrollLeft<2)jump(n*step());go(idx()-1)};
+ next.onclick=function(){norm();go(idx()+1)};
+ tr.addEventListener('scroll',function(){clearTimeout(tr._t);tr._t=setTimeout(function(){norm();mark()},90)},{passive:true});
+ tr.addEventListener('keydown',function(e){if(e.key==='ArrowRight'){next.onclick();e.preventDefault()}if(e.key==='ArrowLeft'){prev.onclick();e.preventDefault()}});
+ addEventListener('resize',function(){clearTimeout(car._r);car._r=setTimeout(build,150)});build();
+ var hold=false,vis=true,ms=(parseFloat(car.getAttribute('data-interval'))||5)*1000;
+ if('IntersectionObserver' in window)new IntersectionObserver(function(e){vis=e[e.length-1].isIntersecting}).observe(car);
+ ['mouseenter','focusin','touchstart'].forEach(function(k){car.addEventListener(k,function(){hold=true},{passive:true})});
+ ['mouseleave','focusout'].forEach(function(k){car.addEventListener(k,function(){hold=false})});
+ car.addEventListener('touchend',function(){setTimeout(function(){hold=false},6000)},{passive:true});
+ if(car.getAttribute('data-auto')==='1'&&!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(function(){if(!loops()||hold||!vis||d.hidden||d.querySelector('#zh-tc-dlg[open]'))return;norm();go(idx()+1)},ms);
+});})();</script>`;
+
+const testimonials = (c: Content) => {
+  const t = c.testimonials, how = Math.min(12, Math.max(1, Math.round(Number(t.count)) || 6));
+  const list: Testimonial[] = (c._testimonials ?? []).slice(0, how); // newest first
+  if (!list.length) return "";
+  const intro = t.title || t.subtitle ? head("", t.title, t.subtitle, "c") : "";
+  const more = String(t.moreText ?? "").trim() ? `<div class="zh-tc-more zr"><a class="zh-btn" href="/testimonials/">${esc(t.moreText)}</a></div>` : "";
+  return `<section class="zh zh-tcs" id="client-feedback"><div class="zh-wrap">${intro}
+<div class="zh-tcr zr" data-auto="${t.autoplay ? 1 : 0}" data-interval="${Math.max(2, Number(t.interval) || 5)}">
+ <div class="zh-tcr-track" tabindex="0" role="region" aria-label="Customer testimonials">${list.map((x) => testimonialCard(x, true)).join("")}</div>
+ <div class="zh-tcr-nav"><button type="button" class="zh-tcr-prev" aria-label="Previous testimonial">${ic("chev")}</button><span class="zh-tcr-dots"></span><button type="button" class="zh-tcr-next" aria-label="Next testimonial">${ic("chev")}</button></div>
+</div>${more}
+</div></section>${TC_JS}`;
+};
+
+const testimonialsAll = (c: Content) => {
+  const t = c.testimonialsAll, list: Testimonial[] = c._testimonials ?? [];
+  const intro = t.title || t.eyebrow || t.subtitle ? head(t.eyebrow, t.title, t.subtitle, "c") : "";
+  return `<section class="zh zh-tcs zh-tcs--all" id="all-testimonials"><div class="zh-wrap">${intro}
+${list.length ? `<div class="zh-tc-grid">${list.map((x) => testimonialCard(x)).join("")}</div>` : `<p class="zh-pf-none">${esc(t.empty)}</p>`}
+</div></section>${TC_JS}`;
+};
+
 // AMC (Annual Maintenance Contract): text, a picture, what is included, and a row of service cards. Edited in Studio (section "amc").
 // The video plays only while it is on screen; for visitors who prefer reduced motion it does not autoplay (it gets controls) and the
 // animation stops on a clean frame.
@@ -521,7 +558,7 @@ ${o.map && safeUrl(k.map) ? `<div class="zh-ct-map zr zr-z"><iframe src="${url(k
 };
 
 export const BUILD: Record<string, (c: Content, o?: { map?: boolean }) => string> = {
-  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail, amc, systems, systemDetail,
+  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail, amc, systems, systemDetail, testimonialsAll,
 };
 
 /** The deck sections for a page, in order, with the icon sprite and the animation script. */

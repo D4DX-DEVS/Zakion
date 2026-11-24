@@ -11,7 +11,7 @@ import { passwordProblem } from "@/lib/password";
 import { htmlToText } from "@/lib/html";
 import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
-import { type Field, ALL_KEYS, BANNER_PAGES, clean, cleanLayout, HOME_KEYS, CATEGORIES, NO_SYSTEM, PROJECT_FIELDS, SYSTEM_FIELDS, LAYOUT_KEY, loadContent, loadOne, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
+import { type Field, ALL_KEYS, BANNER_PAGES, clean, cleanLayout, HOME_KEYS, CATEGORIES, NO_SYSTEM, PROJECT_FIELDS, SYSTEM_FIELDS, TESTIMONIAL_FIELDS, LAYOUT_KEY, loadContent, loadOne, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
 import { PAGE_PLAN } from "@/lib/home";
 import { bannerKey } from "@/lib/banners";
 import { CONTACT_NETS, cleanSite, SITE_DEFAULTS, siteOf, TAB_BY_ID } from "@/lib/site";
@@ -326,6 +326,47 @@ export async function toggleSystem(f: FormData) {
 async function systemPaths(slugs: string[]) {
   const all = await db().prepare("SELECT slug FROM systems").all<{ slug: string }>().then((r) => r.results.map((x) => x.slug)).catch(() => []);
   return [...new Set(["/services/", ...[...slugs, ...all].map((x) => `/services/${x}/`)])];
+}
+
+// ---- testimonials (table "testimonials"): the Home page carousel and the Testimonials page ----
+
+/** The pages a testimonial shows on. */
+const testimonialPaths = () => ["/", "/testimonials/"];
+/** The editor sends the testimonial as one JSON field (see TESTIMONIAL_FIELDS in lib/content.ts); "key" is its id, or "new". */
+export async function saveTestimonial(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "key");
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("data") ?? "{}")); } catch { redirect("/admin/testimonials/" + encodeURIComponent(id) + "?error=1"); }
+  const d = clean(TESTIMONIAL_FIELDS, raw, {}) as Record<string, any>;
+  const v = [String(d.name).trim().slice(0, 120) || "Customer", String(d.role).trim(), String(d.company).trim(), String(d.quote).trim(), String(d.avatar), String(d.video), String(d.poster), d.visible === "Hidden" ? "draft" : "published"];
+  if (id === "new") {
+    const r = await db().prepare("INSERT INTO testimonials (name,role,company,quote,avatar,video,poster,status) VALUES (?,?,?,?,?,?,?,?)").bind(...v).run();
+    await purgeSite(testimonialPaths());
+    redirect("/admin/testimonials/" + r.meta.last_row_id + "?saved=1");
+  }
+  const old = await db().prepare("SELECT id FROM testimonials WHERE id=?").bind(id).first();
+  if (!old) redirect("/admin/testimonials");
+  await db().prepare("UPDATE testimonials SET name=?,role=?,company=?,quote=?,avatar=?,video=?,poster=?,status=?,updated_at=datetime('now') WHERE id=?").bind(...v, id).run();
+  await purgeSite(testimonialPaths());
+  redirect("/admin/testimonials/" + id + "?saved=1");
+}
+export async function deleteTestimonial(f: FormData) {
+  await requireAdmin();
+  await db().prepare("DELETE FROM testimonials WHERE id=?").bind(s(f, "key")).run();
+  await purgeSite(testimonialPaths());
+  redirect("/admin/testimonials?deleted=1");
+}
+/** Hides a shown testimonial or shows a hidden one (the testimonial is kept either way). */
+export async function toggleTestimonial(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "key");
+  const x = await db().prepare("SELECT status FROM testimonials WHERE id=?").bind(id).first<{ status: string }>();
+  if (x) {
+    await db().prepare("UPDATE testimonials SET status=?, updated_at=datetime('now') WHERE id=?").bind(x.status === "published" ? "draft" : "published", id).run();
+    await purgeSite(testimonialPaths());
+  }
+  redirect("/admin/testimonials?toggled=" + (x?.status === "published" ? "hidden" : "shown"));
 }
 
 // ---- page sections (src/lib/content.ts): one JSON document per section, merged over the built-in defaults ----

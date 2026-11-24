@@ -9,6 +9,7 @@ export function bannerKey(path: string, isPost = false): string | null {
   if (isPost) return "blog";
   if (path === "/about-us/") return "about";
   if (path === "/contact/") return "contact";
+  if (path === "/testimonials/") return "testimonials";
   if (path === "/projects/" || path.startsWith("/portfolio/")) return "projects";
   if (path === "/blog/" || path.startsWith("/category/")) return "blog";
   if (path === "/services/photovoltaic-solutions/" || path === "/photovoltaic-solutions/") return "pv";

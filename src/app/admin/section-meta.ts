@@ -4,5 +4,5 @@ import type { IconName } from "./icons";
 export const SEC_ICON: Record<string, IconName> = {
   hero: "video", about: "building", vision: "eye", story: "clock", why: "star", renewable: "leaf", onGrid: "sun", hybrid: "bolt", bess: "battery", solarHome: "home",
   components: "settings", aesthetics: "image", roi: "chart", process: "route", track: "chart", partners: "handshake", testimonials: "quote", projects: "grid", cta: "megaphone",
-  contact: "mail", header: "menu", banners: "image", portfolio: "grid", amc: "settings", systems: "sun", footer: "layers",
+  contact: "mail", header: "menu", banners: "image", portfolio: "grid", amc: "settings", systems: "sun", testimonialsAll: "quote", footer: "layers",
 };

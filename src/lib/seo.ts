@@ -21,7 +21,7 @@ export const CANONICAL: Record<string, string> = {
   "/category/uncategorized/": "/blog/",
 };
 const NOINDEX = new Set(["/category/uncategorized/"]);
-const CRUMB: Record<string, string> = { "/about-us/": "About Us", "/services/": "Solutions", "/projects/": "Projects", "/blog/": "Blog", "/contact/": "Contact", "/portfolio/": "Projects" };
+const CRUMB: Record<string, string> = { "/about-us/": "About Us", "/services/": "Solutions", "/projects/": "Projects", "/testimonials/": "Testimonials", "/blog/": "Blog", "/contact/": "Contact", "/portfolio/": "Projects" };
 const PAGE_TYPE: Record<string, string> = { "/about-us/": "AboutPage", "/contact/": "ContactPage" };
 
 export const siteUrl = () => (env().SITE_URL || "").replace(/\/$/, "");
