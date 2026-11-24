@@ -10,7 +10,7 @@ import { changePassword, login, logout, requireAdmin, resetWithRecovery } from "
 import { passwordProblem } from "@/lib/password";
 import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
-import { type Field, ALL_KEYS, clean, cleanLayout, HOME_KEYS, CATEGORIES, PROJECT_FIELDS, LAYOUT_KEY, loadContent, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
+import { type Field, ALL_KEYS, clean, cleanLayout, HOME_KEYS, CATEGORIES, NO_SYSTEM, PROJECT_FIELDS, LAYOUT_KEY, loadContent, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
 import { PAGE_PLAN } from "@/lib/home";
 import { CONTACT_NETS, cleanSite, SITE_DEFAULTS, siteOf, TAB_BY_ID } from "@/lib/site";
 
@@ -176,7 +176,9 @@ export async function saveProject(f: FormData) {
   for (let n = 2; await db().prepare("SELECT id FROM projects WHERE slug=? AND id IS NOT ?").bind(slug, id === "new" ? null : Number(id)).first(); n++) slug = `${base}-${n}`;
   const category = (CATEGORIES as readonly string[]).includes(d.category) ? d.category : "Residential";
   const gallery = JSON.stringify((Array.isArray(d.gallery) ? d.gallery : []).map((g: { image?: string }) => g.image).filter(Boolean).slice(0, 12));
-  const v = [slug, title, category, String(d.location).trim(), String(d.summary).trim(), String(d.capacity).trim(), String(d.systemType).trim(), String(d.systemNote).trim(), String(d.image), gallery, d.status === "Draft" ? "draft" : "published", Math.round(Number(d.sort)) || 0];
+  const kw = Number(d.capacity), capacity = kw > 0 ? String(Math.round(kw * 100) / 100) : ""; // kilowatts; 0 or empty hides the box
+  const systemType = d.systemType === NO_SYSTEM ? "" : String(d.systemType).trim();
+  const v = [slug, title, category, String(d.location).trim(), String(d.summary).trim(), capacity, systemType, String(d.systemNote).trim(), String(d.image), gallery, d.status === "Draft" ? "draft" : "published", Math.round(Number(d.sort)) || 0];
   let oldSlug = "";
   if (id === "new") {
     const r = await db().prepare("INSERT INTO projects (slug,title,category,location,summary,capacity,system_type,system_note,image,gallery,status,sort) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(...v).run();

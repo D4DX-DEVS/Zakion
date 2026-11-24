@@ -36,14 +36,14 @@ export const HOME_KEYS = ["about", "track", "vision", "story", "why", "renewable
 
 // Which blocks each page shows by default, in order. The inner pages keep their own banner (page title and breadcrumb) on top.
 // The admin can reorder, remove and add blocks on every page (Site settings > Section order); the result is kept in the layout below.
-// Blocks that only make sense on inner pages (they have no place in the home page's own order): the Projects page's tabs and cards.
-export const INNER_KEYS = ["portfolio"];
+// Blocks that only make sense on inner pages (they have no place in the home page's own order): the Projects page's tabs and cards, and the AMC block.
+export const INNER_KEYS = ["portfolio", "amc"];
 export const ALL_KEYS = [...HOME_KEYS, ...INNER_KEYS];
 
 export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/": HOME_KEYS,
   "/about-us/": ["about", "track", "vision", "story", "why", "process"],
-  "/services/": ["onGrid", "hybrid", "bess", "components", "aesthetics", "process"],
+  "/services/": ["onGrid", "hybrid", "bess", "components", "aesthetics", "amc"],
   "/projects/": ["portfolio"],
   "/contact/": ["contact"],
   "/blog/": [],
@@ -276,7 +276,7 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "process", title: "Our Work Process", page: "Home, About Us, Solutions", help: MARKUP_HELP,
+    key: "process", title: "Our Work Process", page: "Home, About Us", help: MARKUP_HELP,
     fields: [T("title", "Heading"), T("subtitle", "Subheading"), LIST("steps", "Steps", "step", [T("title", "Step name"), SEL("icon", "Icon", ["auto", ...ICONS], "Auto picks an icon that suits the step name.")], 16)],
     data: { title: "Our Work ==Process==", subtitle: "From First Assessment to Long-Term Performance in **8 Steps**", steps: ["Site Auditing", "Consulting", "Designing & Architecting", "Supply of Material", "Installation", "Testing", "Commissioning", "AMC"].map((title) => ({ title })) },
   },
@@ -364,6 +364,30 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
+    key: "amc", title: "AMC (Annual Maintenance Contract)", page: "Solutions",
+    help: "The maintenance-contract block on the Solutions page: a heading and short text, a picture, what the contract includes, and a row of service cards. Buttons only show when both their label and their link are filled in.",
+    fields: [
+      T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("intro", "Paragraph"),
+      LN("included", "What the contract includes", "One item per line. Each one gets a tick."),
+      IMG("image", "Picture", "Shown beside the text. A landscape picture around 1200 × 900 px works best."),
+      LIST("features", "Service cards", "card", [SEL("icon", "Icon", ICONS), T("title", "Title"), TA("text", "Text")], 8),
+      T("btn1Text", "Button 1 label"), T("btn1Link", "Button 1 link"), T("btn2Text", "Button 2 label"), T("btn2Link", "Button 2 link"),
+    ],
+    data: {
+      eyebrow: "After-sales care", title: "Annual Maintenance\n==Contract (AMC)==",
+      intro: "A solar plant keeps paying you back for years, as long as it is looked after. Our AMC keeps your system clean, checked and performing, so you get the energy you were promised long after commissioning.",
+      included: "Periodic site visits by trained technicians\nInverter, cabling and earthing checks\nGeneration and performance report\nPriority support when something needs attention",
+      image: "/media/2024/03/post-5.jpg",
+      features: [
+        { icon: "wash", title: "Panel cleaning", text: "Scheduled cleaning keeps dust and dirt from cutting your output." },
+        { icon: "search", title: "Inspection and testing", text: "Electrical, inverter and mounting-structure checks on every visit." },
+        { icon: "gauge", title: "Performance monitoring", text: "We compare your generation with what the plant should produce and report what we find." },
+        { icon: "headset", title: "Fast support", text: "One number to call when something needs attention." },
+      ],
+      btn1Text: "Enquire about AMC", btn1Link: "/contact/", btn2Text: "", btn2Link: "",
+    },
+  },
+  {
     key: "portfolio", title: "Projects list (filter tabs and cards)", page: "Projects",
     help: "The filter tabs (All, Residential, Commercial, Industrial) and the project cards on the Projects page. The projects themselves (name, picture, location, details, gallery) are added under Projects in the left menu. Leave the heading empty to show only the tabs and the cards.",
     fields: [T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("subtitle", "Paragraph"), T("allLabel", "Label of the first tab"), T("readMore", "Card button text"), T("empty", "Text shown when there are no projects yet")],
@@ -406,6 +430,10 @@ export const BUILTIN_IMAGES = [
 // ---- projects (table "projects", managed under Projects in the admin) ----
 
 export const CATEGORIES = ["Residential", "Commercial", "Industrial"] as const;
+/** The system types a project can have, with the line shown under each one unless the admin writes their own. */
+export const SYSTEM_TYPES = ["On Grid System", "Hybrid System", "Battery Energy Storage System"] as const;
+export const SYSTEM_NOTES: Record<string, string> = { "On Grid System": "Connected to Utility Grid", "Hybrid System": "Grid connected with battery backup", "Battery Energy Storage System": "Stores energy for later use" };
+export const NO_SYSTEM = "Not specified";
 export type Project = {
   id: number; slug: string; title: string; category: string; location: string; summary: string; capacity: string;
   system_type: string; system_note: string; image: string; gallery: string; status: string; sort: number;
@@ -423,9 +451,9 @@ export const PROJECT_FIELDS: Field[] = [
   SEL("category", "Category", [...CATEGORIES], "The Projects page filter tabs use this."),
   T("location", "Location", "For example: Kozhikode, Kerala"),
   TA("summary", "Description", "Shown beside the main picture on the project page."),
-  T("capacity", "Project capacity", "For example: 10 KW. Leave it empty to hide this box on the project page."),
-  T("systemType", "System type", "For example: On Grid System. Leave it empty to hide this box."),
-  T("systemNote", "System type note", "For example: Connected to Utility Grid"),
+  NUM("capacity", "Project capacity (KW)", "The size of the system in kilowatts, for example 10. Leave 0 to hide the capacity box on the project page."),
+  SEL("systemType", "System type", [NO_SYSTEM, ...SYSTEM_TYPES], "Shown in the System Type box on the project page. Choose Not specified to hide the box."),
+  T("systemNote", "Line under the system type (optional)", "Leave it empty to use the standard line for the chosen type, for example Connected to Utility Grid."),
   { k: "image", label: "Main picture", type: "image", spec: PROJECT_IMAGE_SPEC, help: "Used on the project card and at the top of the project page." },
   { k: "gallery", label: "Project gallery (up to 12 pictures)", type: "list", itemLabel: "picture", max: 12, help: "Small pictures under the main one; visitors can open each one larger.", fields: [{ k: "image", label: "Picture", type: "image", spec: PROJECT_IMAGE_SPEC }] },
   NUM("sort", "Order", "Lower numbers come first on the Projects page. Projects with the same number are listed newest first."),

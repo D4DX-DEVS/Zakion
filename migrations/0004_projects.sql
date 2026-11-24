@@ -23,7 +23,7 @@ CREATE INDEX projects_status_sort ON projects (status, sort);
 INSERT INTO projects (slug, title, category, location, summary, capacity, system_type, system_note, image, gallery, status, sort) VALUES
 ('home-solar-project', 'Home Solar Project', 'Residential', 'Kozhikode, Kerala',
  'A 10 kW on-grid solar system installed at a residential home in Kozhikode, Kerala, helping the family reduce electricity bills and contribute to a greener planet.',
- '10 KW', 'On Grid System', 'Connected to Utility Grid',
+ '10', 'On Grid System', 'Connected to Utility Grid',
  '/zk/solarhome-photo.jpg', '["/media/2024/03/post-3.jpg","/media/2024/03/post-5.jpg","/media/2024/03/post-6.jpg","/media/2024/03/post-2.jpg","/media/2024/03/hero.jpg"]', 'published', 1),
 ('corporate-office-solar', 'Corporate Office Solar', 'Commercial', 'Calicut, Kerala',
  'A rooftop solar installation for a corporate office in Calicut, Kerala, reducing the building''s daytime electricity costs.',

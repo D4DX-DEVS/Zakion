@@ -1,5 +1,5 @@
 // HTML builders for the page sections. Each one renders from the editable content in lib/content.ts (defaults + admin edits).
-import { CATEGORIES, Content, ICONS, parseGallery, type Project, safeUrl } from "./content";
+import { CATEGORIES, Content, ICONS, parseGallery, type Project, safeUrl, SYSTEM_NOTES } from "./content";
 import { ic, SPRITE } from "./sprite";
 import { NEON_HOUSE, PHOTO_FX } from "./neon-house";
 
@@ -347,15 +347,27 @@ const PD_JS = `<script>(function(){var d=document.querySelector('.zh-lb');if(!d)
 function open(k){i=(k+th.length)%th.length;img.src=th[i].getAttribute('data-full');img.alt=th[i].getAttribute('data-alt')||'';if(!d.open)d.showModal()}
 th.forEach(function(b,k){b.addEventListener('click',function(){open(k)})});
 d.querySelector('.zh-lb-x').addEventListener('click',function(){d.close()});d.querySelector('.zh-lb-p').addEventListener('click',function(){open(i-1)});d.querySelector('.zh-lb-n').addEventListener('click',function(){open(i+1)});
-d.addEventListener('click',function(e){if(e.target===d)d.close()});d.addEventListener('keydown',function(e){if(e.key==='ArrowLeft')open(i-1);if(e.key==='ArrowRight')open(i+1)})})();</script>`;
+d.addEventListener('click',function(e){if(e.target===d)d.close()});d.addEventListener('keydown',function(e){if(e.key==='ArrowLeft')open(i-1);if(e.key==='ArrowRight')open(i+1)});
+var car=document.querySelector('.zh-pd-car');if(!car)return;var tr=car.querySelector('.zh-pd-track'),hold=false;
+function step(){var a=th[0],b=th[1];return b?b.offsetLeft-a.offsetLeft:a.offsetWidth}
+function more(){return tr.scrollWidth>tr.clientWidth+4}
+function go(n){var max=tr.scrollWidth-tr.clientWidth,x=tr.scrollLeft+n*step();if(n>0&&tr.scrollLeft>=max-4)x=0;else if(n<0&&tr.scrollLeft<=4)x=max;tr.scrollTo({left:x,behavior:'smooth'})}
+function ui(){car.classList.toggle('static',!more())}
+car.querySelector('.zh-pd-gp').addEventListener('click',function(){go(-1)});car.querySelector('.zh-pd-gn').addEventListener('click',function(){go(1)});
+['mouseenter','focusin','touchstart'].forEach(function(n){car.addEventListener(n,function(){hold=true},{passive:true})});['mouseleave','focusout'].forEach(function(n){car.addEventListener(n,function(){hold=false})});
+car.addEventListener('touchend',function(){setTimeout(function(){hold=false},6000)},{passive:true});
+addEventListener('resize',ui);ui();
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(function(){if(hold||document.hidden||!more()||d.open)return;go(1)},3500)})();</script>`;
 
 const projectDetail = (c: Content) => {
   const p: Project = c._project, all: Project[] = c._projects ?? [], readMore = String(c.portfolio?.readMore || "Read More");
   const gallery = parseGallery(p.gallery);
   const related = [...all.filter((x) => x.id !== p.id && x.category === p.category), ...all.filter((x) => x.id !== p.id && x.category !== p.category)].slice(0, 3);
   const box = (icon: string, label: string, value: string) => (value ? `<div class="zh-pd-box"><span class="zh-pd-ico">${icon}</span><span><b>${esc(value)}</b><i>${esc(label)}</i></span></div>` : "");
-  const system = p.system_type ? `<div class="zh-pd-sys"><span class="zh-pd-ico">${SVG('<path d="m3 16 3-11h15l-3 11zM5.5 10.5h15M11.5 5l-1.5 11M16.5 5 15 16M9 20h9M13.5 16v4"/>')}</span><span><i>System Type</i><b>${esc(p.system_type)}</b>${p.system_note ? `<em>${esc(p.system_note)}</em>` : ""}</span></div>` : "";
-  const stats = box(SVG('<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'), "Project Capacity", p.capacity) + box(PF_ICON[p.category] ?? PF_ICON.Residential, "Category", p.category);
+  const note = p.system_note || SYSTEM_NOTES[p.system_type] || "";
+  const system = p.system_type ? `<div class="zh-pd-sys"><span class="zh-pd-ico">${SVG('<path d="m3 16 3-11h15l-3 11zM5.5 10.5h15M11.5 5l-1.5 11M16.5 5 15 16M9 20h9M13.5 16v4"/>')}</span><span><i>System Type</i><b>${esc(p.system_type)}</b>${note ? `<em>${esc(note)}</em>` : ""}</span></div>` : "";
+  const kw = parseFloat(p.capacity), capacity = p.capacity ? (Number.isFinite(kw) ? `${kw} KW` : p.capacity) : ""; // a number is kilowatts; older text such as "10 KW" is shown as written
+  const stats = box(SVG('<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'), "Project Capacity", capacity) + box(PF_ICON[p.category] ?? PF_ICON.Residential, "Category", p.category);
   return `<section class="zh zh-pd" id="project"><div class="zh-wrap">
 <a class="zh-pd-back" href="/projects/">${ARROW_L}<span>Back to Projects</span></a>
 <div class="zh-pd-hero">
@@ -364,10 +376,33 @@ const projectDetail = (c: Content) => {
   ${stats ? `<div class="zh-pd-stats">${stats}</div>` : ""}${system}</div>
 </div>
 ${gallery.length ? `<h2 class="zh-pd-h">Project Gallery</h2>
-<div class="zh-pd-gal">${gallery.map((g, i) => `<button type="button" class="zh-pd-th" data-full="${url(g)}" data-alt="${esc(p.title)} picture ${i + 1}" aria-label="Open picture ${i + 1} of ${gallery.length}"><img src="${url(g)}" alt="" loading="lazy" decoding="async"></button>`).join("")}</div>
+<div class="zh-pd-car"><div class="zh-pd-track" tabindex="0" role="region" aria-label="Project gallery">${gallery.map((g, i) => `<button type="button" class="zh-pd-th" data-full="${url(g)}" data-alt="${esc(p.title)} picture ${i + 1}" aria-label="Open picture ${i + 1} of ${gallery.length}"><img src="${url(g)}" alt="" loading="lazy" decoding="async"></button>`).join("")}</div>
+<button type="button" class="zh-pd-gp" aria-label="Previous pictures">${ARROW_L}</button><button type="button" class="zh-pd-gn" aria-label="Next pictures">${ARROW_R}</button></div>
 <dialog class="zh-lb" aria-label="Project picture"><button type="button" class="zh-lb-x" aria-label="Close">×</button><button type="button" class="zh-lb-p" aria-label="Previous picture">${ARROW_L}</button><img alt=""><button type="button" class="zh-lb-n" aria-label="Next picture">${ARROW_R}</button></dialog>${PD_JS}` : ""}
 ${related.length ? `<div class="zh-pd-rh"><h2 class="zh-pd-h">Related Projects</h2><a class="zh-pd-all" href="/projects/">View All Projects${ARROW_R}</a></div>
 <div class="zh-pf-grid">${related.map((x) => projectCard(x, readMore)).join("")}</div>` : ""}
+</div></section>`;
+};
+
+// AMC (Annual Maintenance Contract): text, a picture, what is included, and a row of service cards. Edited in Studio (section "amc").
+const amc = (c: Content) => {
+  const a = c.amc;
+  const included = lines(a.included);
+  const feats: any[] = Array.isArray(a.features) ? a.features : [];
+  const button = (text: unknown, link: unknown, cls: string) => (String(text ?? "").trim() && safeUrl(link) ? `<a class="zh-btn ${cls}" href="${url(link)}">${esc(text)}</a>` : ""); // both label and link, or no button
+  const buttons = button(a.btn1Text, a.btn1Link, "") + button(a.btn2Text, a.btn2Link, "zh-btn--line");
+  return `<section class="zh zh-amc" id="amc"><div class="zh-wrap">
+<div class="zh-amc-top">
+ <div class="zh-amc-txt">
+  ${a.eyebrow ? `<span class="zh-eye zr zr-l">${rt(a.eyebrow)}</span>` : ""}
+  <h2 class="zh-h2 zr zr-l">${rt(a.title)}</h2><span class="zh-rule zr zr-l"></span>
+  ${a.intro ? `<p class="zh-lead zr zr-l">${rt(a.intro)}</p>` : ""}
+  ${included.length ? `<ul class="zh-amc-list">${included.map((t) => `<li class="zr">${ic("check")}<span>${rt(t)}</span></li>`).join("")}</ul>` : ""}
+  ${buttons ? `<div class="zh-amc-btns zr">${buttons}</div>` : ""}
+ </div>
+ ${safeUrl(a.image) ? `<figure class="zh-amc-img zr zr-r">${img(a.image, "Technician cleaning and checking solar panels", 800, 600)}</figure>` : ""}
+</div>
+${feats.length ? `<div class="zh-amc-grid">${feats.map((f) => `<article class="zh-amc-card zr"><span class="zh-amc-ic">${ic(ICONS.includes(f.icon) ? f.icon : "wrench")}</span><h3>${rt(f.title)}</h3><p>${rt(f.text)}</p></article>`).join("")}</div>` : ""}
 </div></section>`;
 };
 
@@ -418,7 +453,7 @@ ${o.map && safeUrl(k.map) ? `<div class="zh-ct-map zr zr-z"><iframe src="${url(k
 };
 
 export const BUILD: Record<string, (c: Content, o?: { map?: boolean }) => string> = {
-  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail,
+  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail, amc,
 };
 
 /** The deck sections for a page, in order, with the icon sprite and the animation script. */
