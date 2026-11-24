@@ -36,7 +36,7 @@ export default async function Projects({ searchParams }: { searchParams: Promise
           <form id="projects-sort" action={reorderProjects} hidden><input type="hidden" name="keys" /></form>
           <div className="tablewrap" id="projects-table">
             <table className="rt">
-              <thead><tr><th className="grip"><span className="sr-only">Move</span></th><th>Project</th><th>Category</th><th>Status</th><th>On website</th><th>Order</th><th className="act"><span className="sr-only">Actions</span></th></tr></thead>
+              <thead><tr><th className="grip"><span className="sr-only">Move</span></th><th>Client</th><th>Category</th><th>Status</th><th>On website</th><th>Order</th><th className="act"><span className="sr-only">Actions</span></th></tr></thead>
               <SortRows formId="projects-sort">
                 {rows.map((r, i) => (
                   <tr key={r.id} data-sort="" data-key={r.id} draggable data-q={(r.title + " " + r.category + " " + r.location + " " + r.stage).toLowerCase()} data-s={r.status}>

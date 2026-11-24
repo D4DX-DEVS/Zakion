@@ -351,7 +351,7 @@ export const SECTIONS: SectionDef[] = [
       addresses: "63/700, D Space, Sky Tower, Bank Road, Calicut- 673001\nKalathil Complex, opp. Federal Bank, Pulamanthole, Kerala 679323", qr: "/zk/qr.jpg", scanTitle: "Scan to Connect", scanText: "Scan to visit our website or contact us instantly.",
       facebook: "https://www.facebook.com/zakionenergy/", instagram: "https://www.instagram.com/zakionenergy/", linkedin: "https://in.linkedin.com/company/zakion-energy", whatsapp: "https://wa.me/919188944337",
       scheduleTitle: "Schedule Your Free Consultation Today", scheduleText: "Discover how solar can reduce your energy costs and power a sustainable future.",
-      interests: "Residential solar\nCommercial solar\nIndustrial solar\nBattery storage (BESS)\nOther", button: "Get a free consultation", map: "https://maps.google.com/maps?q=D%20Space%2C%20Sky%20Tower%2C%20Bank%20road%2C%20Calicut%20-%20673001&t=m&z=14&output=embed",
+      interests: "On Grid System\nHybrid System\nBattery Energy Storage System\nAMC Service\nOther", button: "Get a free consultation", map: "https://maps.google.com/maps?q=D%20Space%2C%20Sky%20Tower%2C%20Bank%20road%2C%20Calicut%20-%20673001&t=m&z=14&output=embed",
     },
   },
   {
@@ -374,14 +374,9 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "amc", title: "AMC (Annual Maintenance Contract)", page: "Home, Solutions",
-    help: "The maintenance-contract block: a heading and short text, a picture (or a video), what the contract includes, then the AMC services (a picture, a name and three points each) and the subscription plans. Buttons only show when both their label and their link are filled in.",
+    key: "amc", title: "AMC services and plans", page: "Home, Solutions",
+    help: "The maintenance-contract block: the AMC services (a picture, a name and three points each), the subscription plans and the Enquire button, which opens the enquiry form on the Contact page.",
     fields: [
-      T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("intro", "Paragraph"),
-      LN("included", "What the contract includes", "One item per line. Each one gets a tick."),
-      IMG("image", "Picture", "Shown beside the text. A landscape picture around 1200 × 900 px works best."),
-      { k: "video", label: "Video (optional)", type: "video", spec: "Video: MP4 (H.264) or WebM, up to 25 MB. Landscape 4:3 (for example 1280 × 960 px) or 16:9 fits best; it is cropped to the frame. It plays by itself, silently, in a loop.", help: "Optional. A video plays beside the text instead of the picture; the picture then shows until the video loads." },
-      T("btn1Text", "Button 1 label"), T("btn1Link", "Button 1 link"), T("btn2Text", "Button 2 label"), T("btn2Link", "Button 2 link"),
       TA("servicesTitle", "Heading above the AMC services", MARKUP_HELP),
       LIST("services", "AMC services", "service", [
         T("title", "Name"),
@@ -390,13 +385,9 @@ export const SECTIONS: SectionDef[] = [
       ], 8),
       TA("plansTitle", "Heading of the plans panel", MARKUP_HELP),
       LIST("plans", "Subscription plans", "plan", [T("name", "Name (for example Monthly Plan)"), SEL("icon", "Icon", [...PLAN_ICONS])], 8),
+      T("btnText", "Button label", "The button under the plans. Leave the label or the link empty to hide it."), T("btnLink", "Button link", "By default it opens the enquiry form on the Contact page with AMC Service picked in the interest list."),
     ],
     data: {
-      eyebrow: "After-sales care", title: "Annual Maintenance\n==Contract (AMC)==",
-      intro: "A solar plant keeps paying you back for years, as long as it is looked after. Our AMC keeps your system clean, checked and performing, so you get the energy you were promised long after commissioning.",
-      included: "Periodic site visits by trained technicians\nInverter, cabling and earthing checks\nGeneration and performance report\nPriority support when something needs attention",
-      image: "/media/2024/03/post-5.jpg", video: "",
-      btn1Text: "Enquire about AMC", btn1Link: "/contact/", btn2Text: "", btn2Link: "",
       servicesTitle: "==AMC== Services",
       services: [
         { title: "Solar Panel Cleaning", image: "/zk/amc-1.jpg", points: "Better Absorption\nImproved Output\nPanel Care" },
@@ -408,6 +399,7 @@ export const SECTIONS: SectionDef[] = [
       plans: [
         { name: "Monthly Plan", icon: "Calendar" }, { name: "Quarterly Plan", icon: "Clock" }, { name: "Half-Yearly Plan", icon: "Gauge" }, { name: "Yearly Plan", icon: "365 days" },
       ],
+      btnText: "Enquire about AMC", btnLink: "/contact/?interest=AMC#contact",
     },
   },
   {
@@ -459,13 +451,14 @@ export const BUILTIN_IMAGES = [
 // ---- projects (table "projects", managed under Projects in the admin) ----
 
 export const CATEGORIES = ["Residential", "Commercial", "Industrial"] as const;
-/** The system types a project can have, with the line shown under each one unless the admin writes their own. */
+/** The system types a project can have. */
 export const SYSTEM_TYPES = ["On Grid System", "Hybrid System", "Battery Energy Storage System"] as const;
-export const SYSTEM_NOTES: Record<string, string> = { "On Grid System": "Connected to Utility Grid", "Hybrid System": "Grid connected with battery backup", "Battery Energy Storage System": "Stores energy for later use" };
 export const NO_SYSTEM = "Not specified";
 export type Project = {
   id: number; slug: string; title: string; category: string; location: string; summary: string; capacity: string;
   system_type: string; system_note: string; image: string; gallery: string; status: string; stage: string; sort: number;
+  pv_details: string; pcu_details: string; completion: string; generation: string; savings: string; payback: string;
+  testimonial_video: string; testimonial_image: string; co2: string; trees: string; coal: string;
 };
 /** The gallery column is a JSON list of picture addresses; a damaged value is an empty gallery. */
 export function parseGallery(v: unknown): string[] {
@@ -474,18 +467,28 @@ export function parseGallery(v: unknown): string[] {
 const PROJECT_IMAGE_SPEC = "Image size: 1600 × 1000 px (width × height), landscape 16:10 works best. Smallest that still looks sharp: 1200 × 750 px. JPG or WebP, ideally under 500 KB (up to 15 MB is accepted). The card and the project page show it cropped to fit, so keep the main subject in the middle.";
 /** The fields of the project editor (Admin > Projects). */
 export const PROJECT_FIELDS: Field[] = [
-  T("title", "Project name"),
-  T("slug", "Web address (optional)", "Letters, numbers and dashes. Leave it empty to make it from the name. The project page will be at /projects/<this>/."),
+  T("title", "Client name", "Shown as the heading of the project page and on the project card."),
+  T("slug", "Web address (optional)", "Letters, numbers and dashes. Leave it empty to make it from the client name. The project page will be at /projects/<this>/."),
   SEL("stage", "Status", ["Completed", "Ongoing"], "Shown as a label on the project card and on the project page."),
   SEL("visible", "Show on the website", ["Shown", "Hidden"], "Hidden projects are saved but not shown. You can also hide or show a project from the Projects list."),
   SEL("category", "Category", [...CATEGORIES], "The Projects page filter tabs use this."),
-  T("location", "Location", "For example: Kozhikode, Kerala"),
-  { k: "summary", label: "Description", type: "html", help: "Shown beside the main image on the project page. Use the toolbar for headings, bold, lists, links, tables and images." },
-  NUM("capacity", "Project capacity (KW)", "The size of the system in kilowatts, for example 10. Leave 0 to hide the capacity box on the project page."),
-  SEL("systemType", "System type", [NO_SYSTEM, ...SYSTEM_TYPES], "Shown in the System Type box on the project page. Choose Not specified to hide the box."),
-  T("systemNote", "Line under the system type (optional)", "Leave it empty to use the standard line for the chosen type, for example Connected to Utility Grid."),
-  { k: "image", label: "Main Image", type: "image", spec: PROJECT_IMAGE_SPEC, help: "Used on the project card and at the top of the project page." },
+  T("location", "Location (optional)", "For example: Kozhikode, Kerala. Shown under the client name."),
+  { k: "image", label: "Project image", type: "image", spec: PROJECT_IMAGE_SPEC, help: "Used on the project card and at the top of the project page." },
+  SEL("systemType", "System type", [NO_SYSTEM, ...SYSTEM_TYPES], "Choose Not specified to leave this line out."),
+  NUM("capacity", "Capacity (KW)", "The size of the system in kilowatts, for example 10 or 7.5. Leave 0 to leave this line out."),
+  T("pvDetails", "PV details", "The solar panels, for example: 540 Wp mono PERC × 20 (Waaree)."),
+  T("pcuDetails", "PCU details", "The power conditioning unit (inverter), for example: 10 kW on-grid inverter (Sungrow)."),
+  T("completion", "Completion date", "For example: March 2026."),
+  T("generation", "Average annual unit generation", "With the unit, for example: 14,600 kWh."),
+  T("savings", "Annual energy bill savings", "For example: ₹1,20,000."),
+  T("payback", "Payback period", "For example: 4 years."),
+  { k: "summary", label: "About this project (optional)", type: "html", help: "Shown under the details. Use the toolbar for headings, bold, lists, links, tables and images." },
+  { k: "testimonialVideo", label: "Client testimonial: video (optional)", type: "video", spec: "Video: MP4 (H.264) or WebM, up to 25 MB. Landscape 16:9 (1280 × 720 px) fits best.", help: "Shown in the Client Testimonial part of the project page; visitors press play to watch it in a larger player." },
+  { k: "testimonialImage", label: "Client testimonial: image (optional)", type: "image", spec: "Image size: 1280 × 720 px (16:9) for a video cover, or any picture of the client or the testimonial.", help: "With a video it is the video's cover; without a video it is shown on its own. Leave both empty to leave the Client Testimonial part out." },
   { k: "gallery", label: "Project gallery (up to 12 images)", type: "list", itemLabel: "image", max: 12, help: "A row of images under the main content that scrolls by itself; visitors can open each one larger.", fields: [{ k: "image", label: "Image", type: "image", spec: PROJECT_IMAGE_SPEC }] },
+  NUM("co2", "Environmental benefits: CO₂ saved (tonnes)", "For example 0.66. Leave 0 to leave this one out; if all three are 0 the whole Environmental Benefits part is left out."),
+  NUM("trees", "Environmental benefits: tree equivalence (trees)", "For example 44.99."),
+  NUM("coal", "Environmental benefits: coal saved (tonnes)", "For example 0.25."),
   NUM("sort", "Order", "Lower numbers come first on the Projects page. Projects with the same number are listed newest first."),
 ];
 

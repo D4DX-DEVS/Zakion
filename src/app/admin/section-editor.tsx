@@ -71,7 +71,7 @@ export function Fields({ fields, value, onChange, pick, upload, links }: { field
           case "html":
             return <div className="field" key={f.k}><span>{f.label}</span><RichText value={String(v ?? "")} onChange={(x) => set(f.k, x)} pick={pick} upload={upload} label={f.label} />{help}</div>;
           case "number":
-            return <label className="field" key={f.k}><span>{f.label}</span><input type="number" value={v ?? 0} onChange={(e) => set(f.k, e.target.value === "" ? 0 : Number(e.target.value))} />{help}</label>;
+            return <label className="field" key={f.k}><span>{f.label}</span><input type="number" step="any" value={v ?? 0} onChange={(e) => set(f.k, e.target.value === "" ? 0 : Number(e.target.value))} />{help}</label>;
           case "color": {
             const hex = /^#[0-9a-f]{6}$/i.test(String(v ?? "")) ? String(v) : "#000000";
             return (

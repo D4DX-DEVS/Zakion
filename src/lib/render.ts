@@ -114,7 +114,7 @@ export async function renderPath(path: string): Promise<Response> {
     if (project && shell) {
       const content = await loadContent();
       const body = replaceMain(shell.body_html, renderSections(["projectDetail"], { ...content, _project: project }));
-      return html(document_({ ...shell, path: norm, title: `${project.title} | Zakion Energy`, description: clip(htmlToText(project.summary)), og_image: project.image }, body, content));
+      return html(document_({ ...shell, path: norm, title: `${project.title} | Zakion Energy`, description: clip(htmlToText(project.summary) || `${project.system_type || "Solar"} project${project.location ? " in " + project.location : ""} for ${project.title} by Zakion Energy.`), og_image: project.image }, body, content));
     }
   }
   // a system's own page: the Solutions page's header and footer around the system (Admin > Systems). The stored pages under /services/ are tried first above.

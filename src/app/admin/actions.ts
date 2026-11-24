@@ -172,19 +172,23 @@ export async function saveProject(f: FormData) {
   let raw: unknown;
   try { raw = JSON.parse(String(f.get("data") ?? "{}")); } catch { redirect("/admin/projects/" + encodeURIComponent(id) + "?error=1"); }
   const d = clean(PROJECT_FIELDS, raw, {}) as Record<string, any>;
-  const title = String(d.title).trim().slice(0, 160) || "Untitled project";
+  const title = String(d.title).trim().slice(0, 160) || "Unnamed client";
   const base = slugify(String(d.slug) || title) || "project";
   let slug = base;
   for (let n = 2; await db().prepare("SELECT id FROM projects WHERE slug=? AND id IS NOT ?").bind(slug, id === "new" ? null : Number(id)).first(); n++) slug = `${base}-${n}`;
   const category = (CATEGORIES as readonly string[]).includes(d.category) ? d.category : "Residential";
   const gallery = JSON.stringify((Array.isArray(d.gallery) ? d.gallery : []).map((g: { image?: string }) => g.image).filter(Boolean).slice(0, 12));
-  const kw = Number(d.capacity), capacity = kw > 0 ? String(Math.round(kw * 100) / 100) : ""; // kilowatts; 0 or empty hides the box
+  const num = (x: unknown) => { const n = Number(x); return n > 0 ? String(Math.round(n * 100) / 100) : ""; }; // a number above 0, or empty (nothing is shown)
+  const capacity = num(d.capacity); // kilowatts; 0 or empty leaves the line out
   const systemType = d.systemType === NO_SYSTEM ? "" : String(d.systemType).trim();
   const summary = htmlToText(d.summary) || /<(img|table)\b/i.test(d.summary) ? String(d.summary).trim() : ""; // an editor left with only empty lines is no description
-  const v = [slug, title, category, String(d.location).trim(), summary, capacity, systemType, String(d.systemNote).trim(), String(d.image), gallery, d.visible === "Hidden" ? "draft" : "published", d.stage === "Ongoing" ? "ongoing" : "completed", Math.round(Number(d.sort)) || 0];
+  const t = (x: unknown, n = 300) => String(x ?? "").trim().slice(0, n);
+  const v = [slug, title, category, t(d.location, 160), summary, capacity, systemType, String(d.image), gallery, d.visible === "Hidden" ? "draft" : "published", d.stage === "Ongoing" ? "ongoing" : "completed", Math.round(Number(d.sort)) || 0,
+    t(d.pvDetails), t(d.pcuDetails), t(d.completion, 120), t(d.generation, 160), t(d.savings, 160), t(d.payback, 120), String(d.testimonialVideo), String(d.testimonialImage), num(d.co2), num(d.trees), num(d.coal)];
+  const cols = ["slug", "title", "category", "location", "summary", "capacity", "system_type", "image", "gallery", "status", "stage", "sort", "pv_details", "pcu_details", "completion", "generation", "savings", "payback", "testimonial_video", "testimonial_image", "co2", "trees", "coal"];
   let oldSlug = "";
   if (id === "new") {
-    const r = await db().prepare("INSERT INTO projects (slug,title,category,location,summary,capacity,system_type,system_note,image,gallery,status,stage,sort) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(...v).run();
+    const r = await db().prepare(`INSERT INTO projects (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`).bind(...v).run();
     const newId = r.meta.last_row_id;
     await purgeSite(["/projects/", `/projects/${slug}/`]);
     redirect("/admin/projects/" + newId + "?saved=1");
@@ -192,7 +196,7 @@ export async function saveProject(f: FormData) {
   const old = await db().prepare("SELECT slug FROM projects WHERE id=?").bind(id).first<{ slug: string }>();
   if (!old) redirect("/admin/projects");
   oldSlug = old.slug;
-  await db().prepare("UPDATE projects SET slug=?,title=?,category=?,location=?,summary=?,capacity=?,system_type=?,system_note=?,image=?,gallery=?,status=?,stage=?,sort=?,updated_at=datetime('now') WHERE id=?").bind(...v, id).run();
+  await db().prepare(`UPDATE projects SET ${cols.map((c) => c + "=?").join(",")},updated_at=datetime('now') WHERE id=?`).bind(...v, id).run();
   await purgeSite(await projectPaths([slug, oldSlug]));
   redirect("/admin/projects/" + id + "?saved=1");
 }

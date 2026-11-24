@@ -1,5 +1,5 @@
 // HTML builders for the page sections. Each one renders from the editable content in lib/content.ts (defaults + admin edits).
-import { CATEGORIES, Content, ICONS, parseFeatures, parseGallery, type Project, safeUrl, type System, SYSTEM_NOTES, type Testimonial } from "./content";
+import { CATEGORIES, Content, ICONS, parseFeatures, parseGallery, type Project, safeUrl, type System, type Testimonial } from "./content";
 import { richOrText } from "./html";
 import { ic, SPRITE } from "./sprite";
 import { NEON_HOUSE, PHOTO_FX } from "./neon-house";
@@ -326,22 +326,36 @@ const projectDetail = (c: Content) => {
   const p: Project = c._project, all: Project[] = c._projects ?? [], readMore = String(c.portfolio?.readMore || "Read More");
   const gallery = parseGallery(p.gallery);
   const related = [...all.filter((x) => x.id !== p.id && x.category === p.category), ...all.filter((x) => x.id !== p.id && x.category !== p.category)].slice(0, 3);
-  const box = (icon: string, label: string, value: string) => (value ? `<div class="zh-pd-box"><span class="zh-pd-ico">${icon}</span><span><b>${esc(value)}</b><i>${esc(label)}</i></span></div>` : "");
-  const note = p.system_note || SYSTEM_NOTES[p.system_type] || "";
-  const system = p.system_type ? `<div class="zh-pd-sys"><span class="zh-pd-ico">${SVG('<path d="m3 16 3-11h15l-3 11zM5.5 10.5h15M11.5 5l-1.5 11M16.5 5 15 16M9 20h9M13.5 16v4"/>')}</span><span><i>System Type</i><b>${esc(p.system_type)}</b>${note ? `<em>${esc(note)}</em>` : ""}</span></div>` : "";
   const kw = parseFloat(p.capacity), capacity = p.capacity ? (Number.isFinite(kw) ? `${kw} KW` : p.capacity) : ""; // a number is kilowatts; older text such as "10 KW" is shown as written
-  const stats = box(SVG('<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'), "Project Capacity", capacity) + box(PF_ICON[p.category] ?? PF_ICON.Residential, "Category", p.category);
+  // the details, in this order; a line with no value is left out
+  const row = (label: string, value: string) => (String(value ?? "").trim() ? `<div class="zh-pd-row"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>` : "");
+  const specs = row("System Type", p.system_type) + row("Category", p.category) + row("Capacity", capacity) + row("PV Details", p.pv_details) + row("PCU Details", p.pcu_details) +
+    row("Completion Date", p.completion) + row("Average Annual Unit Generation", p.generation) + row("Annual Energy Bill Savings", p.savings) + row("Payback Period", p.payback);
+  // the client's testimonial: a video (opens in the player of the Testimonials block, TC_JS) and/or a picture
+  const tmVideo = safeUrl(p.testimonial_video), tmImage = safeUrl(p.testimonial_image);
+  const testimonial = tmVideo || tmImage
+    ? `<h2 class="zh-pd-h">Client Testimonial</h2><figure class="zh-pd-tm">${tmVideo
+        ? `<button type="button" class="zh-pd-tmv" data-tc-video="${url(tmVideo)}" data-tc-name="${esc(p.title)}" aria-label="Play the video testimonial from ${esc(p.title)}">${tmImage ? img(tmImage, "", 960, 540) : `<video src="${url(tmVideo)}#t=0.1" muted playsinline preload="metadata" tabindex="-1" aria-hidden="true"></video>`}<span class="zh-pd-play">${PLAY_MARK}</span></button>`
+        : img(tmImage, `Testimonial from ${p.title}`, 960, 640)}<figcaption>${esc(p.title)}</figcaption></figure>${tmVideo ? TC_JS : ""}`
+    : "";
+  // environmental benefits: numbers entered per project, shown as they are (no counting animation)
+  const env = (icon: string, label: string, value: string, unit: string, w: number, h: number) =>
+    parseFloat(value) > 0 ? `<div class="zh-env-i"><img src="/zk/env-${icon}.png" alt="" width="${w}" height="${h}" loading="lazy" decoding="async"><div><span>${label}</span><b>${esc(String(parseFloat(value)))}${unit}</b></div></div>` : "";
+  const benefits = env("co2", "CO<sub>2</sub> Saved", p.co2, "t", 172, 115) + env("trees", "Tree Equivalence", p.trees, " Trees", 139, 120) + env("coal", "Coal Saved", p.coal, "t", 126, 104);
   return `<section class="zh zh-pd" id="project"><div class="zh-wrap">
 <a class="zh-pd-back" href="/projects/">${ARROW_L}<span>Back to Projects</span></a>
 <div class="zh-pd-hero">
  <figure class="zh-pd-main">${p.image ? img(p.image, p.title, 960, 640) : ""}</figure>
- <div class="zh-pd-info"><h1>${esc(p.title)}</h1><div class="zh-pd-meta">${p.location ? `<p class="zh-pc-loc">${PIN}<span>${esc(p.location)}</span></p>` : ""}${stageChip(p, "zh-pd-stage")}</div>${p.summary ? `<div class="zh-pd-sum zh-prose">${richOrText(p.summary)}</div>` : ""}
-  ${stats ? `<div class="zh-pd-stats">${stats}</div>` : ""}${system}</div>
+ <div class="zh-pd-info"><h1>${esc(p.title)}</h1><div class="zh-pd-meta">${p.location ? `<p class="zh-pc-loc">${PIN}<span>${esc(p.location)}</span></p>` : ""}${stageChip(p, "zh-pd-stage")}</div>
+  ${specs ? `<dl class="zh-pd-specs">${specs}</dl>` : ""}</div>
 </div>
+${p.summary ? `<h2 class="zh-pd-h">About the Project</h2><div class="zh-pd-about zh-prose">${richOrText(p.summary)}</div>` : ""}
+${testimonial}
 ${gallery.length ? `<h2 class="zh-pd-h">Project Gallery</h2>
 <div class="zh-pd-car"><div class="zh-pd-track" tabindex="0" role="region" aria-label="Project gallery">${gallery.map((g, i) => `<button type="button" class="zh-pd-th" data-full="${url(g)}" data-alt="${esc(p.title)} picture ${i + 1}" aria-label="Open picture ${i + 1} of ${gallery.length}"><img src="${url(g)}" alt="" loading="lazy" decoding="async"></button>`).join("")}</div>
 <button type="button" class="zh-pd-gp" aria-label="Previous pictures">${ARROW_L}</button><button type="button" class="zh-pd-gn" aria-label="Next pictures">${ARROW_R}</button></div>
 <dialog class="zh-lb" aria-label="Project picture"><button type="button" class="zh-lb-x" aria-label="Close">×</button><button type="button" class="zh-lb-p" aria-label="Previous picture">${ARROW_L}</button><img alt=""><button type="button" class="zh-lb-n" aria-label="Next picture">${ARROW_R}</button></dialog>${PD_JS}` : ""}
+${benefits ? `<div class="zh-env"><h2 class="zh-env-h">Environmental Benefits</h2><div class="zh-env-grid">${benefits}</div></div>` : ""}
 ${related.length ? `<div class="zh-pd-rh"><h2 class="zh-pd-h">Related Projects</h2><a class="zh-pd-all" href="/projects/">View All Projects${ARROW_R}</a></div>
 <div class="zh-pf-grid">${related.map((x) => projectCard(x, readMore)).join("")}</div>` : ""}
 </div></section>`;
@@ -486,39 +500,18 @@ const PLAN_ICON_SVG: Record<string, string> = {
 // "Half-Yearly Plan": everything but the last word is bold, the last word light
 const planName = (n: unknown) => { const w = String(n ?? "").trim().split(/\s+/); return w.length < 2 ? `<b>${esc(n)}</b>` : `<b>${esc(w.slice(0, -1).join(" "))}</b> ${esc(w[w.length - 1])}`; };
 
-// AMC (Annual Maintenance Contract): text, a picture, what is included, then the AMC services (picture, name, points) and the subscription plans. Edited in Studio (section "amc").
-// A video added in Studio plays only while it is on screen; for visitors who prefer reduced motion it does not autoplay (it gets controls).
-const AMC_JS = `<script>(function(){var v=document.querySelector('#amc .zh-amc-img video');if(!v)return;
-if(matchMedia('(prefers-reduced-motion: reduce)').matches){v.removeAttribute('autoplay');v.pause();v.controls=true;return}
-if('IntersectionObserver' in window)new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting){var p=v.play();if(p&&p.catch)p.catch(function(){})}else v.pause()})},{threshold:.2}).observe(v)})();</script>`;
-
+// AMC (Annual Maintenance Contract): the AMC services (picture, name, points), the subscription plans and the Enquire button. Edited in Studio (section "amc").
 const amc = (c: Content) => {
   const a = c.amc;
-  const included = lines(a.included);
   const services: any[] = Array.isArray(a.services) ? a.services : [], plans: any[] = Array.isArray(a.plans) ? a.plans : [];
-  const button = (text: unknown, link: unknown, cls: string) => (String(text ?? "").trim() && safeUrl(link) ? `<a class="zh-btn ${cls}" href="${url(link)}">${esc(text)}</a>` : ""); // both label and link, or no button
-  const buttons = button(a.btn1Text, a.btn1Link, "") + button(a.btn2Text, a.btn2Link, "zh-btn--line");
-  // beside the text: the video if one was added (silent, looping, paused while off screen), else the picture
-  const media = safeUrl(a.video)
-    ? `<video src="${url(a.video)}"${safeUrl(a.image) ? ` poster="${url(a.image)}"` : ""} autoplay muted loop playsinline preload="metadata" aria-label="Solar panel cleaning and maintenance"></video>`
-    : safeUrl(a.image) ? img(a.image, "Technician cleaning and checking solar panels", 800, 600) : "";
-  return `<section class="zh zh-amc" id="amc"><div class="zh-wrap">
-<div class="zh-amc-top">
- <div class="zh-amc-txt">
-  ${a.eyebrow ? `<span class="zh-eye zr zr-l">${rt(a.eyebrow)}</span>` : ""}
-  <h2 class="zh-h2 zr zr-l">${rt(a.title)}</h2><span class="zh-rule zr zr-l"></span>
-  ${a.intro ? `<p class="zh-lead zr zr-l">${rt(a.intro)}</p>` : ""}
-  ${included.length ? `<ul class="zh-amc-list">${included.map((t) => `<li class="zr">${ic("check")}<span>${rt(t)}</span></li>`).join("")}</ul>` : ""}
-  ${buttons ? `<div class="zh-amc-btns zr">${buttons}</div>` : ""}
- </div>
- ${media ? `<figure class="zh-amc-img zr zr-r">${media}</figure>` : ""}
-</div>
-${services.length ? `<div class="zh-ams">
+  const enquire = String(a.btnText ?? "").trim() && safeUrl(a.btnLink) ? `<div class="zh-ams-cta zr"><a class="zh-btn" href="${url(a.btnLink)}">${esc(a.btnText)}</a></div>` : ""; // both label and link, or no button
+  if (!services.length && !plans.length) return "";
+  return `<section class="zh zh-amc" id="amc"><div class="zh-wrap"><div class="zh-ams">
  ${a.servicesTitle ? `<header class="zh-head zr"><h2>${rt(a.servicesTitle)}</h2></header>` : ""}
- <div class="zh-ams-grid">${services.map((f, i) => `<div class="zh-ams-col zr"><figure class="zh-ams-card">${safeUrl(f.image) ? img(f.image, f.title, 315, 206) : ""}<figcaption><h3>${rt(f.title)}</h3><span class="zh-ams-n" aria-hidden="true">${i + 1}</span></figcaption></figure>${lines(f.points).length ? `<ul class="zh-ams-list">${lines(f.points).map((t) => `<li>${rt(t)}</li>`).join("")}</ul>` : ""}</div>`).join("")}</div>
+ ${services.length ? `<div class="zh-ams-grid">${services.map((f, i) => `<div class="zh-ams-col zr"><figure class="zh-ams-card">${safeUrl(f.image) ? img(f.image, f.title, 315, 206) : ""}<figcaption><h3>${rt(f.title)}</h3><span class="zh-ams-n" aria-hidden="true">${i + 1}</span></figcaption></figure>${lines(f.points).length ? `<ul class="zh-ams-list">${lines(f.points).map((t) => `<li>${rt(t)}</li>`).join("")}</ul>` : ""}</div>`).join("")}</div>` : ""}
  ${plans.length ? `<aside class="zh-ams-plans zr" aria-label="Subscription plans">${a.plansTitle ? `<h3 class="zh-ams-ph">${rt(a.plansTitle)}</h3>` : ""}<ul>${plans.map((p) => `<li><span class="zh-ams-pn">${planName(p.name)}</span><span class="zh-ams-pi" aria-hidden="true">${PLAN_ICON_SVG[p.icon] ?? PLAN_ICON_SVG.Calendar}</span></li>`).join("")}</ul></aside>` : ""}
-</div>` : ""}
-</div>${safeUrl(a.video) ? AMC_JS : ""}</section>`;
+ ${enquire}
+</div></div></section>`;
 };
 
 const cta = (c: Content) => { const a = c.cta; return `<section class="zh zh-cta" id="power-your-future"><div class="zh-wrap zh-cta-grid">
@@ -534,6 +527,9 @@ const cta = (c: Content) => { const a = c.cta; return `<section class="zh zh-cta
 
 // Contact: a navy details panel (call, email, web, visit, QR and social) next to the enquiry form card, and the map on the Contact page.
 // No photo. The form fields keep their names (FullName, Phone, Email, Subject, Write) because /api/contact reads them.
+// Arriving with ?interest=AMC (the Enquire about AMC button) picks the matching option of "I am interested in": an exact match, else an option that contains the word.
+const INTEREST_JS = `<script>(function(){var q=(new URLSearchParams(location.search).get('interest')||'').toLowerCase();if(!q)return;var r=[].slice.call(document.querySelectorAll('.zh-chips input[name=Subject]')),m=r.filter(function(i){return i.value.toLowerCase()===q})[0]||r.filter(function(i){return i.value.toLowerCase().indexOf(q)>-1})[0];if(m)m.checked=true})();</script>`;
+
 const contact = (c: Content, o: { map?: boolean } = {}) => {
   const k = c.contact; const phones = lines(k.phones); const addr = lines(k.addresses);
   const social = [["facebook", "Facebook", "fb"], ["instagram", "Instagram", "ig"], ["linkedin", "LinkedIn", "in"], ["whatsapp", "WhatsApp", "wa"]].filter(([key]) => safeUrl(k[key]));
@@ -564,7 +560,7 @@ const contact = (c: Content, o: { map?: boolean } = {}) => {
  </form>
 </div>
 ${o.map && safeUrl(k.map) ? `<div class="zh-ct-map zr zr-z"><iframe src="${url(k.map)}" title="Zakion Energy office location" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>` : ""}
-</div></section>`;
+</div></section>${INTEREST_JS}`;
 };
 
 export const BUILD: Record<string, (c: Content, o?: { map?: boolean }) => string> = {
