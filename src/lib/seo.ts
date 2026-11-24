@@ -35,7 +35,7 @@ function crumbs(path: string, name: string, base: string) {
   const items: [string, string][] = [["Home", "/"]];
   const parts = path.split("/").filter(Boolean);
   if (path.startsWith("/services/") && parts.length > 1) items.push([CRUMB["/services/"], "/services/"]);
-  else if (path.startsWith("/portfolio/") && parts.length > 1) items.push([CRUMB["/projects/"], "/projects/"]);
+  else if ((path.startsWith("/portfolio/") || path.startsWith("/projects/")) && parts.length > 1) items.push([CRUMB["/projects/"], "/projects/"]);
   if (path !== "/") items.push([CRUMB[path] || name, path]);
   return { "@type": "BreadcrumbList", itemListElement: items.map(([n, u], i) => ({ "@type": "ListItem", position: i + 1, name: n, item: base + u })) };
 }

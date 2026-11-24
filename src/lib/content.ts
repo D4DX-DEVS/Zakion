@@ -36,11 +36,15 @@ export const HOME_KEYS = ["about", "track", "vision", "story", "why", "renewable
 
 // Which blocks each page shows by default, in order. The inner pages keep their own banner (page title and breadcrumb) on top.
 // The admin can reorder, remove and add blocks on every page (Site settings > Section order); the result is kept in the layout below.
+// Blocks that only make sense on inner pages (they have no place in the home page's own order): the Projects page's tabs and cards.
+export const INNER_KEYS = ["portfolio"];
+export const ALL_KEYS = [...HOME_KEYS, ...INNER_KEYS];
+
 export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/": HOME_KEYS,
   "/about-us/": ["about", "track", "vision", "story", "why", "process"],
   "/services/": ["onGrid", "hybrid", "bess", "components", "aesthetics", "process"],
-  "/projects/": ["projects"],
+  "/projects/": ["portfolio"],
   "/contact/": ["contact"],
   "/blog/": [],
 };
@@ -69,7 +73,7 @@ export function cleanLayout(input: unknown): Layout {
   }
   const pages: Layout["pages"] = {};
   const pg = src.pages && typeof src.pages === "object" ? src.pages : {};
-  for (const p of Object.keys(PAGE_DEFAULTS)) if (p !== "/" && Array.isArray(pg[p])) pages[p] = [...new Set(list(pg[p]).filter((k) => HOME_KEYS.includes(k)))];
+  for (const p of Object.keys(PAGE_DEFAULTS)) if (p !== "/" && Array.isArray(pg[p])) pages[p] = [...new Set(list(pg[p]).filter((k) => ALL_KEYS.includes(k)))];
   return { order, hidden, settings, pages };
 }
 
@@ -360,6 +364,12 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
+    key: "portfolio", title: "Projects list (filter tabs and cards)", page: "Projects",
+    help: "The filter tabs (All, Residential, Commercial, Industrial) and the project cards on the Projects page. The projects themselves (name, picture, location, details, gallery) are added under Projects in the left menu. Leave the heading empty to show only the tabs and the cards.",
+    fields: [T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("subtitle", "Paragraph"), T("allLabel", "Label of the first tab"), T("readMore", "Card button text"), T("empty", "Text shown when there are no projects yet")],
+    data: { eyebrow: "", title: "", subtitle: "", allLabel: "All", readMore: "Read More", empty: "New projects are being added. Please check back soon." },
+  },
+  {
     key: "banners", title: "Page banners", page: "Inner pages",
     help: "The picture behind the title at the top of each inner page (About Us, Solutions, Projects, Contact, Blog and the pages under them). Pick a different picture for each page. If you empty a field, that page goes back to its built-in picture.",
     fields: BANNER_PAGES.map((b): Field => ({ k: b.key, label: b.label, type: "image", spec: BANNER_SPEC, help: `Shown on ${b.where}.` })),
@@ -392,6 +402,34 @@ export const BUILTIN_IMAGES = [
   "about-worker", "aes-canopy", "aes-ev", "aes-gazebo", "aes-roof", "avatar-rahees", "avatar-yousuf", "bess-farm", "bess-home", "cert-logos", "city-strip", "comp-battery", "comp-inverter", "comp-panel", "contact-worker", "cta-worker",
   "helmet", "hybrid-panel", "ongrid-panel", "proj-1", "proj-2", "proj-3", "proj-4", "proj-5", "proj-6", "qr", "roi-house", "solarhome-photo", "story-2015", "story-2017", "story-2020", "story-2026", "track-bg", "vision-bg", "page-hero",
 ].map((n) => `/zk/${n}.jpg`);
+
+// ---- projects (table "projects", managed under Projects in the admin) ----
+
+export const CATEGORIES = ["Residential", "Commercial", "Industrial"] as const;
+export type Project = {
+  id: number; slug: string; title: string; category: string; location: string; summary: string; capacity: string;
+  system_type: string; system_note: string; image: string; gallery: string; status: string; sort: number;
+};
+/** The gallery column is a JSON list of picture addresses; a damaged value is an empty gallery. */
+export function parseGallery(v: unknown): string[] {
+  try { const a = JSON.parse(String(v ?? "[]")); return Array.isArray(a) ? a.map((x) => safeUrl(x)).filter(Boolean) : []; } catch { return []; }
+}
+const PROJECT_IMAGE_SPEC = "Image size: 1600 × 1000 px (width × height), landscape 16:10 works best. Smallest that still looks sharp: 1200 × 750 px. JPG or WebP, ideally under 500 KB (up to 15 MB is accepted). The card and the project page show it cropped to fit, so keep the main subject in the middle.";
+/** The fields of the project editor (Admin > Projects). */
+export const PROJECT_FIELDS: Field[] = [
+  T("title", "Project name"),
+  T("slug", "Web address (optional)", "Letters, numbers and dashes. Leave it empty to make it from the name. The project page will be at /projects/<this>/."),
+  SEL("status", "Status", ["Published", "Draft"], "A draft is saved but not shown on the website."),
+  SEL("category", "Category", [...CATEGORIES], "The Projects page filter tabs use this."),
+  T("location", "Location", "For example: Kozhikode, Kerala"),
+  TA("summary", "Description", "Shown beside the main picture on the project page."),
+  T("capacity", "Project capacity", "For example: 10 KW. Leave it empty to hide this box on the project page."),
+  T("systemType", "System type", "For example: On Grid System. Leave it empty to hide this box."),
+  T("systemNote", "System type note", "For example: Connected to Utility Grid"),
+  { k: "image", label: "Main picture", type: "image", spec: PROJECT_IMAGE_SPEC, help: "Used on the project card and at the top of the project page." },
+  { k: "gallery", label: "Project gallery (up to 12 pictures)", type: "list", itemLabel: "picture", max: 12, help: "Small pictures under the main one; visitors can open each one larger.", fields: [{ k: "image", label: "Picture", type: "image", spec: PROJECT_IMAGE_SPEC }] },
+  NUM("sort", "Order", "Lower numbers come first on the Projects page. Projects with the same number are listed newest first."),
+];
 
 // ---- reading and cleaning saved content ----
 
@@ -446,6 +484,8 @@ export async function loadContent(): Promise<Content> {
   try { rows = (await db().prepare("SELECT key, data FROM site_content").all<{ key: string; data: string }>()).results; } catch { /* table not created yet: defaults */ }
   const saved: Record<string, unknown> = {};
   for (const r of rows) { try { saved[r.key] = JSON.parse(r.data); } catch { /* ignore a damaged row */ } }
-  return { ...Object.fromEntries(SECTIONS.map((d) => [d.key, merge(d, saved[d.key])])), _layout: cleanLayout(saved[LAYOUT_KEY]), [SITE_KEY]: saved[SITE_KEY] ?? null };
+  let projects: Project[] = [];
+  try { projects = (await db().prepare("SELECT * FROM projects WHERE status='published' ORDER BY sort, id DESC").all<Project>()).results; } catch { /* table not created yet: no projects */ }
+  return { ...Object.fromEntries(SECTIONS.map((d) => [d.key, merge(d, saved[d.key])])), _layout: cleanLayout(saved[LAYOUT_KEY]), [SITE_KEY]: saved[SITE_KEY] ?? null, _projects: projects };
 }
 export async function loadOne(key: string) { const d = SECTION_BY_KEY[key]; const r = await db().prepare("SELECT data FROM site_content WHERE key=?").bind(key).first<{ data: string }>().catch(() => null); let s: unknown = null; try { s = r ? JSON.parse(r.data) : null; } catch { /* default */ } return { def: d, data: merge(d, s), customised: !!r }; }

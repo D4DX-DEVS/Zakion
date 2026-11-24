@@ -25,7 +25,7 @@ export const ANCHORS: Record<string, string> = {
 export const HOME_HEAD =
   '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap">' +
-  '<link rel="stylesheet" href="/zk-home.css?v=45">';
+  '<link rel="stylesheet" href="/zk-home.css?v=47">';
 
 const FOOTER_MARK = "ekit-template-content-footer";
 const footerStart = (body: string) => { const i = body.indexOf(FOOTER_MARK); return i < 0 ? -1 : body.lastIndexOf("<div", i); };
@@ -257,6 +257,19 @@ function applyInner(body: string, keys: string[], c: Content, map: boolean): str
   }
   if (bannerEnd < 0 || wrapEnd < 0 || wrapEnd < bannerEnd) return body;
   return body.slice(0, bannerEnd) + renderSections(keys, c, { map }) + body.slice(wrapEnd);
+}
+
+/** A stored page's shell (header, footer, styles) around different main content: everything inside the page wrapper, the banner included, is replaced. */
+export function replaceMain(body: string, main: string): string {
+  const a = body.indexOf('data-elementor-type="wp-page"');
+  if (a < 0) return body;
+  const wrapper = body.lastIndexOf("<div", a);
+  const inside = body.indexOf(">", a) + 1;
+  const re = /<(\/?)div\b[^>]*>/g;
+  re.lastIndex = wrapper;
+  let depth = 0, wrapEnd = -1, m: RegExpExecArray | null;
+  while ((m = re.exec(body))) { if (m[1]) { if (--depth === 0) { wrapEnd = m.index; break; } } else depth++; }
+  return wrapEnd < inside ? body : body.slice(0, inside) + main + body.slice(wrapEnd);
 }
 
 export function applyPage(path: string, body: string, c: Content): string {

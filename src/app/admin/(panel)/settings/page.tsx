@@ -1,6 +1,6 @@
 import { db } from "@/lib/env";
 import { CANONICAL } from "@/lib/seo";
-import { HOME_KEYS, loadContent, PAGE_DEFAULTS, PAGE_TITLES, SECTION_BY_KEY } from "@/lib/content";
+import { ALL_KEYS, HOME_KEYS, loadContent, PAGE_DEFAULTS, PAGE_TITLES, SECTION_BY_KEY } from "@/lib/content";
 import { pageKeys } from "@/lib/home";
 import { SETTINGS_TABS, siteOf, socialForEditor } from "@/lib/site";
 import { resetSettings, saveSettings, savePageLayout, uploadSectionFile } from "../../actions";
@@ -34,7 +34,7 @@ export default async function SiteSettings({ searchParams }: { searchParams: Pro
 
   let editor: React.ReactNode;
   if (tab.id === "sections") {
-    const blocks = HOME_KEYS.map((k) => ({ key: k, title: SECTION_BY_KEY[k].title, icon: SEC_ICON[k] ?? ("layers" as IconName), where: SECTION_BY_KEY[k].page }));
+    const blocks = ALL_KEYS.filter((k) => path !== "/" || HOME_KEYS.includes(k)).map((k) => ({ key: k, title: SECTION_BY_KEY[k].title, icon: SEC_ICON[k] ?? ("layers" as IconName), where: SECTION_BY_KEY[k].page }));
     editor = (
       <>
         <div className="pills pl-pages" role="group" aria-label="Choose a page">

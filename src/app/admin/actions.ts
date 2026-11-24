@@ -10,7 +10,7 @@ import { changePassword, login, logout, requireAdmin, resetWithRecovery } from "
 import { passwordProblem } from "@/lib/password";
 import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
-import { type Field, cleanLayout, HOME_KEYS, LAYOUT_KEY, loadContent, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
+import { type Field, ALL_KEYS, clean, cleanLayout, HOME_KEYS, CATEGORIES, PROJECT_FIELDS, LAYOUT_KEY, loadContent, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
 import { PAGE_PLAN } from "@/lib/home";
 import { CONTACT_NETS, cleanSite, SITE_DEFAULTS, siteOf, TAB_BY_ID } from "@/lib/site";
 
@@ -159,6 +159,50 @@ export async function deleteMessage(f: FormData) {
   await requireAdmin();
   await db().prepare("DELETE FROM messages WHERE id=?").bind(s(f, "id")).run();
   revalidatePath("/admin/messages");
+}
+
+// ---- projects (table "projects"): the cards on the Projects page and each project's own page ----
+
+/** The editor sends the project as one JSON field (see PROJECT_FIELDS in lib/content.ts); "key" is the project's id, or "new". */
+export async function saveProject(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "key");
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("data") ?? "{}")); } catch { redirect("/admin/projects/" + encodeURIComponent(id) + "?error=1"); }
+  const d = clean(PROJECT_FIELDS, raw, {}) as Record<string, any>;
+  const title = String(d.title).trim().slice(0, 160) || "Untitled project";
+  const base = slugify(String(d.slug) || title) || "project";
+  let slug = base;
+  for (let n = 2; await db().prepare("SELECT id FROM projects WHERE slug=? AND id IS NOT ?").bind(slug, id === "new" ? null : Number(id)).first(); n++) slug = `${base}-${n}`;
+  const category = (CATEGORIES as readonly string[]).includes(d.category) ? d.category : "Residential";
+  const gallery = JSON.stringify((Array.isArray(d.gallery) ? d.gallery : []).map((g: { image?: string }) => g.image).filter(Boolean).slice(0, 12));
+  const v = [slug, title, category, String(d.location).trim(), String(d.summary).trim(), String(d.capacity).trim(), String(d.systemType).trim(), String(d.systemNote).trim(), String(d.image), gallery, d.status === "Draft" ? "draft" : "published", Math.round(Number(d.sort)) || 0];
+  let oldSlug = "";
+  if (id === "new") {
+    const r = await db().prepare("INSERT INTO projects (slug,title,category,location,summary,capacity,system_type,system_note,image,gallery,status,sort) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(...v).run();
+    const newId = r.meta.last_row_id;
+    await purgeSite(["/projects/", `/projects/${slug}/`]);
+    redirect("/admin/projects/" + newId + "?saved=1");
+  }
+  const old = await db().prepare("SELECT slug FROM projects WHERE id=?").bind(id).first<{ slug: string }>();
+  if (!old) redirect("/admin/projects");
+  oldSlug = old.slug;
+  await db().prepare("UPDATE projects SET slug=?,title=?,category=?,location=?,summary=?,capacity=?,system_type=?,system_note=?,image=?,gallery=?,status=?,sort=?,updated_at=datetime('now') WHERE id=?").bind(...v, id).run();
+  await purgeSite(await projectPaths([slug, oldSlug]));
+  redirect("/admin/projects/" + id + "?saved=1");
+}
+export async function deleteProject(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "key");
+  const old = await db().prepare("SELECT slug FROM projects WHERE id=?").bind(id).first<{ slug: string }>();
+  await db().prepare("DELETE FROM projects WHERE id=?").bind(id).run();
+  await purgeSite(await projectPaths(old ? [old.slug] : []));
+  redirect("/admin/projects?deleted=1");
+}
+/** Every page a change to a project can show on: the Projects page, the project's own page, and every other project's page (the related list). */
+async function projectPaths(slugs: string[]) {
+  const all = await db().prepare("SELECT slug FROM projects").all<{ slug: string }>().then((r) => r.results.map((x) => x.slug)).catch(() => []);
+  return [...new Set(["/projects/", ...slugs, ...all].map((x) => (x === "/projects/" ? x : `/projects/${x}/`)))];
 }
 
 // ---- page sections (src/lib/content.ts): one JSON document per section, merged over the built-in defaults ----
@@ -343,7 +387,7 @@ export async function savePageLayout(f: FormData) {
   if (!PAGE_DEFAULTS[path]) redirect("/admin/settings?tab=sections");
   let raw: unknown;
   try { raw = JSON.parse(String(f.get("keys") ?? "[]")); } catch { redirect(`/admin/settings?tab=sections&page=${encodeURIComponent(path)}&error=1`); }
-  const keys = [...new Set((Array.isArray(raw) ? raw.map(String) : []).filter(k => HOME_KEYS.includes(k)))];
+  const keys = [...new Set((Array.isArray(raw) ? raw.map(String) : []).filter(k => (path === "/" ? HOME_KEYS : ALL_KEYS).includes(k)))];
   const l = await readLayout();
   if (path === "/") {
     l.order = [...keys, ...HOME_KEYS.filter(k => !keys.includes(k))];

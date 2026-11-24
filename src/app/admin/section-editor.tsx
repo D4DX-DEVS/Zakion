@@ -4,7 +4,7 @@
 // library or upload a new file.
 import { useRef, useState } from "react";
 import type { Field } from "@/lib/content";
-import { Icon } from "./icons";
+import { Icon, type IconName } from "./icons";
 import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
 import { MenuEditor, type LinkOption } from "./menu-editor";
@@ -123,9 +123,12 @@ export function Fields({ fields, value, onChange, pick, upload, links }: { field
   );
 }
 
-export function SectionEditor({ sectionKey, fields, initial, images, save, reset, upload }: {
+// `reset` is the secondary button next to Save. For a page section it is "Reset to original"; the project editor passes its own wording
+// ("Delete project") and leaves it out for a project that has not been saved yet.
+export function SectionEditor({ sectionKey, fields, initial, images, save, reset, upload, resetLabel = "Reset to original", resetConfirm = "Discard all edits to this section and go back to the original text and images?", resetIcon = "reset" }: {
   sectionKey: string; fields: Field[]; initial: Obj; images: string[];
-  save: (f: FormData) => Promise<void>; reset: (f: FormData) => Promise<void>; upload: Upload;
+  save: (f: FormData) => Promise<void>; reset?: (f: FormData) => Promise<void>; upload: Upload;
+  resetLabel?: string; resetConfirm?: string; resetIcon?: IconName;
 }) {
   const [data, setData] = useState<Obj>(initial);
   const dlg = useRef<HTMLDialogElement>(null);
@@ -139,7 +142,7 @@ export function SectionEditor({ sectionKey, fields, initial, images, save, reset
         <div className="card"><Fields fields={fields} value={data} onChange={setData} pick={pick} upload={upload} /></div>
         <div className="stickybar">
           <span className="grow">Don’t forget to save your changes.</span>
-          <button type="submit" className="btn del" formAction={reset} onClick={(e) => { if (!confirm("Discard all edits to this section and go back to the original text and images?")) e.preventDefault(); }}><Icon name="reset" size={18} />Reset to original</button>
+          {reset && <button type="submit" className="btn del" formAction={reset} onClick={(e) => { if (!confirm(resetConfirm)) e.preventDefault(); }}><Icon name={resetIcon} size={18} />{resetLabel}</button>}
           <SubmitButton><Icon name="save" size={18} />Save changes</SubmitButton>
         </div>
       </form>

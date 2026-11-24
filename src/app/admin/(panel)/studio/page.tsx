@@ -1,5 +1,5 @@
 import { db, env } from "@/lib/env";
-import { BUILTIN_IMAGES, HOME_KEYS, loadContent, loadOne, SECTION_BY_KEY, type Layout } from "@/lib/content";
+import { BUILTIN_IMAGES, HOME_KEYS, INNER_KEYS, loadContent, loadOne, SECTION_BY_KEY, type Layout } from "@/lib/content";
 import { ANCHORS } from "@/lib/home";
 import { moveSection, reorderSections, resetSection, saveSection, saveSectionSettings, toggleSection, uploadSectionFile } from "../../actions";
 import { fmtDate } from "../../format";
@@ -20,7 +20,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
   const rows = await db().prepare("SELECT key, updated_at FROM site_content").all<{ key: string; updated_at: string }>().then((r) => r.results).catch(() => []);
   const edited = new Map(rows.map((r) => [r.key, r.updated_at]));
   const hidden = new Set(layout.hidden);
-  const sel = SECTION_BY_KEY[key] && (key === "hero" || key === "header" || key === "footer" || key === "banners" || HOME_KEYS.includes(key)) ? key : "";
+  const sel = SECTION_BY_KEY[key] && (key === "hero" || key === "header" || key === "footer" || key === "banners" || INNER_KEYS.includes(key) || HOME_KEYS.includes(key)) ? key : "";
   const live = layout.order.length - hidden.size;
 
   const status = (k: string) => {
@@ -76,7 +76,7 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
     const onHome = HOME_KEYS.includes(sel);
     const st = layout.settings[sel] ?? { spacing: "standard", anim: "on" };
     const pos = layout.order.indexOf(sel) + 1;
-    const when = sel === "hero" ? "Top of the home page" : sel === "header" ? "Top of every page" : sel === "footer" ? "Bottom of every page" : sel === "banners" ? "Top of every inner page" : `Block ${pos} of ${layout.order.length}`;
+    const when = sel === "hero" ? "Top of the home page" : sel === "header" ? "Top of every page" : sel === "footer" ? "Bottom of every page" : sel === "banners" ? "Top of every inner page" : sel === "portfolio" ? "Projects page" : `Block ${pos} of ${layout.order.length}`;
     const seg = (name: string, cur: string, opts: [string, string][]) => (
       <div className="seg" role="radiogroup">{opts.map(([v, l]) => <label key={v}><input type="radio" name={name} value={v} defaultChecked={cur === v} /><span>{l}</span></label>)}</div>
     );
@@ -127,11 +127,12 @@ export default async function Studio({ searchParams }: { searchParams: Promise<{
           <li className="o-cap">Every page</li>
           {item("header")}
           {item("banners")}
+          {item("portfolio")}
           {item("footer")}
         </OutlineList>
       </aside>
       <section className="canvas" aria-live="polite">{editor}</section>
-      {sel ? <PreviewPanel key={sel} src={sel === "banners" ? "/about-us/" : "/" + (anchor ? "#" + anchor : "")} label={SECTION_BY_KEY[sel].title} /> : <div className="pv-ghost" aria-hidden="true" />}
+      {sel ? <PreviewPanel key={sel} src={sel === "banners" ? "/about-us/" : sel === "portfolio" ? "/projects/" : "/" + (anchor ? "#" + anchor : "")} label={SECTION_BY_KEY[sel].title} /> : <div className="pv-ghost" aria-hidden="true" />}
     </div>
   );
 }

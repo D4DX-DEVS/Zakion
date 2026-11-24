@@ -1,5 +1,5 @@
 // HTML builders for the page sections. Each one renders from the editable content in lib/content.ts (defaults + admin edits).
-import { Content, ICONS, safeUrl } from "./content";
+import { CATEGORIES, Content, ICONS, parseGallery, type Project, safeUrl } from "./content";
 import { ic, SPRITE } from "./sprite";
 import { NEON_HOUSE, PHOTO_FX } from "./neon-house";
 
@@ -307,6 +307,70 @@ const projects = (c: Content) => { const p = c.projects; return `<section class=
 <div class="zh-proj-photos">${p.photos.map((f: any, n: number) => { const u = safeUrl(f.url); const tag = u ? "a" : "div"; return `<${tag} class="zh-ph zr zr-z"${u ? ` href="${esc(u)}" aria-label="View our projects (photo ${n + 1})"` : ""}>${img(f.image, f.alt, 468, 255)}</${tag}>`; }).join("")}</div>
 </div></section>`; };
 
+// ---- Projects page: filter tabs and cards, and the project page. The projects come from the "projects" table (Admin > Projects). ----
+const SVG = (d: string, cls = "") => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"${cls ? ` class="${cls}"` : ""}>${d}</svg>`;
+const PF_ICON: Record<string, string> = {
+  Residential: SVG('<path d="m3 11 9-8 9 8M5 10v10h14V10M10 20v-6h4v6"/>'),
+  Commercial: SVG('<path d="M4 21V4h10v17M14 9h6v12M8 8h2M8 12h2M8 16h2M17 13h1M17 17h1M3 21h18"/>'),
+  Industrial: SVG('<path d="M3 21V9l6 3V9l6 3V5h3v16zM7 17h2M12 17h2"/>'),
+};
+const PIN = SVG('<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.4"/>', "zh-pin");
+const ARROW_R = SVG('<path d="M4 12h16M14 6l6 6-6 6"/>');
+const ARROW_L = SVG('<path d="M20 12H4M10 6l-6 6 6 6"/>');
+const projectUrl = (p: Pick<Project, "slug">) => `/projects/${esc(p.slug)}/`;
+
+const projectCard = (p: Project, readMore: string) =>
+  `<article class="zh-pc" data-cat="${esc(p.category)}"><a class="zh-pc-img" href="${projectUrl(p)}" tabindex="-1" aria-hidden="true">${p.image ? img(p.image, "", 640, 400) : ""}</a>` +
+  `<div class="zh-pc-b"><h3><a href="${projectUrl(p)}">${esc(p.title)}</a></h3>${p.location ? `<p class="zh-pc-loc">${PIN}<span>${esc(p.location)}</span></p>` : ""}` +
+  `<a class="zh-pc-btn" href="${projectUrl(p)}" aria-label="${esc(readMore)}: ${esc(p.title)}">${esc(readMore)}${ARROW_R}</a></div></article>`;
+
+// The tabs only filter what is already on the page (no reload); without JavaScript every project simply stays visible.
+const PF_JS = `<script>(function(){var s=document.getElementById('our-projects');if(!s)return;var tabs=[].slice.call(s.querySelectorAll('.zh-pf-tab')),cards=[].slice.call(s.querySelectorAll('.zh-pc')),none=s.querySelector('.zh-pf-none');
+function show(c){var n=0;tabs.forEach(function(t){t.setAttribute('aria-pressed',t.getAttribute('data-c')===c?'true':'false')});cards.forEach(function(k){var on=c==='all'||k.getAttribute('data-cat')===c;k.hidden=!on;if(on)n++});if(none)none.hidden=n>0}
+tabs.forEach(function(t){t.addEventListener('click',function(){show(t.getAttribute('data-c'))})})})();</script>`;
+
+const portfolio = (c: Content) => {
+  const p = c.portfolio, list: Project[] = c._projects ?? [];
+  const readMore = String(p.readMore || "Read More");
+  const tabs = [["all", String(p.allLabel || "All"), ""], ...CATEGORIES.map((k) => [k, k, PF_ICON[k]])]
+    .map(([v, label, icon], i) => `<button type="button" class="zh-pf-tab" data-c="${esc(v)}" aria-pressed="${i === 0 ? "true" : "false"}">${icon}<span>${esc(label)}</span></button>`).join("");
+  const intro = p.title || p.eyebrow || p.subtitle ? head(p.eyebrow, p.title, p.subtitle) : "";
+  return `<section class="zh zh-pf" id="our-projects"><div class="zh-wrap">${intro}
+${list.length ? `<div class="zh-pf-tabs" role="group" aria-label="Filter projects by category">${tabs}</div>
+<div class="zh-pf-grid">${list.map((x) => projectCard(x, readMore)).join("")}</div>
+<p class="zh-pf-none" hidden>No projects in this category yet.</p>${PF_JS}` : `<p class="zh-pf-none">${esc(p.empty)}</p>`}
+</div></section>`;
+};
+
+// The project page: a back link, the main picture beside the name, description and details, the gallery (opens larger), and related projects.
+const PD_JS = `<script>(function(){var d=document.querySelector('.zh-lb');if(!d)return;var img=d.querySelector('img'),th=[].slice.call(document.querySelectorAll('.zh-pd-th')),i=0;
+function open(k){i=(k+th.length)%th.length;img.src=th[i].getAttribute('data-full');img.alt=th[i].getAttribute('data-alt')||'';if(!d.open)d.showModal()}
+th.forEach(function(b,k){b.addEventListener('click',function(){open(k)})});
+d.querySelector('.zh-lb-x').addEventListener('click',function(){d.close()});d.querySelector('.zh-lb-p').addEventListener('click',function(){open(i-1)});d.querySelector('.zh-lb-n').addEventListener('click',function(){open(i+1)});
+d.addEventListener('click',function(e){if(e.target===d)d.close()});d.addEventListener('keydown',function(e){if(e.key==='ArrowLeft')open(i-1);if(e.key==='ArrowRight')open(i+1)})})();</script>`;
+
+const projectDetail = (c: Content) => {
+  const p: Project = c._project, all: Project[] = c._projects ?? [], readMore = String(c.portfolio?.readMore || "Read More");
+  const gallery = parseGallery(p.gallery);
+  const related = [...all.filter((x) => x.id !== p.id && x.category === p.category), ...all.filter((x) => x.id !== p.id && x.category !== p.category)].slice(0, 3);
+  const box = (icon: string, label: string, value: string) => (value ? `<div class="zh-pd-box"><span class="zh-pd-ico">${icon}</span><span><b>${esc(value)}</b><i>${esc(label)}</i></span></div>` : "");
+  const system = p.system_type ? `<div class="zh-pd-sys"><span class="zh-pd-ico">${SVG('<path d="m3 16 3-11h15l-3 11zM5.5 10.5h15M11.5 5l-1.5 11M16.5 5 15 16M9 20h9M13.5 16v4"/>')}</span><span><i>System Type</i><b>${esc(p.system_type)}</b>${p.system_note ? `<em>${esc(p.system_note)}</em>` : ""}</span></div>` : "";
+  const stats = box(SVG('<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'), "Project Capacity", p.capacity) + box(PF_ICON[p.category] ?? PF_ICON.Residential, "Category", p.category);
+  return `<section class="zh zh-pd" id="project"><div class="zh-wrap">
+<a class="zh-pd-back" href="/projects/">${ARROW_L}<span>Back to Projects</span></a>
+<div class="zh-pd-hero">
+ <figure class="zh-pd-main">${p.image ? img(p.image, p.title, 960, 640) : ""}</figure>
+ <div class="zh-pd-info"><h1>${esc(p.title)}</h1>${p.location ? `<p class="zh-pc-loc">${PIN}<span>${esc(p.location)}</span></p>` : ""}${p.summary ? `<p class="zh-pd-sum">${esc(p.summary)}</p>` : ""}
+  ${stats ? `<div class="zh-pd-stats">${stats}</div>` : ""}${system}</div>
+</div>
+${gallery.length ? `<h2 class="zh-pd-h">Project Gallery</h2>
+<div class="zh-pd-gal">${gallery.map((g, i) => `<button type="button" class="zh-pd-th" data-full="${url(g)}" data-alt="${esc(p.title)} picture ${i + 1}" aria-label="Open picture ${i + 1} of ${gallery.length}"><img src="${url(g)}" alt="" loading="lazy" decoding="async"></button>`).join("")}</div>
+<dialog class="zh-lb" aria-label="Project picture"><button type="button" class="zh-lb-x" aria-label="Close">×</button><button type="button" class="zh-lb-p" aria-label="Previous picture">${ARROW_L}</button><img alt=""><button type="button" class="zh-lb-n" aria-label="Next picture">${ARROW_R}</button></dialog>${PD_JS}` : ""}
+${related.length ? `<div class="zh-pd-rh"><h2 class="zh-pd-h">Related Projects</h2><a class="zh-pd-all" href="/projects/">View All Projects${ARROW_R}</a></div>
+<div class="zh-pf-grid">${related.map((x) => projectCard(x, readMore)).join("")}</div>` : ""}
+</div></section>`;
+};
+
 const cta = (c: Content) => { const a = c.cta; return `<section class="zh zh-cta" id="power-your-future"><div class="zh-wrap zh-cta-grid">
 <div class="zh-cta-txt">
  <h2 class="zh-h2 zr zr-l">${rt(a.title)}</h2>
@@ -354,7 +418,7 @@ ${o.map && safeUrl(k.map) ? `<div class="zh-ct-map zr zr-z"><iframe src="${url(k
 };
 
 export const BUILD: Record<string, (c: Content, o?: { map?: boolean }) => string> = {
-  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact,
+  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail,
 };
 
 /** The deck sections for a page, in order, with the icon sprite and the animation script. */

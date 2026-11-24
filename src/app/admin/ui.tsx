@@ -12,6 +12,7 @@ const NAV: Nav[] = [
   { href: "/admin/studio", label: "Studio", icon: "layers", group: "Home page", sub: "Arrange, edit and tune every block of the home page.", bare: true },
   { href: "/admin/settings", label: "Site settings", icon: "settings", group: "Site", sub: "Layout, colours, fonts, header, footer, navigation and social links for the whole website.", bare: true },
   { href: "/admin/pages", label: "Pages", icon: "file", group: "Content", sub: "Edit the text, images and settings of every page." },
+  { href: "/admin/projects", label: "Projects", icon: "grid", group: "Content", sub: "Add and edit the projects on the Projects page: the cards, the filter tabs and each project's own page." },
   { href: "/admin/posts", label: "Blog posts", icon: "pen", group: "Content", sub: "Write, edit and publish your articles." },
   { href: "/admin/media", label: "Library", icon: "image", group: "Library", sub: "Upload and manage images, videos and PDFs." },
   { href: "/admin/messages", label: "Inbox", icon: "inbox", group: "Inbox", sub: "Enquiries sent through your contact form." },
@@ -32,6 +33,7 @@ function Palette({ open, onClose, sections, tabs }: { open: boolean; onClose: ()
   const all = useMemo<Cmd[]>(() => [
     ...NAV.map((n): Cmd => ({ label: n.label, hint: n.group, href: n.href, icon: n.icon })),
     { label: "Write a new blog post", hint: "Action", href: "/admin/posts/new", icon: "pen" },
+    { label: "Add a project", hint: "Action", href: "/admin/projects/new", icon: "plus" },
     { label: "Upload to the library", hint: "Action", href: "/admin/media", icon: "upload" },
     ...tabs.map((t): Cmd => ({ label: t.label, hint: "Site settings", href: "/admin/settings?tab=" + t.id, icon: "settings" })),
     ...sections.map((s): Cmd => ({ label: s.title, hint: "Studio section", href: "/admin/studio?key=" + s.key, icon: SEC_ICON[s.key] ?? "layers" })),

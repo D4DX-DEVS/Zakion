@@ -2,12 +2,12 @@ import { db } from "./env";
 import { improveBody, isPlaceholder, isStaging, seoHead } from "./seo";
 import { applyBanner } from "./banners";
 import { stripLegacyBlocks } from "./legacy-blocks";
-import { applyPage, HOME_HEAD, PAGE_PLAN } from "./home";
-import { type Content, loadContent } from "./content";
+import { applyPage, HOME_HEAD, PAGE_PLAN, replaceMain } from "./home";
+import { type Content, loadContent, type Project } from "./content";
 import { BACK_TO_TOP, FONT_HEAD, LIGHT_JS, MOTION_EARLY, MOTION_JS } from "./chrome";
 import { swapFooter } from "./footer";
 import { applyHeader } from "./header";
-import { SCRIPT_EARLY } from "./sections";
+import { renderSections, SCRIPT_EARLY } from "./sections";
 import { isThemed, siteHead, siteOf, socialOf, themeKey, themeText } from "./site";
 
 type Page = { path: string; title: string; description: string; og_image: string; body_class: string; head_html: string; body_html: string; foot_html: string };
@@ -63,7 +63,7 @@ function document_(p: Page, body: string, c: Content, post?: Post) {
   return `<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${site.scrollAnimations ? MOTION_EARLY : ""}<title>${t}</title>` +
     (p.description ? `<meta name="description" content="${esc(p.description)}">` : "") +
     `<meta property="og:title" content="${t}">` + seoHead(p, post, isPlaceholder(body), sameAs.length ? sameAs : undefined) +
-    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${head}${PUBLIC_CSS}<link rel="stylesheet" href="/zk-deck.css?v=14">${FONT_HEAD}<link rel="stylesheet" href="/zk-wide.css?v=9">${p.path in PAGE_PLAN ? HOME_HEAD : ""}<link rel="stylesheet" href="/zk-footer.css?v=2"><link rel="stylesheet" href="/zk-motion.css?v=12"><link rel="stylesheet" href="/zk-menu.css?v=7">${siteHead(site)}</head>` +
+    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${head}${PUBLIC_CSS}<link rel="stylesheet" href="/zk-deck.css?v=14">${FONT_HEAD}<link rel="stylesheet" href="/zk-wide.css?v=9">${p.path in PAGE_PLAN || p.path.startsWith("/projects/") ? HOME_HEAD : ""}<link rel="stylesheet" href="/zk-footer.css?v=2"><link rel="stylesheet" href="/zk-motion.css?v=12"><link rel="stylesheet" href="/zk-menu.css?v=7">${siteHead(site)}</head>` +
     `<body class="${esc(p.body_class)}">${improveBody(swapFooter(noSmoothScroll(applyHeader(body, c, p.path)), c), post ? post.title : p.title.split(/ [–|] /)[0])}${site.scrollAnimations ? MOTION_JS : ""}${site.imageShine ? LIGHT_JS : ""}${noSmoothScroll(foot)}${FORM_JS}${site.backToTop ? BACK_TO_TOP : ""}<script src="/zk-deck.js?v=12" defer></script></body></html>`;
 }
 
@@ -104,6 +104,17 @@ export async function renderPath(path: string): Promise<Response> {
     let body = norm in PAGE_PLAN ? applyPage(norm, page.body_html, content) : page.body_html;
     if (body.includes("{{CARDS}}")) { const cards = (await published()).map(card).join(""); body = body.replace("{{CARDS}}", () => cards); }
     return html(document_(page, body, content));
+  }
+  // a project's own page: the Projects page's header and footer around the project (Admin > Projects)
+  const pm = /^\/projects\/([^/]+)\/$/.exec(norm);
+  if (pm) {
+    const project = await d.prepare("SELECT * FROM projects WHERE slug=? AND status='published'").bind(pm[1]).first<Project>().catch(() => null);
+    const shell = project && (await d.prepare("SELECT * FROM pages WHERE path='/projects/' AND kind!='template'").first<Page>());
+    if (project && shell) {
+      const content = await loadContent();
+      const body = replaceMain(shell.body_html, renderSections(["projectDetail"], { ...content, _project: project }));
+      return html(document_({ ...shell, path: norm, title: `${project.title} | Zakion Energy`, description: clip(project.summary), og_image: project.image }, body, content));
+    }
   }
   const slug = norm.slice(1, -1);
   if (slug && !slug.includes("/")) {
