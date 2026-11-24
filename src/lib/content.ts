@@ -20,6 +20,8 @@ export type Field = {
 export type SectionDef = { key: string; title: string; page: string; help: string; fields: Field[]; data: Record<string, unknown> };
 export type Content = Record<string, any>;
 
+/** The icons a subscription plan can show (drawn in lib/sections.ts). */
+export const PLAN_ICONS = ["Calendar", "Clock", "Gauge", "365 days"] as const;
 export const ICONS = ["sun", "bolt", "house", "panel", "rupee", "chart", "bank", "doc", "bulb", "leaf", "shield", "gear", "battery", "ac", "fridge", "wash", "tv", "fan", "tube", "globe", "hardhat", "award", "clock", "headset", "wrench", "users", "trend", "swap", "ban", "search", "chat", "ruler", "truck", "gauge", "power", "cycle"];
 
 const T = (k: string, label: string, help?: string): Field => ({ k, label, type: "text", help });
@@ -33,13 +35,13 @@ const BOOL = (k: string, label: string, help?: string): Field => ({ k, label, ty
 const SEL = (k: string, label: string, options: string[], help?: string): Field => ({ k, label, type: "select", options, help });
 
 // The home page sections in their default order (the page plan in home.ts uses this too). The admin can reorder or hide them.
-export const HOME_KEYS = ["about", "track", "vision", "story", "why", "renewable", "onGrid", "hybrid", "bess", "solarHome", "components", "aesthetics", "roi", "process", "partners", "testimonials", "projects", "cta", "contact"];
+export const HOME_KEYS = ["about", "track", "vision", "story", "why", "renewable", "onGrid", "hybrid", "bess", "solarHome", "components", "aesthetics", "amc", "roi", "process", "partners", "testimonials", "projects", "cta", "contact"];
 
 // Which blocks each page shows by default, in order. The inner pages keep their own banner (page title and breadcrumb) on top.
 // The admin can reorder, remove and add blocks on every page (Site settings > Section order); the result is kept in the layout below.
-// Blocks that only make sense on inner pages (they have no place in the home page's own order): the Projects page's tabs and cards, the AMC block,
-// and the system cards of the Solutions page (the Home page keeps showing the full On Grid, Hybrid and BESS blocks).
-export const INNER_KEYS = ["portfolio", "amc", "systems", "testimonialsAll"];
+// Blocks that only make sense on inner pages (they have no place in the home page's own order): the Projects page's tabs and cards, the system
+// cards of the Solutions page (the Home page keeps showing the full On Grid, Hybrid and BESS blocks) and the list of all testimonials.
+export const INNER_KEYS = ["portfolio", "systems", "testimonialsAll"];
 export const ALL_KEYS = [...HOME_KEYS, ...INNER_KEYS];
 
 export const PAGE_DEFAULTS: Record<string, string[]> = {
@@ -64,7 +66,14 @@ export type Layout = { order: string[]; hidden: string[]; settings: Record<strin
 export function cleanLayout(input: unknown): Layout {
   const src: any = input && typeof input === "object" ? input : {};
   const list = (v: unknown) => (Array.isArray(v) ? v.map(String) : []);
-  const order = [...new Set([...list(src.order).filter((k) => HOME_KEYS.includes(k)), ...HOME_KEYS])];
+  const order = [...new Set(list(src.order).filter((k) => HOME_KEYS.includes(k)))];
+  // a block added to the site after this order was saved goes where it sits by default: right after the block that comes before it in HOME_KEYS
+  HOME_KEYS.forEach((k, i) => {
+    if (order.includes(k)) return;
+    let at = 0;
+    for (let j = i - 1; j >= 0; j--) { const p = order.indexOf(HOME_KEYS[j]); if (p >= 0) { at = p + 1; break; } }
+    order.splice(at, 0, k);
+  });
   const hidden = [...new Set(list(src.hidden).filter((k) => HOME_KEYS.includes(k)))];
   const settings: Layout["settings"] = {};
   const st = src.settings && typeof src.settings === "object" ? src.settings : {};
@@ -83,21 +92,21 @@ export function cleanLayout(input: unknown): Layout {
 export const MARKUP_HELP = "Use ==text== for the amber highlight and **text** for bold.";
 
 // The picture behind the title at the top of each inner page. "where" says which pages use it (the matching is in banners.ts); "image" is the
-// built-in picture, a photo from the media library, used until the admin picks another one (or empties the field).
+// built-in picture (1920 px wide strips in public/zk/banners, cut at the banner shape), used until the admin picks another one (or empties the field).
 export const BANNER_PAGES: { key: string; label: string; where: string; image: string }[] = [
-  { key: "about", label: "About Us", where: "the About Us page", image: "/media/2024/03/post-1.jpg" },
-  { key: "solutions", label: "Solutions (main page)", where: "the Solutions page and any other page under it", image: "/media/2024/03/post-4.jpg" },
-  { key: "pv", label: "Photovoltaic Solutions", where: "the Photovoltaic Solutions page", image: "/media/2024/03/header-banner.jpg" },
-  { key: "solarHome", label: "Solar Home", where: "the Solar Home page", image: "/zk/solarhome-photo.jpg" },
-  { key: "energy", label: "Energy Engineering", where: "the Energy Engineering page", image: "/media/2024/03/post-6.jpg" },
-  { key: "emobility", label: "EV Charging Infrastructure", where: "the EV Charging Infrastructure page", image: "/media/2024/03/emobility.webp" },
-  { key: "projects", label: "Projects", where: "the Projects page and every project page", image: "/media/2024/03/hero.jpg" },
-  { key: "testimonials", label: "Testimonials", where: "the Testimonials page", image: "/media/2024/03/post-1.jpg" },
-  { key: "contact", label: "Contact", where: "the Contact page", image: "/media/2024/03/post-2.jpg" },
-  { key: "blog", label: "Blog", where: "the Blog page, its categories and every article", image: "/media/2024/03/hero-2.jpg" },
-  { key: "other", label: "Any other page", where: "every page that is not listed above", image: "/zk/page-hero.jpg" },
+  { key: "about", label: "About Us", where: "the About Us page", image: "/zk/banners/about.jpg" },
+  { key: "solutions", label: "Solutions (main page)", where: "the Solutions page and any other page under it", image: "/zk/banners/solutions.jpg" },
+  { key: "pv", label: "Photovoltaic Solutions", where: "the Photovoltaic Solutions page", image: "/zk/banners/pv.jpg" },
+  { key: "solarHome", label: "Solar Home", where: "the Solar Home page", image: "/zk/banners/solar-home.jpg" },
+  { key: "energy", label: "Energy Engineering", where: "the Energy Engineering page", image: "/zk/banners/energy.jpg" },
+  { key: "emobility", label: "EV Charging Infrastructure", where: "the EV Charging Infrastructure page", image: "/zk/banners/emobility.jpg" },
+  { key: "projects", label: "Projects", where: "the Projects page and every project page", image: "/zk/banners/projects.jpg" },
+  { key: "testimonials", label: "Testimonials", where: "the Testimonials page", image: "/zk/banners/testimonials.jpg" },
+  { key: "contact", label: "Contact", where: "the Contact page", image: "/zk/banners/contact.jpg" },
+  { key: "blog", label: "Blog", where: "the Blog page, its categories and every article", image: "/zk/banners/blog.jpg" },
+  { key: "other", label: "Any other page", where: "every page that is not listed above", image: "/zk/banners/other.jpg" },
 ];
-const BANNER_SPEC = "Image size: 1920 × 600 px (width × height), a wide strip. Smallest that still looks sharp: 1600 × 500 px. JPG or WebP, ideally under 500 KB so the page opens fast (up to 15 MB is accepted). The picture fills the strip behind the page title, so only a band across the middle shows: keep the main subject in the middle. The left side is darkened so the white title stays easy to read.";
+const BANNER_SPEC = "Image size: 1920 × 420 px (width × height), a wide strip about 4.5 times as wide as it is tall (the strip on a computer is about 1920 × 420 px). Smallest that still looks sharp: 1600 × 360 px; a 1920 px wide photo of any height works, but the strip then shows only a band across it. JPG or WebP, ideally under 500 KB so the page opens fast (up to 15 MB is accepted). The picture fills the strip behind the page title, so only a band across the middle shows: keep the main subject in the middle. The left side is darkened so the white title stays easy to read.";
 
 export const SECTIONS: SectionDef[] = [
   {
@@ -365,28 +374,40 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "amc", title: "AMC (Annual Maintenance Contract)", page: "Solutions",
-    help: "The maintenance-contract block on the Solutions page: a heading and short text, a picture (or a video), what the contract includes, and a row of service cards. Buttons only show when both their label and their link are filled in.",
+    key: "amc", title: "AMC (Annual Maintenance Contract)", page: "Home, Solutions",
+    help: "The maintenance-contract block: a heading and short text, a picture (or a video), what the contract includes, then the AMC services (a picture, a name and three points each) and the subscription plans. Buttons only show when both their label and their link are filled in.",
     fields: [
       T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("intro", "Paragraph"),
       LN("included", "What the contract includes", "One item per line. Each one gets a tick."),
       IMG("image", "Picture", "Shown beside the text. A landscape picture around 1200 × 900 px works best."),
       { k: "video", label: "Video (optional)", type: "video", spec: "Video: MP4 (H.264) or WebM, up to 25 MB. Landscape 4:3 (for example 1280 × 960 px) or 16:9 fits best; it is cropped to the frame. It plays by itself, silently, in a loop.", help: "Optional. A video plays beside the text instead of the picture; the picture then shows until the video loads." },
-      LIST("features", "Service cards", "card", [SEL("icon", "Icon", ICONS), T("title", "Title"), TA("text", "Text")], 8),
       T("btn1Text", "Button 1 label"), T("btn1Link", "Button 1 link"), T("btn2Text", "Button 2 label"), T("btn2Link", "Button 2 link"),
+      TA("servicesTitle", "Heading above the AMC services", MARKUP_HELP),
+      LIST("services", "AMC services", "service", [
+        T("title", "Name"),
+        IMG("image", "Picture", "Shown at the top of the card, about 315 × 206 px or larger in the same shape (3:2)."),
+        LN("points", "Points under the card", "One point per line; three fit best."),
+      ], 8),
+      TA("plansTitle", "Heading of the plans panel", MARKUP_HELP),
+      LIST("plans", "Subscription plans", "plan", [T("name", "Name (for example Monthly Plan)"), SEL("icon", "Icon", [...PLAN_ICONS])], 8),
     ],
     data: {
       eyebrow: "After-sales care", title: "Annual Maintenance\n==Contract (AMC)==",
       intro: "A solar plant keeps paying you back for years, as long as it is looked after. Our AMC keeps your system clean, checked and performing, so you get the energy you were promised long after commissioning.",
       included: "Periodic site visits by trained technicians\nInverter, cabling and earthing checks\nGeneration and performance report\nPriority support when something needs attention",
       image: "/media/2024/03/post-5.jpg", video: "",
-      features: [
-        { icon: "wash", title: "Panel cleaning", text: "Scheduled cleaning keeps dust and dirt from cutting your output." },
-        { icon: "search", title: "Inspection and testing", text: "Electrical, inverter and mounting-structure checks on every visit." },
-        { icon: "gauge", title: "Performance monitoring", text: "We compare your generation with what the plant should produce and report what we find." },
-        { icon: "headset", title: "Fast support", text: "One number to call when something needs attention." },
-      ],
       btn1Text: "Enquire about AMC", btn1Link: "/contact/", btn2Text: "", btn2Link: "",
+      servicesTitle: "==AMC== Services",
+      services: [
+        { title: "Solar Panel Cleaning", image: "/zk/amc-1.jpg", points: "Better Absorption\nImproved Output\nPanel Care" },
+        { title: "System Performance Monitoring", image: "/zk/amc-2.jpg", points: "Real-Time Tracking\nEarly Fault Detection\nReliable Operation" },
+        { title: "Detailed inspection Report", image: "/zk/amc-3.jpg", points: "System Health Check\nFault Identification\nMaintenance Planning" },
+        { title: "Efficiency & Degradation Tracking", image: "/zk/amc-4.jpg", points: "Efficiency Analysis\nPerformance Tracking\nLong-Term Reliability" },
+      ],
+      plansTitle: "==Subscription==\nPlans",
+      plans: [
+        { name: "Monthly Plan", icon: "Calendar" }, { name: "Quarterly Plan", icon: "Clock" }, { name: "Half-Yearly Plan", icon: "Gauge" }, { name: "Yearly Plan", icon: "365 days" },
+      ],
     },
   },
   {

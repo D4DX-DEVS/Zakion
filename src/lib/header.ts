@@ -80,10 +80,16 @@ function drawer(body: string, c: Content): string {
   return body.slice(0, at) + foot + IDENT + logo + body.slice(at + IDENT.length);
 }
 
+/** The logo in the menu bar links to the home page on every page (the stored header leaves its address empty, which only reloads the page). */
+const logoHome = (body: string) =>
+  body
+    .replace(/(<div class="ata-site-logo">\s*<a\b[^>]*?\bhref=)""/, '$1"/"')
+    .replace('alt="default-logo"', 'alt="Zakion Energy, home page"');
+
 export function applyHeader(body: string, c: Content, path: string): string {
   const h = c.header;
-  if (!h) return body;
-  let out = body;
+  if (!h) return logoHome(body);
+  let out = logoHome(body);
   const m = NAV_OPEN.exec(out);
   if (m) {
     let depth = 0, end = -1, t: RegExpExecArray | null;

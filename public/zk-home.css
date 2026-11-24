@@ -793,14 +793,7 @@
 .zh-amc-btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(20px,2.4vw,32px)}
 .zh-amc-img{margin:0;overflow:hidden;border-radius:28px 110px 28px 28px;box-shadow:0 22px 50px rgba(var(--zr-082a5a,8,42,90),.22)}
 .zh-amc-img img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}
-.zh-amc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(14px,1.8vw,24px);margin-top:clamp(28px,4vw,56px)}
-.zh-amc-card{padding:clamp(20px,2vw,28px);border-radius:20px;border-top:4px solid var(--amber);background:#fff;box-shadow:0 10px 30px rgba(var(--zr-082a5a,8,42,90),.09)}
-.zh-amc-ic{display:grid;place-items:center;width:52px;height:52px;margin-bottom:14px;border-radius:16px;background:var(--navy);color:var(--amber)}
-.zh-amc-ic .zi{width:26px;height:26px}
-.zh .zh-amc-card h3{margin:0 0 8px;font:700 clamp(18px,1.6vw,22px)/1.2 var(--zk-head,Rajdhani),sans-serif;color:var(--navy)}
-.zh-amc-card p{margin:0;font-size:15px;line-height:1.6;color:var(--zc-3b4a63,#3b4a63)}
-@media (max-width:1024px){.zh-amc-top{grid-template-columns:1fr}.zh-amc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.zh-amc-img{max-width:620px}}
-@media (max-width:640px){.zh-amc-grid{grid-template-columns:1fr}}
+@media (max-width:1024px){.zh-amc-top{grid-template-columns:1fr}.zh-amc-img{max-width:620px}}
 
 /* ---------- A system's own page: /services/<slug>/ (markup: systemDetail in src/lib/sections.ts) ---------- */
 .zh-sd .zh-pd-back{margin-bottom:clamp(18px,2.4vw,32px)}
@@ -938,3 +931,45 @@ dialog.zh-vlb video{display:block;width:100%;max-height:86vh;border-radius:16px;
 dialog.zh-vlb .zh-vlb-x{position:absolute;right:-6px;top:-46px;display:grid;place-items:center;width:40px;height:40px;min-width:0;padding:0!important;border:0!important;border-radius:50%!important;background:#fff!important;color:#0d2b5e!important;font:400 28px/1 sans-serif;cursor:pointer}
 dialog.zh-vlb .zh-vlb-x:hover{background:#fec142!important}
 @media (prefers-reduced-motion:reduce){.zh-q-play{animation:none}.zh-q-media img,.zh-q-media video{transition:none}}
+
+
+/* ---------- AMC services and subscription plans (markup: amc in src/lib/sections.ts) ---------- */
+.zh-ams{margin-top:clamp(36px,5vw,76px)}
+.zh-ams .zh-head{margin-bottom:clamp(20px,2.6vw,38px)}
+.zh-ams .zh-head h2{font-size:var(--zh-title);font-weight:700;line-height:1.04}
+.zh-ams-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(18px,2.4vw,38px)}
+.zh-ams-col{min-width:0}
+/* the card: the picture, then the name on a pale panel with a big faint number; the right edge is navy with an amber foot */
+.zh-ams-card{position:relative;margin:0;overflow:hidden;background:linear-gradient(180deg,#e9eff9,#f6f8fd);box-shadow:0 10px 28px rgba(var(--zr-082a5a,8,42,90),.1)}
+.zh-ams-card::after{content:"";position:absolute;right:0;top:0;bottom:0;width:clamp(6px,.6vw,9px);background:linear-gradient(180deg,var(--navy) 0 64%,var(--amber) 64% 100%)}
+.zh-ams-card img{display:block;width:100%;height:auto;aspect-ratio:315/206;object-fit:cover}
+.zh-ams-card figcaption{position:relative;min-height:clamp(96px,8.6vw,124px);padding:clamp(14px,1.4vw,20px) clamp(16px,1.6vw,22px)}
+.zh .zh-ams-card h3{position:relative;z-index:1;margin:0;max-width:82%;font-size:clamp(21px,1.85vw,29px);font-weight:700;line-height:1.04;color:var(--navy)}
+.zh-ams-n{position:absolute;right:clamp(14px,1.4vw,22px);bottom:-.14em;font:700 clamp(84px,8.4vw,128px)/1 var(--zk-head,Rajdhani),sans-serif;color:rgba(var(--zr-0d3d7b,13,61,123),.08);pointer-events:none}
+.zh-ams-list{list-style:none;margin:clamp(14px,1.6vw,24px) 0 0;padding:0}
+.zh-ams-list li{position:relative;padding:clamp(10px,1vw,14px) 0 clamp(10px,1vw,14px) 24px;border-bottom:1px solid var(--navy);font-size:clamp(15px,1.3vw,19px);font-weight:300;line-height:1.3;color:var(--navy)}
+.zh-ams-list li:last-child{border-bottom:0}
+.zh-ams-list li::before{content:"";position:absolute;left:3px;top:1.32em;width:9px;height:9px;border-radius:50%;background:var(--amber)}
+/* the plans: a navy panel with the heading on the left and the plans in a row */
+.zh-ams-plans{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);align-items:center;gap:clamp(18px,3vw,50px);margin-top:clamp(30px,4vw,56px);padding:clamp(24px,3vw,44px) clamp(22px,3.6vw,56px);border-radius:30px;color:#fff;background:radial-gradient(60% 90% at 100% 0%,rgba(255,255,255,.1),transparent 70%),linear-gradient(135deg,#0a2a63,#1b4b9b);box-shadow:0 22px 54px rgba(var(--zr-082a5a,8,42,90),.28)}
+.zh .zh-ams-ph{margin:0;font-size:clamp(32px,3.6vw,56px);font-weight:700;line-height:1.02;color:#fff}
+.zh-ams-ph em{display:block;font-style:normal;color:var(--amber)}
+.zh-ams-plans ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.zh-ams-plans li{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:clamp(14px,1.5vw,22px) clamp(14px,1.8vw,28px);border-left:1px solid rgba(255,255,255,.28)}
+.zh-ams-plans li:nth-child(odd){border-left:0;padding-left:0}
+.zh-ams-plans li:nth-child(n+3){border-top:1px solid rgba(255,255,255,.28)}
+.zh-ams-pn{font-size:clamp(17px,1.55vw,23px);font-weight:300;line-height:1.2}
+.zh-ams-pn b{display:block;font-weight:700}
+.zh-ams-pi{flex:none;display:grid;place-items:center;width:clamp(46px,4.2vw,62px);aspect-ratio:1;border-radius:50%;background:#fff;color:var(--navy);box-shadow:0 0 0 3px var(--amber)}
+.zh-ams-pi svg{width:54%;height:54%;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:1100px){
+  .zh-ams-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .zh-ams-plans{grid-template-columns:1fr;gap:14px}
+}
+@media (max-width:640px){
+  .zh-ams-grid{grid-template-columns:1fr;gap:26px}
+  .zh-ams-plans{padding:24px 20px;border-radius:22px}
+  .zh-ams-plans ul{grid-template-columns:1fr}
+  .zh-ams-plans li,.zh-ams-plans li:nth-child(n){padding:14px 0;border-left:0;border-top:1px solid rgba(255,255,255,.22)}
+  .zh-ams-plans li:first-child{border-top:0}
+}

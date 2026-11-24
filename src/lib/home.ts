@@ -19,13 +19,13 @@ export const pageKeys = (c: Content, path: string): string[] => (path === "/" ? 
 export const ANCHORS: Record<string, string> = {
   hero: "", about: "about-zakion", vision: "vision-mission", story: "our-story", why: "why-choose", renewable: "why-renewable", onGrid: "on-grid", hybrid: "hybrid", bess: "bess", solarHome: "solar-home",
   components: "components", aesthetics: "solar-aesthetics", roi: "roi", process: "work-process", track: "track-record", partners: "technology-partners", testimonials: "client-feedback",
-  projects: "projects-delivered", cta: "power-your-future", contact: "contact", systems: "our-systems", header: "", footer: "site-footer",
+  projects: "projects-delivered", cta: "power-your-future", contact: "contact", amc: "amc", systems: "our-systems", header: "", footer: "site-footer",
 };
 
 export const HOME_HEAD =
   '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap">' +
-  '<link rel="stylesheet" href="/zk-home.css?v=62">';
+  '<link rel="stylesheet" href="/zk-home.css?v=64">';
 
 const FOOTER_MARK = "ekit-template-content-footer";
 const footerStart = (body: string) => { const i = body.indexOf(FOOTER_MARK); return i < 0 ? -1 : body.lastIndexOf("<div", i); };

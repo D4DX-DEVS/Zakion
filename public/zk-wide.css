@@ -29,10 +29,12 @@ h1,h2,h3,.elementor-heading-title{font-weight:700}
 
 /* ---------- Inner page banner photo ----------
    --zk-banner is set on the banner block by applyBanner() in src/lib/banners.ts (the admin picks it per page under Studio > Page banners);
-   the deck photo is what shows when it is not set. The motion layer is a child of the block, so it inherits the variable. */
+   the deck photo is what shows when it is not set. The motion layer is a child of the block, so it inherits the variable.
+   The theme's parallax made the background fixed, which scales the picture to the whole screen (a 1366 px photo was blown up and looked soft); it
+   now scrolls with the banner, so the whole strip shows at its own resolution. The crop leans right (68%) on narrow screens, where the subject sits. */
 .elementor-element.parallaxie.e-parent:not(.elementor-motion-effects-element-type-background),
 .elementor-element.parallaxie.e-parent>.elementor-motion-effects-container>.elementor-motion-effects-layer,
-.page-header{background-image:var(--zk-banner,url("/zk/page-hero.jpg"))!important;background-size:cover!important;background-position:center 40%!important}
+.page-header{background-image:var(--zk-banner,url("/zk/page-hero.jpg"))!important;background-size:cover!important;background-position:68% 40%!important;background-attachment:scroll!important}
 
 /* ---------- Back to top: sun button ---------- */
 .zk-top{position:fixed;right:clamp(14px,2vw,28px);bottom:clamp(88px,9vw,104px);z-index:9990;width:56px;height:56px;padding:0;border:0;border-radius:50%;cursor:pointer;

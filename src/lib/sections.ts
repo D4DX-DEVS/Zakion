@@ -476,7 +476,17 @@ ${list.length ? `<div class="zh-q-grid">${list.map(testimonialCard).join("")}</d
 </div></section>${TC_JS}`;
 };
 
-// AMC (Annual Maintenance Contract): text, a picture, what is included, and a row of service cards. Edited in Studio (section "amc").
+// AMC plan icons (the plan's "icon" choice in Studio): drawn as 24 x 24 line icons in a round white frame.
+const PLAN_ICON_SVG: Record<string, string> = {
+  Calendar: SVG('<rect x="4" y="5.5" width="16" height="14.5" rx="1.8"/><path d="M4 10h16M8 3.5v4M16 3.5v4M9 15l2.2 2.2L15.6 13"/>'),
+  Clock: SVG('<circle cx="12" cy="12" r="8.2"/><path fill="currentColor" d="M12 12V3.8A8.2 8.2 0 0 1 20.2 12z"/>'),
+  Gauge: SVG('<path d="M4.2 17a8.2 8.2 0 1 1 15.6 0"/><path d="M12 16.6l4-5.4"/><circle cx="12" cy="16.6" r="1.5"/><path d="M12 6.4v1.6M6.6 9l1.2 1M17.4 9l-1.2 1"/>'),
+  "365 days": SVG('<rect x="4" y="5" width="16" height="15.5" rx="1.8"/><path d="M4 9.2h16M8 3v4M16 3v4"/><text x="12" y="17.6" text-anchor="middle" font-size="6.4" font-weight="700" fill="currentColor" stroke="none" font-family="Rajdhani,sans-serif">365</text>'),
+};
+// "Half-Yearly Plan": everything but the last word is bold, the last word light
+const planName = (n: unknown) => { const w = String(n ?? "").trim().split(/\s+/); return w.length < 2 ? `<b>${esc(n)}</b>` : `<b>${esc(w.slice(0, -1).join(" "))}</b> ${esc(w[w.length - 1])}`; };
+
+// AMC (Annual Maintenance Contract): text, a picture, what is included, then the AMC services (picture, name, points) and the subscription plans. Edited in Studio (section "amc").
 // A video added in Studio plays only while it is on screen; for visitors who prefer reduced motion it does not autoplay (it gets controls).
 const AMC_JS = `<script>(function(){var v=document.querySelector('#amc .zh-amc-img video');if(!v)return;
 if(matchMedia('(prefers-reduced-motion: reduce)').matches){v.removeAttribute('autoplay');v.pause();v.controls=true;return}
@@ -485,7 +495,7 @@ if('IntersectionObserver' in window)new IntersectionObserver(function(e){e.forEa
 const amc = (c: Content) => {
   const a = c.amc;
   const included = lines(a.included);
-  const feats: any[] = Array.isArray(a.features) ? a.features : [];
+  const services: any[] = Array.isArray(a.services) ? a.services : [], plans: any[] = Array.isArray(a.plans) ? a.plans : [];
   const button = (text: unknown, link: unknown, cls: string) => (String(text ?? "").trim() && safeUrl(link) ? `<a class="zh-btn ${cls}" href="${url(link)}">${esc(text)}</a>` : ""); // both label and link, or no button
   const buttons = button(a.btn1Text, a.btn1Link, "") + button(a.btn2Text, a.btn2Link, "zh-btn--line");
   // beside the text: the video if one was added (silent, looping, paused while off screen), else the picture
@@ -503,7 +513,11 @@ const amc = (c: Content) => {
  </div>
  ${media ? `<figure class="zh-amc-img zr zr-r">${media}</figure>` : ""}
 </div>
-${feats.length ? `<div class="zh-amc-grid">${feats.map((f) => `<article class="zh-amc-card zr"><span class="zh-amc-ic">${ic(ICONS.includes(f.icon) ? f.icon : "wrench")}</span><h3>${rt(f.title)}</h3><p>${rt(f.text)}</p></article>`).join("")}</div>` : ""}
+${services.length ? `<div class="zh-ams">
+ ${a.servicesTitle ? `<header class="zh-head zr"><h2>${rt(a.servicesTitle)}</h2></header>` : ""}
+ <div class="zh-ams-grid">${services.map((f, i) => `<div class="zh-ams-col zr"><figure class="zh-ams-card">${safeUrl(f.image) ? img(f.image, f.title, 315, 206) : ""}<figcaption><h3>${rt(f.title)}</h3><span class="zh-ams-n" aria-hidden="true">${i + 1}</span></figcaption></figure>${lines(f.points).length ? `<ul class="zh-ams-list">${lines(f.points).map((t) => `<li>${rt(t)}</li>`).join("")}</ul>` : ""}</div>`).join("")}</div>
+ ${plans.length ? `<aside class="zh-ams-plans zr" aria-label="Subscription plans">${a.plansTitle ? `<h3 class="zh-ams-ph">${rt(a.plansTitle)}</h3>` : ""}<ul>${plans.map((p) => `<li><span class="zh-ams-pn">${planName(p.name)}</span><span class="zh-ams-pi" aria-hidden="true">${PLAN_ICON_SVG[p.icon] ?? PLAN_ICON_SVG.Calendar}</span></li>`).join("")}</ul></aside>` : ""}
+</div>` : ""}
 </div>${safeUrl(a.video) ? AMC_JS : ""}</section>`;
 };
 
