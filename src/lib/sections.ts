@@ -389,14 +389,24 @@ ${related.length ? `<div class="zh-pd-rh"><h2 class="zh-pd-h">Related Projects</
 // ---- the Solutions page: one card per system type (picture, name, Read More), and each system's own page (/services/<slug>/) ----
 
 const systemUrl = (x: Pick<System, "slug">) => `/services/${esc(x.slug)}/`;
-const systemCard = (x: System, readMore: string) =>
-  `<article class="zh-pc zh-sc"><a class="zh-pc-img" href="${systemUrl(x)}" tabindex="-1" aria-hidden="true">${x.thumb || x.image ? img(x.thumb || x.image, "", 640, 400) : ""}</a>` +
-  `<div class="zh-pc-b"><h3><a href="${systemUrl(x)}">${esc(x.title)}</a></h3>` +
-  `<a class="zh-pc-btn" href="${systemUrl(x)}" aria-label="${esc(readMore)}: ${esc(x.title)}">${esc(readMore)}${ARROW_R}</a></div></article>`;
+// Two colours in a name: every word but the last in white, the last word in the accent colour (a one-word name stays white).
+const twoTone = (t: string) => {
+  const w = String(t).trim().split(/\s+/);
+  return w.length < 2 ? esc(t) : `${esc(w.slice(0, -1).join(" "))} <em>${esc(w[w.length - 1])}</em>`;
+};
+// A system card: the picture, the name (bold, two colours, centred) and a Read More button, inside an animated neon border.
+// The ring is a large conic gradient that turns slowly behind the card; the card's dark body covers all but its edge (styles: .zh-sc in public/zk-home.css).
+const systemCard = (x: System, readMore: string) => {
+  const u = systemUrl(x), pic = x.thumb || x.image;
+  return `<article class="zh-sc"><span class="zh-sc-ring" aria-hidden="true"></span><div class="zh-sc-in">` +
+    `<a class="zh-sc-img" href="${u}" tabindex="-1" aria-hidden="true">${pic ? img(pic, "", 640, 400) : ""}</a>` +
+    `<div class="zh-sc-b"><h3 class="zh-sc-t"><a href="${u}">${twoTone(x.title)}</a></h3>` +
+    `<a class="zh-pc-btn" href="${u}" aria-label="${esc(readMore)}: ${esc(x.title)}">${esc(readMore)}${ARROW_R}</a></div></div></article>`;
+};
 
 const systems = (c: Content) => {
   const p = c.systems, list: System[] = c._systems ?? [];
-  const intro = p.title || p.eyebrow || p.subtitle ? head(p.eyebrow, p.title, p.subtitle) : "";
+  const intro = p.title || p.eyebrow || p.subtitle ? head(p.eyebrow, p.title, p.subtitle, "c zh-head--light") : "";
   return `<section class="zh zh-pf zh-sc-sec" id="our-systems"><div class="zh-wrap">${intro}
 ${list.length ? `<div class="zh-pf-grid">${list.map((x) => systemCard(x, String(p.readMore || "Read More"))).join("")}</div>` : `<p class="zh-pf-none">${esc(p.empty)}</p>`}
 </div></section>`;

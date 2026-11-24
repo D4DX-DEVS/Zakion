@@ -851,3 +851,34 @@
 .zh-sd-cta{margin-top:clamp(24px,3vw,40px)}
 .zh a.zh-sd-cta-btn,.zh-sd-cta .zh-pc-btn{margin-top:0;padding:14px 30px;font-size:16px}
 .zh-sd-other .zh-pd-rh{margin-bottom:0}
+
+/* ---------- Solutions page: system cards with a neon border (markup: systems and systemCard in src/lib/sections.ts) ---------- */
+/* a deep navy band so the neon shows; the heading above the cards is centred (head with the "c" and "zh-head--light" classes) */
+.zh-sc-sec{position:relative;overflow:hidden;background:radial-gradient(60% 55% at 10% 0%,color-mix(in srgb,var(--sky) 30%,transparent),transparent 70%),radial-gradient(55% 50% at 94% 100%,color-mix(in srgb,var(--amber) 20%,transparent),transparent 70%),linear-gradient(180deg,#06173a,#0b2a63)}
+.zh-sc-sec .zh-head{margin-bottom:clamp(26px,3.4vw,52px)}
+.zh-sc-sec .zh-eye{letter-spacing:.08em;text-transform:uppercase;font-size:clamp(14px,1.3vw,18px);font-weight:600}
+.zh-sc-sec .zh-sub{max-width:34em;margin-left:auto;margin-right:auto;color:#dbe7ff}
+.zh-sc-sec .zh-pf-grid{gap:clamp(22px,2.8vw,40px)}
+.zh-sc-sec .zh-pf-none{color:#dbe7ff}
+
+.zh-sc{--nA:var(--amber);--nB:var(--sky);position:relative;display:flex;flex-direction:column;isolation:isolate;overflow:hidden;padding:3px;border-radius:26px;background:#0a1d47;box-shadow:0 0 0 1px color-mix(in srgb,var(--nB) 35%,transparent),0 0 16px color-mix(in srgb,var(--nA) 38%,transparent),0 0 40px color-mix(in srgb,var(--nB) 26%,transparent);animation:zscGlow 4.8s ease-in-out infinite;transition:transform .3s ease}
+.zh-sc:hover{transform:translateY(-6px)}
+/* the neon: two bright arcs (blue to white to amber) travelling round the edge */
+.zh-sc-ring{position:absolute;z-index:0;left:50%;top:50%;width:230%;aspect-ratio:1/1;border-radius:50%;pointer-events:none;background:conic-gradient(from 0deg,transparent 0,var(--nB) 11%,#fff 15%,var(--nA) 23%,transparent 35%,transparent 50%,var(--nA) 61%,#fff 65%,var(--nB) 73%,transparent 85%);transform:translate(-50%,-50%) rotate(0deg);animation:zscSpin 5.5s linear infinite}
+.zh-sc-in{position:relative;z-index:1;display:flex;flex:1;flex-direction:column;overflow:hidden;border-radius:23px;background:linear-gradient(180deg,#0c2a63,#07173b)}
+.zh-sc-img{position:relative;display:block;aspect-ratio:16/10;overflow:hidden;background:#0a2150}
+.zh-sc-img img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+.zh-sc:hover .zh-sc-img img{transform:scale(1.05)}
+.zh-sc-img::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;background:linear-gradient(180deg,transparent,rgba(8,27,67,.9))}
+.zh-sc-b{display:flex;flex:1;flex-direction:column;align-items:center;gap:clamp(14px,1.4vw,20px);padding:clamp(10px,1vw,14px) clamp(16px,1.8vw,26px) clamp(20px,2vw,28px);text-align:center}
+/* the name: bold, two colours, centred; the link inside takes the heading's font (the theme would give it its plain link font) */
+.zh .zh-sc .zh-sc-t{margin:0;font-size:clamp(22px,2vw,28px);font-weight:700;line-height:1.15;color:#fff;text-align:center}
+.zh .zh-sc .zh-sc-t a{font:inherit;color:inherit;text-decoration:none}
+.zh .zh-sc .zh-sc-t em{font-style:normal;color:var(--amber);text-shadow:0 0 18px color-mix(in srgb,var(--amber) 55%,transparent)}
+.zh .zh-sc a.zh-pc-btn{margin:auto auto 0;background:var(--amber);color:var(--navy-d);box-shadow:0 0 18px color-mix(in srgb,var(--amber) 45%,transparent)}
+.zh .zh-sc a.zh-pc-btn:hover{background:#fff;color:var(--navy-d)}
+@keyframes zscSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes zscGlow{0%,100%{box-shadow:0 0 0 1px color-mix(in srgb,var(--nB) 35%,transparent),0 0 16px color-mix(in srgb,var(--nA) 38%,transparent),0 0 40px color-mix(in srgb,var(--nB) 26%,transparent)}50%{box-shadow:0 0 0 1px color-mix(in srgb,var(--nA) 35%,transparent),0 0 22px color-mix(in srgb,var(--nB) 45%,transparent),0 0 52px color-mix(in srgb,var(--nA) 30%,transparent)}}
+@media (prefers-reduced-motion:reduce){.zh-sc,.zh-sc-ring{animation:none}.zh-sc:hover{transform:none}}
+/* other solutions under a system's page sit on a light band: the same dark cards, centred in their own column */
+.zh-sd-other .zh-pf-grid{margin-top:clamp(8px,1vw,14px)}

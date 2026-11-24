@@ -45,7 +45,7 @@ export const ALL_KEYS = [...HOME_KEYS, ...INNER_KEYS];
 export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/": HOME_KEYS,
   "/about-us/": ["about", "track", "vision", "story", "why", "process"],
-  "/services/": ["systems", "components", "aesthetics", "amc"],
+  "/services/": ["systems", "aesthetics", "amc", "components"],
   "/projects/": ["projects", "portfolio"],
   "/blog/": [],
   "/contact/": ["contact"],
