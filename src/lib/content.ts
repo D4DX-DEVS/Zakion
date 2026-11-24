@@ -40,7 +40,7 @@ export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/": HOME_KEYS,
   "/about-us/": ["about", "track", "vision", "story", "why", "process"],
   "/services/": ["onGrid", "hybrid", "bess", "components", "aesthetics", "process"],
-  "/projects/": ["projects", "track", "testimonials"],
+  "/projects/": ["projects"],
   "/contact/": ["contact"],
   "/blog/": [],
 };
@@ -277,7 +277,7 @@ export const SECTIONS: SectionDef[] = [
     data: { title: "Our Work ==Process==", subtitle: "From First Assessment to Long-Term Performance in **8 Steps**", steps: ["Site Auditing", "Consulting", "Designing & Architecting", "Supply of Material", "Installation", "Testing", "Commissioning", "AMC"].map((title) => ({ title })) },
   },
   {
-    key: "track", title: "Our Track Record", page: "Home, About Us, Projects", help: "Numbers count up when scrolled into view. A value such as 05+ or 500+ counts up; anything else (24/7) is shown as typed.",
+    key: "track", title: "Our Track Record", page: "Home, About Us", help: "Numbers count up when scrolled into view. A value such as 05+ or 500+ counts up; anything else (24/7) is shown as typed.",
     fields: [T("title", "Heading", MARKUP_HELP), T("subtitle", "Subheading"), IMG("image", "Panel background photo"), LIST("stats", "Numbers", "number", [T("value", "Value (for example 500+)"), T("label", "Label"), T("sub", "Small text")], 8)],
     data: {
       title: "Our ==Track Record==", subtitle: "Trusted Experience. Real Projects. Satisfied Customers.", image: "/zk/track-bg.jpg",
@@ -299,7 +299,7 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
-    key: "testimonials", title: "Testimonials (carousel)", page: "Home, Projects", help: "Two testimonials show at a time on a computer, one on a phone. Add more and visitors can scroll through them. A testimonial can be a written quote, a video, or both: upload a video on the testimonial and it plays right in the card.",
+    key: "testimonials", title: "Testimonials (carousel)", page: "Home", help: "Two testimonials show at a time on a computer, one on a phone. Add more and visitors can scroll through them. A testimonial can be a written quote, a video, or both: upload a video on the testimonial and it plays right in the card.",
     fields: [T("title", "Heading", MARKUP_HELP), TA("subtitle", "Subheading"), BOOL("autoplay", "Slide automatically"), NUM("interval", "Seconds between slides"),
       LIST("items", "Testimonials", "testimonial", [
       T("name", "Name"), T("role", "Job title"), T("company", "Company or place"), TA("quote", "Testimonial", "Use **text** for bold. Optional when you add a video."), IMG("avatar", "Photo"),
