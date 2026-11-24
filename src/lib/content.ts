@@ -116,7 +116,7 @@ export const SECTIONS: SectionDef[] = [
       T("btn1Text", "Button 1 label", "A button only shows when both its label and its link are filled in."), T("btn1Link", "Button 1 link", "Leave the label or the link empty to hide this button."), T("btn2Text", "Button 2 label", "A button only shows when both its label and its link are filled in."), T("btn2Link", "Button 2 link", "Leave the label or the link empty to hide this button."),
       {
         k: "slides", label: "Banner slides (up to 8)", type: "list", itemLabel: "slide", max: 8,
-        help: "Each slide is one image or one video: fill in the image or the video, not both (if both are filled in, the video is used). Use the up and down arrows to change the order. The banner is as wide as the page and as tall as the slide's own picture, so nothing is cropped; for a slider, give every slide the same shape (16:9 is best) so the banner does not change height.",
+        help: "Each slide is one image, one video file or one YouTube video (if more than one is filled in, the video file is used, then the YouTube link). A slide can also have its own text and buttons. Use the up and down arrows to change the order. The banner is as wide as the page and as tall as the slide's own picture, so nothing is cropped; for a slider, give every slide the same shape (16:9 is best) so the banner does not change height.",
         fields: [
           {
             k: "image", label: "Image", type: "image",
@@ -128,11 +128,15 @@ export const SECTIONS: SectionDef[] = [
             spec: "Video size: 1920 × 1080 px (width × height), landscape 16:9 is the usual choice, but any shape works. Smallest that still looks sharp: 1280 × 720 px. MP4 (H.264), up to 25 MB.",
             help: "For a video slide. In a slider the video plays once to its end and then the next slide appears; a banner with only this one video plays it again and again. It plays with sound where the browser allows it, otherwise it starts muted and the sound switches on at the visitor's first click or tap. Visitors can pause it and turn the sound on or off.",
           },
+          T("youtube", "YouTube video link", "For a YouTube slide, for example https://www.youtube.com/watch?v=… Leave the video above empty. It plays once to its end, silently until the visitor clicks or taps once, and then the next slide appears. The image above, if there is one, is its cover until it plays."),
           T("alt", "Description (for screen readers)", "Optional. A few words saying what the slide shows."),
+          T("eyebrow", "Text on this slide: small heading", "Optional. The text, the paragraph and the buttons below show only while this slide is on, over the picture (under it on a phone). A button needs both its label and its link."),
+          T("title", "Text on this slide: main heading", "Use ==text== to colour a word amber."), TA("subtitle", "Text on this slide: paragraph"),
+          T("btn1Text", "Button 1 label"), T("btn1Link", "Button 1 link"), T("btn2Text", "Button 2 label"), T("btn2Link", "Button 2 link"),
         ],
       },
       NUM("slideSeconds", "Seconds on each image", "Only for image slides in a slider (2 or more slides). Between 3 and 20. A video slide plays to its end."),
-      T("youtube", "YouTube video link", "Used only when there are no slides at all. It is looped with a cross-fade so there is no pause."),
+      T("youtube", "YouTube video link for the whole banner", "Used only when there are no slides at all (a YouTube video can also be a slide above). It is looped with a cross-fade so there is no pause."),
     ],
     data: { eyebrow: "Welcome to Zakion Energy", title: "Powering the Future With ==Renewable.==", subtitle: "Premium renewable energy solutions for a sustainable tomorrow. Powering homes. Empowering businesses. Building a sustainable future.", btn1Text: "Our Services", btn1Link: "/services/", btn2Text: "Contact Now", btn2Link: "/contact/", slides: [], slideSeconds: 6, youtube: "https://www.youtube.com/watch?v=TzfnlPxCZv0" },
   },

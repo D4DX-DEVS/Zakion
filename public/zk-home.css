@@ -986,3 +986,41 @@ dialog.zh-vlb .zh-vlb-x:hover{background:#fec142!important}
 @media (max-width:640px){.zh-pd-row{grid-template-columns:1fr;gap:2px}.zh-env-grid{grid-template-columns:1fr}.zh-pd-play{width:58px;height:58px;margin:-29px 0 0 -29px}}
 
 .zh-ams-cta{display:flex;justify-content:center;margin-top:clamp(24px,3vw,40px)}
+
+
+/* ---------- Banner slider: a YouTube slide and the text of a slide (markup: sliderMarkup and textLayer in src/lib/home.ts) ---------- */
+/* a YouTube slide: its cover picture shows until the clip plays; the player is cropped a little (as the old looping banner did) to hide YouTube's own title bar */
+.zh-ytp{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.zh-ytp iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;transform:scale(1.26)}
+.zh-sl.yt-on .zh-ytposter{opacity:0;transition:opacity .6s ease}
+/* the text of the slides sits in the banner's text place (over the picture; under it on phones), one block per slide, the one of the slide on show visible.
+   The banner is outside the .zh sections, so these styles carry their own colours and do not rely on the section variables. */
+.zh-hero-vid>.zh-slts{grid-area:1/1;position:relative;z-index:2;display:grid;pointer-events:none}
+.zh-slt{grid-area:1/1;position:relative;display:flex;align-items:center;padding:clamp(28px,5vw,96px) max(clamp(18px,4vw,60px),calc((100% - 1180px)/2));opacity:0;transition:opacity .8s ease;color:#fff}
+.zh-slt.on{opacity:1}
+.zh-slt.on .zh-slt-in{pointer-events:auto}
+.zh-slt-in{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;gap:clamp(10px,1.2vw,16px);max-width:min(660px,58%)}
+.elementor .zh-slts .zh-slt-eye{font:600 clamp(14px,1.35vw,20px)/1.2 var(--zk-head,Rajdhani),sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--zc-f5a800,#f5a800)}
+.elementor .zh-slts h2.zh-slt-h{margin:0;padding:0;font:700 clamp(30px,4.6vw,70px)/1.04 var(--zk-head,Rajdhani),sans-serif;letter-spacing:0;text-transform:none;color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+.elementor .zh-slts h2.zh-slt-h span{color:var(--zc-f5a800,#f5a800)}
+.elementor .zh-slts p.zh-slt-p{margin:0;font-size:clamp(15px,1.4vw,20px);line-height:1.55;color:rgba(255,255,255,.93);text-shadow:0 1px 10px rgba(0,0,0,.4)}
+.zh-slt-btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(4px,.8vw,12px)}
+.elementor .zh-slts a.zh-slt-btn,.elementor .zh-slts a.zh-slt-btn:visited{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:12px 30px;border:2px solid var(--zc-f5a800,#f5a800);border-radius:999px;background:var(--zc-f5a800,#f5a800);color:#1b2a4a;font:600 16px/1 var(--zk-body,Poppins),sans-serif;text-decoration:none;transition:background-color .2s,color .2s,border-color .2s}
+.elementor .zh-slts a.zh-slt-btn:hover{background:#fff;border-color:#fff;color:#0d3d7b}
+.elementor .zh-slts a.zh-slt-btn--line,.elementor .zh-slts a.zh-slt-btn--line:visited{background:transparent;border-color:rgba(255,255,255,.9);color:#fff}
+.elementor .zh-slts a.zh-slt-btn--line:hover{background:#fff;border-color:#fff;color:#0d3d7b}
+/* a dark veil on the left keeps the text readable over any picture */
+.zh-slt:has(.zh-slt-in)::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,18,43,.78),rgba(4,18,43,.4) 55%,transparent);pointer-events:none}
+@media (max-width:767px){
+  .zh-hero-vid>.zh-slts{pointer-events:auto;display:block}
+  /* under the video only the text of the slide on show takes room (a slide without text leaves no empty block) */
+  .zh-slt{display:none;padding:22px 18px 46px}
+  .zh-slt.on{display:flex;animation:zhSltIn .6s ease both}
+  .zh-slt:has(.zh-slt-in)::before{display:none}
+  .zh-slt-in{max-width:none}
+  .zh-slt.on:not(:has(.zh-slt-in)){display:none}
+  /* the video is small here, so YouTube's title bar and logo would show: the player is cropped in tighter */
+  .zh-ytp iframe{transform:scale(1.62)}
+}
+@keyframes zhSltIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.zh-slt{transition:none}}

@@ -25,7 +25,7 @@ export const ANCHORS: Record<string, string> = {
 export const HOME_HEAD =
   '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap">' +
-  '<link rel="stylesheet" href="/zk-home.css?v=66">';
+  '<link rel="stylesheet" href="/zk-home.css?v=69">';
 
 const FOOTER_MARK = "ekit-template-content-footer";
 const footerStart = (body: string) => { const i = body.indexOf(FOOTER_MARK); return i < 0 ? -1 : body.lastIndexOf("<div", i); };
@@ -104,34 +104,49 @@ function videoMarkup(h: Content["hero"]) {
 // itself (after the last, the first). Visitors can also use the arrows, the dots or a swipe, pause it, and turn a video's sound on or off. The banner is
 // the full width and as tall as the slide on show: its aspect-ratio is set from that slide's own picture size and eases to the next one when the shape
 // changes. It pauses while it is off screen or the tab is hidden. Styles: .zh-sl, .zh-arrow, .zh-dots in public/zk-home.css.
-type Slide = { src: string; kind: "image" | "video"; alt: string };
+type SlideText = { eyebrow: string; title: string; subtitle: string; btn1Text: string; btn1Link: string; btn2Text: string; btn2Link: string };
+type Slide = { src: string; kind: "image" | "video" | "youtube"; alt: string; yt: string; text: SlideText };
+const YT_ID = /(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/;
 const bannerSlides = (h: Content["hero"]): Slide[] =>
   (Array.isArray(h.slides) ? h.slides : [])
     .map((it: any): Slide | null => {
-      const video = safeUrl(it?.video), image = safeUrl(it?.image);
-      return video ? { src: video, kind: "video", alt: "" } : image ? { src: image, kind: "image", alt: String(it?.alt ?? "").trim() } : null;
+      const video = safeUrl(it?.video), image = safeUrl(it?.image), yt = YT_ID.exec(String(it?.youtube ?? ""))?.[1] ?? "";
+      const t = (k: string) => String(it?.[k] ?? "").trim();
+      const text: SlideText = { eyebrow: t("eyebrow"), title: t("title"), subtitle: t("subtitle"), btn1Text: t("btn1Text"), btn1Link: t("btn1Link"), btn2Text: t("btn2Text"), btn2Link: t("btn2Link") };
+      // a video file wins over a YouTube link, which wins over a picture (the picture then is the YouTube slide's cover)
+      return video ? { src: video, kind: "video", alt: "", yt: "", text }
+        : yt ? { src: image, kind: "youtube", alt: "", yt, text }
+        : image ? { src: image, kind: "image", alt: String(it?.alt ?? "").trim(), yt: "", text } : null;
     })
     .filter((s: Slide | null): s is Slide => !!s)
     .slice(0, 8);
 
 const CHEVRON = (d: string) => `<svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" focusable="false"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const SLIDER_JS = (sec: number) => `<script>(function(){var box=document.querySelector('.zh-slider');if(!box)return;
-var S=[].slice.call(box.querySelectorAll('.zh-sl')),n=S.length,D=[].slice.call(box.querySelectorAll('.zh-dot')),pl=box.querySelector('.zh-play'),vol=box.querySelector('.zh-vol'),ctl=box.querySelector('.zh-vctl'),V=S.map(function(s){return s.querySelector('video')}),hasV=V.some(function(v){return v});
-var sec=${sec},i=0,t=0,ft=0,vis=true,userPaused=false,muted=true,chosen=false,still=matchMedia('(prefers-reduced-motion: reduce)').matches;
-function ui(){if(!vol)return;vol.classList.toggle('is-muted',muted);vol.setAttribute('aria-pressed',muted?'false':'true');vol.setAttribute('aria-label',muted?'Turn sound on':'Turn sound off')}
-function mute(m){muted=m;V.forEach(function(v){if(v)v.muted=m});ui()}
+var S=[].slice.call(box.querySelectorAll('.zh-sl')),n=S.length,D=[].slice.call(box.querySelectorAll('.zh-dot')),pl=box.querySelector('.zh-play'),vol=box.querySelector('.zh-vol'),ctl=box.querySelector('.zh-vctl'),V=S.map(function(s){return s.querySelector('video')}),Y=S.map(function(s){return s.getAttribute('data-yt')}),hasV=V.some(function(v){return v}),hasY=Y.some(function(y){return y}),T=[].slice.call((box.parentNode||document).querySelectorAll('.zh-slt')),P=[],yr=[],yp=[];
+var sec=${sec},i=0,t=0,ft=0,vis=true,userPaused=false,muted=true,chosen=false,gest=false,still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function eff(){return muted||(!!Y[i]&&!gest)}
+function ui(){if(!vol)return;var m=eff();vol.classList.toggle('is-muted',m);vol.setAttribute('aria-pressed',m?'false':'true');vol.setAttribute('aria-label',m?'Turn sound on':'Turn sound off')}
+function mute(m){muted=m;V.forEach(function(v){if(v)v.muted=m});P.forEach(function(p){try{if(m)p.mute();else if(gest)p.unMute()}catch(e){}});ui()}
 function playV(v){var p=v.play();if(p&&p.catch)p.catch(function(){if(!v.muted){mute(true);var q=v.play();if(q&&q.catch)q.catch(function(){})}})}
 function pui(){if(!pl)return;var v=V[i],on=v?!v.paused:!userPaused;pl.classList.toggle('is-paused',!on);pl.setAttribute('aria-label',on?'Pause banner':'Play banner')}
-function ratio(k){var v=V[k];if(v)return v.videoWidth?v.videoWidth/v.videoHeight:0;var m=S[k].querySelector('img');return m&&m.naturalWidth?m.naturalWidth/m.naturalHeight:0}
+function ratio(k){if(Y[k])return 16/9;var v=V[k];if(v)return v.videoWidth?v.videoWidth/v.videoHeight:0;var m=S[k].querySelector('img');return m&&m.naturalWidth?m.naturalWidth/m.naturalHeight:0}
 function fit(anim){var r=ratio(i);if(!r)return;var h0=box.offsetHeight;clearTimeout(ft);box.style.transition='none';box.style.height='';box.style.setProperty('--zr',String(r));if(!anim||!h0)return;var h1=box.offsetHeight;if(Math.abs(h1-h0)<3)return;box.style.height=h0+'px';void box.offsetHeight;box.style.transition='height .6s ease';box.style.height=h1+'px';ft=setTimeout(function(){box.style.height='';box.style.transition=''},650)}
-function arm(){clearTimeout(t);var v=V[i];if(!(vis&&!document.hidden&&!userPaused)){if(v)v.pause();return}if(v)playV(v);else if(n>1&&!still)t=setTimeout(function(){go(i+1)},sec*1000)}
+function arm(){clearTimeout(t);var v=V[i],y=P[i];
+if(!(vis&&!document.hidden&&!userPaused)){if(v)v.pause();if(y)try{y.pauseVideo()}catch(e){}return}
+if(v)playV(v);
+else if(Y[i]){if(y&&yr[i])try{y.playVideo()}catch(e){}if(n>1&&!still)t=setTimeout(function(){if(!yp[i])go(i+1)},9000)}
+else if(n>1&&!still)t=setTimeout(function(){go(i+1)},sec*1000)}
 function show(k){var old=i;i=((k%n)+n)%n;
 S.forEach(function(s,j){s.classList.toggle('on',j===i);s.setAttribute('aria-hidden',j===i?'false':'true')});
 D.forEach(function(d,j){d.classList.toggle('on',j===i);if(j===i)d.setAttribute('aria-current','true');else d.removeAttribute('aria-current')});
+T.forEach(function(x,j){x.classList.toggle('on',j===i);x.setAttribute('aria-hidden',j===i?'false':'true')});
 var ov=V[old];if(ov&&old!==i){ov.pause();setTimeout(function(){if(V[i]!==ov){try{ov.currentTime=0}catch(e){}}},900)}
+var oy=P[old];if(oy&&old!==i){try{oy.pauseVideo()}catch(e){}setTimeout(function(){if(i!==old){try{oy.seekTo(0,true)}catch(e){}S[old].classList.remove('yt-on');yp[old]=0}},900)}
 var v=V[i];if(v){try{v.currentTime=0}catch(e){}v.muted=muted}
+var y=P[i];if(y&&yr[i]){try{y.seekTo(0,true)}catch(e){}}
 var nx=V[(i+1)%n];if(nx)nx.preload='auto';
-if(vol)vol.hidden=!v;fit(true);pui()}
+if(vol)vol.hidden=!(v||Y[i]);ui();fit(true);pui()}
 function go(k){show(k);arm()}
 V.forEach(function(v,k){if(!v)return;
 v.addEventListener('ended',function(){if(V[i]===v&&n>1&&!still)go(i+1)});
@@ -139,38 +154,53 @@ v.addEventListener('error',function(){if(V[i]===v&&n>1)setTimeout(function(){if(
 v.addEventListener('play',pui);v.addEventListener('pause',pui);
 v.addEventListener('loadedmetadata',function(){if(i===k)fit(false)})});
 S.forEach(function(s,k){var m=s.querySelector('img');if(!m)return;if(m.complete&&m.naturalWidth)return;m.addEventListener('load',function(){if(i===k)fit(false)})});
+if(hasY){var boot=function(){S.forEach(function(s,k){if(!Y[k])return;P[k]=new YT.Player(s.querySelector('.zh-ytp').firstChild,{videoId:Y[k],playerVars:{autoplay:0,mute:1,controls:0,rel:0,playsinline:1,modestbranding:1,iv_load_policy:3,disablekb:1,fs:0,cc_load_policy:0,origin:location.origin},events:{onReady:function(e){e.target.mute();yr[k]=1;if(i===k)arm()},onStateChange:function(e){if(e.data===1){yp[k]=1;s.classList.add('yt-on')}if(e.data===1||e.data===2)pui();if(e.data===0&&i===k){if(n>1&&!still)go(i+1);else{try{e.target.seekTo(0);e.target.playVideo()}catch(x){}}}}}})})};
+if(window.YT&&YT.Player)boot();else{var pr=window.onYouTubeIframeAPIReady;window.onYouTubeIframeAPIReady=function(){if(pr)pr();boot()};var sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';document.head.appendChild(sc)}}
 var pv=box.querySelector('.zh-prev'),nx=box.querySelector('.zh-next');
 if(pv)pv.addEventListener('click',function(){go(i-1)});if(nx)nx.addEventListener('click',function(){go(i+1)});
 D.forEach(function(d,j){d.addEventListener('click',function(){go(j)})});
 if(pl)pl.addEventListener('click',function(){userPaused=!userPaused;arm();pui()});
-if(vol)vol.addEventListener('click',function(){chosen=true;mute(!muted);var v=V[i];if(v&&!muted&&v.paused&&vis&&!userPaused)playV(v)});
+if(vol)vol.addEventListener('click',function(){var m=eff();chosen=true;gest=true;mute(!m);var v=V[i];if(v&&!muted&&v.paused&&vis&&!userPaused)playV(v)});
 var hero=box.parentNode,x0=null;
 hero.addEventListener('touchstart',function(e){x0=e.touches[0].clientX},{passive:true});
 hero.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;x0=null;if(n>1&&Math.abs(dx)>50)go(i+(dx<0?1:-1))},{passive:true});
 if('IntersectionObserver' in window)new IntersectionObserver(function(e){vis=e[e.length-1].isIntersecting;arm()},{threshold:.1}).observe(box);
 document.addEventListener('visibilitychange',arm);
-if(hasV){var ev=['pointerdown','click','keydown','touchend'];
-function unlock(e){if(ctl&&ctl.contains(e.target))return;ev.forEach(function(x){document.removeEventListener(x,unlock,true)});if(muted&&!chosen){mute(false);var v=V[i];if(v&&vis&&!document.hidden&&!userPaused)playV(v)}}
+if(hasV||hasY){var ev=['pointerdown','click','keydown','touchend'];
+function unlock(e){if(ctl&&ctl.contains(e.target))return;ev.forEach(function(x){document.removeEventListener(x,unlock,true)});gest=true;if(muted&&!chosen)mute(false);else mute(muted);var v=V[i];if(v&&!muted&&v.paused&&vis&&!document.hidden&&!userPaused)playV(v)}
 ev.forEach(function(x){document.addEventListener(x,unlock,true)});mute(false)}
-if(vol)vol.hidden=!V[0];fit(false);pui();arm()})();</script>`;
+if(vol)vol.hidden=!(V[0]||Y[0]);ui();fit(false);pui();arm()})();</script>`;
+
+// The text of the slides: one block per slide (empty for a slide without text), stacked in one place; the slider's script shows the one of the slide on show.
+const hasText = (t: SlideText) => !!(t.eyebrow || t.title || t.subtitle || (t.btn1Text && safeUrl(t.btn1Link)) || (t.btn2Text && safeUrl(t.btn2Link)));
+function textLayer(slides: Slide[]) {
+  if (!slides.some((s) => hasText(s.text))) return "";
+  const btn = (text: string, link: string, cls: string) => (text && safeUrl(link) ? `<a class="zh-slt-btn${cls ? " " + cls : ""}" href="${esc(safeUrl(link))}">${esc(text)}</a>` : "");
+  return `<div class="zh-slts">${slides.map((s, i) => {
+    const t = s.text, b = btn(t.btn1Text, t.btn1Link, "") + btn(t.btn2Text, t.btn2Link, "zh-slt-btn--line");
+    return `<div class="zh-slt${i === 0 ? " on" : ""}"${i ? ' aria-hidden="true"' : ""}>${hasText(t) ? `<div class="zh-slt-in">${t.eyebrow ? `<span class="zh-slt-eye">${esc(t.eyebrow)}</span>` : ""}${t.title ? `<h2 class="zh-slt-h">${rt(t.title, "span")}</h2>` : ""}${t.subtitle ? `<p class="zh-slt-p">${esc(t.subtitle)}</p>` : ""}${b ? `<div class="zh-slt-btns">${b}</div>` : ""}</div>` : ""}</div>`;
+  }).join("")}</div>`;
+}
 
 function sliderMarkup(slides: Slide[], seconds: unknown) {
   const n = slides.length;
   const sec = Math.min(20, Math.max(3, Number(seconds) || 6));
-  const hasVideo = slides.some((s) => s.kind === "video");
+  const hasVideo = slides.some((s) => s.kind !== "image"); // a video file or a YouTube clip: the sound button
   const slide = (s: Slide, i: number) =>
-    `<div class="zh-sl${i === 0 ? " on" : ""}"${n > 1 ? ` role="group" aria-roledescription="slide" aria-label="${i + 1} of ${n}"${i ? ' aria-hidden="true"' : ""}` : ""}>` +
+    `<div class="zh-sl${i === 0 ? " on" : ""}"${s.kind === "youtube" ? ` data-yt="${esc(s.yt)}"` : ""}${n > 1 ? ` role="group" aria-roledescription="slide" aria-label="${i + 1} of ${n}"${i ? ' aria-hidden="true"' : ""}` : ""}>` +
     (s.kind === "video"
-      ? `<video src="${esc(s.src)}" muted playsinline preload="${i === 0 ? "auto" : "metadata"}" aria-hidden="true" tabindex="-1"></video>`
-      : `<img src="${esc(s.src)}" alt="${esc(s.alt)}" decoding="async"${i === 0 ? ' fetchpriority="high"' : ' loading="lazy"'}>`) +
+      ? `<video src="${esc(s.src)}" muted playsinline${n === 1 ? " loop" : ""} preload="${i === 0 ? "auto" : "metadata"}" aria-hidden="true" tabindex="-1"></video>`
+      : s.kind === "youtube"
+        ? `<img class="zh-ytposter" src="${esc(s.src || `https://i.ytimg.com/vi/${s.yt}/maxresdefault.jpg`)}" alt="" decoding="async"${i === 0 ? ' fetchpriority="high"' : ' loading="lazy"'}><div class="zh-ytp"><div></div></div>`
+        : `<img src="${esc(s.src)}" alt="${esc(s.alt)}" decoding="async"${i === 0 ? ' fetchpriority="high"' : ' loading="lazy"'}>`) +
     `</div>`;
-  const controls = n < 2 ? "" :
+  const controls = n < 2 && !hasVideo ? "" : (n < 2 ? "" :
     `<div class="zh-nav"><button type="button" class="zh-cbtn zh-arrow zh-prev" aria-label="Previous slide">${CHEVRON("M14.5 5.5 8 12l6.5 6.5")}</button>` +
     `<div class="zh-dots" role="group" aria-label="Choose a slide">${slides.map((_, i) => `<button type="button" class="zh-dot${i === 0 ? " on" : ""}" aria-label="Show slide ${i + 1}"${i === 0 ? ' aria-current="true"' : ""}></button>`).join("")}</div>` +
-    `<button type="button" class="zh-cbtn zh-arrow zh-next" aria-label="Next slide">${CHEVRON("M9.5 5.5 16 12l-6.5 6.5")}</button></div>` +
+    `<button type="button" class="zh-cbtn zh-arrow zh-next" aria-label="Next slide">${CHEVRON("M9.5 5.5 16 12l-6.5 6.5")}</button></div>`) +
     `<div class="zh-vctl" role="group" aria-label="Banner controls"><button type="button" class="zh-cbtn zh-play" aria-label="Pause banner">${PLAYPAUSE}</button>` +
-    (hasVideo ? `<button type="button" class="zh-cbtn zh-vol is-muted"${slides[0].kind === "video" ? "" : " hidden"} aria-pressed="false" aria-label="Turn sound on">${SPEAKER("i-on", "M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11")}${SPEAKER("i-off", "m16 9.5 5 5m0-5-5 5")}</button>` : "") + `</div>`;
-  return `<div class="elementor-background-video-container zh-vid zh-vauto zh-slider" data-n="${n}"${n > 1 ? ' role="group" aria-roledescription="carousel" aria-label="Banner"' : ""}>${slides.map(slide).join("")}${controls}</div>${SLIDER_JS(sec)}`;
+    (hasVideo ? `<button type="button" class="zh-cbtn zh-vol is-muted"${slides[0].kind !== "image" ? "" : " hidden"} aria-pressed="false" aria-label="Turn sound on">${SPEAKER("i-on", "M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11")}${SPEAKER("i-off", "m16 9.5 5 5m0-5-5 5")}</button>` : "") + `</div>`;
+  return `<div class="elementor-background-video-container zh-vid zh-vauto zh-slider" data-n="${n}"${n > 1 ? ' role="group" aria-roledescription="carousel" aria-label="Banner"' : ""}>${slides.map(slide).join("")}${controls}</div>${textLayer(slides)}${SLIDER_JS(sec)}`;
 }
 
 /** Removes one Elementor element (found by its id) together with everything inside it. */
@@ -210,7 +240,7 @@ function patchHero(prefix: string, h: Content["hero"]) {
   hero = hero.replace("&quot;background_video_link&quot;", "&quot;zh_video_link&quot;");
   // the banner's picture: the admin's slides (one video loops; one image is a still banner; two or more make a slider), otherwise the YouTube video
   const slides = bannerSlides(h);
-  const banner = !slides.length ? null : slides.length === 1 && slides[0].kind === "video" ? mp4Markup(slides[0].src) : sliderMarkup(slides, h.slideSeconds);
+  const banner = !slides.length ? null : slides.length === 1 && slides[0].kind === "video" && !hasText(slides[0].text) ? mp4Markup(slides[0].src) : sliderMarkup(slides, h.slideSeconds);
   hero = hero.replace(/<div class="elementor-background-video-container">\s*<div class="elementor-background-video-embed" role="presentation"><\/div>\s*<\/div>/, () => (banner ? "" : videoMarkup(h)));
   // the banner goes before the text block, so the text sits above it
   hero = hero.replace('<div class="e-con-inner">', () => (banner ?? "") + '<div class="e-con-inner">');
