@@ -1,6 +1,7 @@
 import { db } from "./env";
 import { improveBody, isPlaceholder, isStaging, seoHead } from "./seo";
 import { applyBanner } from "./banners";
+import { htmlToText } from "./html";
 import { stripLegacyBlocks } from "./legacy-blocks";
 import { applyPage, HOME_HEAD, PAGE_PLAN, replaceMain } from "./home";
 import { type Content, loadContent, type Project } from "./content";
@@ -113,7 +114,7 @@ export async function renderPath(path: string): Promise<Response> {
     if (project && shell) {
       const content = await loadContent();
       const body = replaceMain(shell.body_html, renderSections(["projectDetail"], { ...content, _project: project }));
-      return html(document_({ ...shell, path: norm, title: `${project.title} | Zakion Energy`, description: clip(project.summary), og_image: project.image }, body, content));
+      return html(document_({ ...shell, path: norm, title: `${project.title} | Zakion Energy`, description: clip(htmlToText(project.summary)), og_image: project.image }, body, content));
     }
   }
   const slug = norm.slice(1, -1);

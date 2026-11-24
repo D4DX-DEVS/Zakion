@@ -9,6 +9,7 @@ import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
 import { MenuEditor, type LinkOption } from "./menu-editor";
 import { PickerDialog, SubmitButton } from "./ui";
+import { RichText } from "./rich-text";
 
 type Obj = Record<string, any>;
 type Upload = (f: FormData) => Promise<{ url?: string; error?: string }>;
@@ -67,6 +68,8 @@ export function Fields({ fields, value, onChange, pick, upload, links }: { field
           case "textarea":
           case "lines":
             return <label className="field" key={f.k}><span>{f.label}</span><textarea className="plain" rows={f.type === "lines" ? 5 : 3} value={v ?? ""} onChange={(e) => set(f.k, e.target.value)} />{help}</label>;
+          case "html":
+            return <div className="field" key={f.k}><span>{f.label}</span><RichText value={String(v ?? "")} onChange={(x) => set(f.k, x)} pick={pick} upload={upload} label={f.label} />{help}</div>;
           case "number":
             return <label className="field" key={f.k}><span>{f.label}</span><input type="number" value={v ?? 0} onChange={(e) => set(f.k, e.target.value === "" ? 0 : Number(e.target.value))} />{help}</label>;
           case "color": {

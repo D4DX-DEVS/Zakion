@@ -8,6 +8,7 @@ import { db, env } from "@/lib/env";
 import { siteUrl } from "@/lib/seo";
 import { changePassword, login, logout, requireAdmin, resetWithRecovery } from "@/lib/auth";
 import { passwordProblem } from "@/lib/password";
+import { htmlToText } from "@/lib/html";
 import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
 import { type Field, ALL_KEYS, clean, cleanLayout, HOME_KEYS, CATEGORIES, NO_SYSTEM, PROJECT_FIELDS, LAYOUT_KEY, loadContent, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
@@ -178,10 +179,11 @@ export async function saveProject(f: FormData) {
   const gallery = JSON.stringify((Array.isArray(d.gallery) ? d.gallery : []).map((g: { image?: string }) => g.image).filter(Boolean).slice(0, 12));
   const kw = Number(d.capacity), capacity = kw > 0 ? String(Math.round(kw * 100) / 100) : ""; // kilowatts; 0 or empty hides the box
   const systemType = d.systemType === NO_SYSTEM ? "" : String(d.systemType).trim();
-  const v = [slug, title, category, String(d.location).trim(), String(d.summary).trim(), capacity, systemType, String(d.systemNote).trim(), String(d.image), gallery, d.status === "Draft" ? "draft" : "published", Math.round(Number(d.sort)) || 0];
+  const summary = htmlToText(d.summary) || /<(img|table)\b/i.test(d.summary) ? String(d.summary).trim() : ""; // an editor left with only empty lines is no description
+  const v = [slug, title, category, String(d.location).trim(), summary, capacity, systemType, String(d.systemNote).trim(), String(d.image), gallery, d.visible === "Hidden" ? "draft" : "published", d.stage === "Ongoing" ? "ongoing" : "completed", Math.round(Number(d.sort)) || 0];
   let oldSlug = "";
   if (id === "new") {
-    const r = await db().prepare("INSERT INTO projects (slug,title,category,location,summary,capacity,system_type,system_note,image,gallery,status,sort) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").bind(...v).run();
+    const r = await db().prepare("INSERT INTO projects (slug,title,category,location,summary,capacity,system_type,system_note,image,gallery,status,stage,sort) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(...v).run();
     const newId = r.meta.last_row_id;
     await purgeSite(["/projects/", `/projects/${slug}/`]);
     redirect("/admin/projects/" + newId + "?saved=1");
@@ -189,7 +191,7 @@ export async function saveProject(f: FormData) {
   const old = await db().prepare("SELECT slug FROM projects WHERE id=?").bind(id).first<{ slug: string }>();
   if (!old) redirect("/admin/projects");
   oldSlug = old.slug;
-  await db().prepare("UPDATE projects SET slug=?,title=?,category=?,location=?,summary=?,capacity=?,system_type=?,system_note=?,image=?,gallery=?,status=?,sort=?,updated_at=datetime('now') WHERE id=?").bind(...v, id).run();
+  await db().prepare("UPDATE projects SET slug=?,title=?,category=?,location=?,summary=?,capacity=?,system_type=?,system_note=?,image=?,gallery=?,status=?,stage=?,sort=?,updated_at=datetime('now') WHERE id=?").bind(...v, id).run();
   await purgeSite(await projectPaths([slug, oldSlug]));
   redirect("/admin/projects/" + id + "?saved=1");
 }
@@ -201,6 +203,43 @@ export async function deleteProject(f: FormData) {
   await purgeSite(await projectPaths(old ? [old.slug] : []));
   redirect("/admin/projects?deleted=1");
 }
+/** Renumbers the projects 1, 2, 3 ... in the given order; any project not listed keeps its place at the end. */
+async function renumberProjects(first: number[]) {
+  const all = await db().prepare("SELECT id FROM projects ORDER BY sort, id DESC").all<{ id: number }>().then((r) => r.results.map((x) => x.id));
+  const order = [...first.filter((id) => all.includes(id)), ...all.filter((id) => !first.includes(id))];
+  if (order.length) await db().batch(order.map((id, i) => db().prepare("UPDATE projects SET sort=? WHERE id=?").bind(i + 1, id)));
+  return order;
+}
+/** Moves a project one place up or down the Projects page (the up and down arrows in the list). */
+export async function moveProject(f: FormData) {
+  await requireAdmin();
+  const id = Number(s(f, "key")), step = s(f, "dir") === "up" ? -1 : 1;
+  const order = await db().prepare("SELECT id FROM projects ORDER BY sort, id DESC").all<{ id: number }>().then((r) => r.results.map((x) => x.id));
+  const i = order.indexOf(id), j = i + step;
+  if (i >= 0 && j >= 0 && j < order.length) { [order[i], order[j]] = [order[j], order[i]]; await renumberProjects(order); await purgeSite(await projectPaths([])); }
+  redirect("/admin/projects");
+}
+/** Sets the whole order in one go (a row dragged to a new place in the list). */
+export async function reorderProjects(f: FormData) {
+  await requireAdmin();
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("keys") ?? "[]")); } catch { raw = []; }
+  await renumberProjects((Array.isArray(raw) ? raw : []).map(Number).filter((n) => Number.isInteger(n)));
+  await purgeSite(await projectPaths([]));
+  redirect("/admin/projects");
+}
+/** Hides a shown project or shows a hidden one (the project is kept either way). */
+export async function toggleProject(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "key");
+  const p = await db().prepare("SELECT slug, status FROM projects WHERE id=?").bind(id).first<{ slug: string; status: string }>();
+  if (p) {
+    await db().prepare("UPDATE projects SET status=?, updated_at=datetime('now') WHERE id=?").bind(p.status === "published" ? "draft" : "published", id).run();
+    await purgeSite(await projectPaths([p.slug]));
+  }
+  redirect("/admin/projects?toggled=" + (p?.status === "published" ? "hidden" : "shown"));
+}
+
 /** Every page a change to a project can show on: the Projects page, the project's own page, and every other project's page (the related list). */
 async function projectPaths(slugs: string[]) {
   const all = await db().prepare("SELECT slug FROM projects").all<{ slug: string }>().then((r) => r.results.map((x) => x.slug)).catch(() => []);

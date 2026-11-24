@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db, env } from "@/lib/env";
 import { BUILTIN_IMAGES, NO_SYSTEM, parseGallery, PROJECT_FIELDS, type Project } from "@/lib/content";
+import { richOrText } from "@/lib/html";
 import { deleteProject, saveProject, uploadSectionFile } from "../../../actions";
 import { Icon } from "../../../icons";
 import { SectionEditor } from "../../../section-editor";
@@ -15,8 +16,8 @@ export default async function EditProject({ params, searchParams }: { params: Pr
   if (!isNew && !p) notFound();
   const next = isNew ? await db().prepare("SELECT COALESCE(MAX(sort),0)+1 AS n FROM projects").first<{ n: number }>().then((r) => r?.n ?? 1).catch(() => 1) : 0;
   const initial = p
-    ? { title: p.title, slug: p.slug, status: p.status === "draft" ? "Draft" : "Published", category: p.category, location: p.location, summary: p.summary, capacity: parseFloat(p.capacity) || 0, systemType: p.system_type || NO_SYSTEM, systemNote: p.system_note, image: p.image, gallery: parseGallery(p.gallery).map((image) => ({ image })), sort: p.sort }
-    : { title: "", slug: "", status: "Draft", category: "Residential", location: "", summary: "", capacity: 0, systemType: NO_SYSTEM, systemNote: "", image: "", gallery: [], sort: next };
+    ? { title: p.title, slug: p.slug, stage: p.stage === "ongoing" ? "Ongoing" : "Completed", visible: p.status === "draft" ? "Hidden" : "Shown", category: p.category, location: p.location, summary: richOrText(p.summary), capacity: parseFloat(p.capacity) || 0, systemType: p.system_type || NO_SYSTEM, systemNote: p.system_note, image: p.image, gallery: parseGallery(p.gallery).map((image) => ({ image })), sort: p.sort }
+    : { title: "", slug: "", stage: "Completed", visible: "Shown", category: "Residential", location: "", summary: "", capacity: 0, systemType: NO_SYSTEM, systemNote: "", image: "", gallery: [], sort: next };
   const uploaded = (await env().MEDIA.list({ limit: 1000 })).objects
     .filter((o) => /\.(png|jpe?g|webp|gif|svg)$/i.test(o.key) && !/-\d+x\d+\.\w+$/.test(o.key) && !o.key.startsWith("_snap/") && !o.key.startsWith("elementor/"))
     .sort((a, b) => b.uploaded.getTime() - a.uploaded.getTime()).slice(0, 150).map((o) => "/media/" + o.key);

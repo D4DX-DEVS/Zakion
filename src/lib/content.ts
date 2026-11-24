@@ -2,11 +2,12 @@
 // images from the ZaKion Energy deck). Saved edits live in D1 (table site_content) and are merged over the defaults, so the
 // site keeps rendering if the table is empty or missing.
 import { db } from "./env";
+import { cleanHtml } from "./html";
 
 export type Field = {
   k: string;
   label: string;
-  type: "text" | "textarea" | "lines" | "number" | "bool" | "select" | "image" | "video" | "file" | "list" | "color";
+  type: "text" | "textarea" | "html" | "lines" | "number" | "bool" | "select" | "image" | "video" | "file" | "list" | "color";
   help?: string;
   options?: string[];
   fields?: Field[]; // list item fields
@@ -44,7 +45,7 @@ export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/": HOME_KEYS,
   "/about-us/": ["about", "track", "vision", "story", "why", "process"],
   "/services/": ["onGrid", "hybrid", "bess", "components", "aesthetics", "amc"],
-  "/projects/": ["portfolio"],
+  "/projects/": ["projects", "portfolio"],
   "/contact/": ["contact"],
   "/blog/": [],
 };
@@ -436,7 +437,7 @@ export const SYSTEM_NOTES: Record<string, string> = { "On Grid System": "Connect
 export const NO_SYSTEM = "Not specified";
 export type Project = {
   id: number; slug: string; title: string; category: string; location: string; summary: string; capacity: string;
-  system_type: string; system_note: string; image: string; gallery: string; status: string; sort: number;
+  system_type: string; system_note: string; image: string; gallery: string; status: string; stage: string; sort: number;
 };
 /** The gallery column is a JSON list of picture addresses; a damaged value is an empty gallery. */
 export function parseGallery(v: unknown): string[] {
@@ -447,15 +448,16 @@ const PROJECT_IMAGE_SPEC = "Image size: 1600 × 1000 px (width × height), lands
 export const PROJECT_FIELDS: Field[] = [
   T("title", "Project name"),
   T("slug", "Web address (optional)", "Letters, numbers and dashes. Leave it empty to make it from the name. The project page will be at /projects/<this>/."),
-  SEL("status", "Status", ["Published", "Draft"], "A draft is saved but not shown on the website."),
+  SEL("stage", "Status", ["Completed", "Ongoing"], "Shown as a label on the project card and on the project page."),
+  SEL("visible", "Show on the website", ["Shown", "Hidden"], "Hidden projects are saved but not shown. You can also hide or show a project from the Projects list."),
   SEL("category", "Category", [...CATEGORIES], "The Projects page filter tabs use this."),
   T("location", "Location", "For example: Kozhikode, Kerala"),
-  TA("summary", "Description", "Shown beside the main picture on the project page."),
+  { k: "summary", label: "Description", type: "html", help: "Shown beside the main image on the project page. Use the toolbar for headings, bold, lists, links, tables and images." },
   NUM("capacity", "Project capacity (KW)", "The size of the system in kilowatts, for example 10. Leave 0 to hide the capacity box on the project page."),
   SEL("systemType", "System type", [NO_SYSTEM, ...SYSTEM_TYPES], "Shown in the System Type box on the project page. Choose Not specified to hide the box."),
   T("systemNote", "Line under the system type (optional)", "Leave it empty to use the standard line for the chosen type, for example Connected to Utility Grid."),
-  { k: "image", label: "Main picture", type: "image", spec: PROJECT_IMAGE_SPEC, help: "Used on the project card and at the top of the project page." },
-  { k: "gallery", label: "Project gallery (up to 12 pictures)", type: "list", itemLabel: "picture", max: 12, help: "Small pictures under the main one; visitors can open each one larger.", fields: [{ k: "image", label: "Picture", type: "image", spec: PROJECT_IMAGE_SPEC }] },
+  { k: "image", label: "Main Image", type: "image", spec: PROJECT_IMAGE_SPEC, help: "Used on the project card and at the top of the project page." },
+  { k: "gallery", label: "Project gallery (up to 12 images)", type: "list", itemLabel: "image", max: 12, help: "A row of images under the main content that scrolls by itself; visitors can open each one larger.", fields: [{ k: "image", label: "Image", type: "image", spec: PROJECT_IMAGE_SPEC }] },
   NUM("sort", "Order", "Lower numbers come first on the Projects page. Projects with the same number are listed newest first."),
 ];
 
@@ -476,6 +478,7 @@ export function clean(fields: Field[], input: any, defaults: any): any {
         out[f.k] = arr.slice(0, f.max ?? 60).map((it: any) => clean(f.fields!, it, {}));
         break;
       }
+      case "html": out[f.k] = cleanHtml(v).slice(0, 60000); break;
       case "number": { const n = Number(v); out[f.k] = Number.isFinite(n) ? n : (defaults?.[f.k] ?? 0); break; }
       case "bool": out[f.k] = v === true || v === "true" || v === "on"; break;
       case "select": out[f.k] = f.options!.includes(String(v)) ? String(v) : (defaults?.[f.k] ?? f.options![0]); break;

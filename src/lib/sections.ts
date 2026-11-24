@@ -1,5 +1,6 @@
 // HTML builders for the page sections. Each one renders from the editable content in lib/content.ts (defaults + admin edits).
 import { CATEGORIES, Content, ICONS, parseGallery, type Project, safeUrl, SYSTEM_NOTES } from "./content";
+import { richOrText } from "./html";
 import { ic, SPRITE } from "./sprite";
 import { NEON_HOUSE, PHOTO_FX } from "./neon-house";
 
@@ -319,8 +320,9 @@ const ARROW_R = SVG('<path d="M4 12h16M14 6l6 6-6 6"/>');
 const ARROW_L = SVG('<path d="M20 12H4M10 6l-6 6 6 6"/>');
 const projectUrl = (p: Pick<Project, "slug">) => `/projects/${esc(p.slug)}/`;
 
+const stageChip = (p: Pick<Project, "stage">, cls = "zh-pc-stage") => `<span class="${cls} ${p.stage === "ongoing" ? "is-ongoing" : "is-done"}">${p.stage === "ongoing" ? "Ongoing" : "Completed"}</span>`;
 const projectCard = (p: Project, readMore: string) =>
-  `<article class="zh-pc" data-cat="${esc(p.category)}"><a class="zh-pc-img" href="${projectUrl(p)}" tabindex="-1" aria-hidden="true">${p.image ? img(p.image, "", 640, 400) : ""}</a>` +
+  `<article class="zh-pc" data-cat="${esc(p.category)}"><a class="zh-pc-img" href="${projectUrl(p)}" tabindex="-1" aria-hidden="true">${p.image ? img(p.image, "", 640, 400) : ""}${stageChip(p)}</a>` +
   `<div class="zh-pc-b"><h3><a href="${projectUrl(p)}">${esc(p.title)}</a></h3>${p.location ? `<p class="zh-pc-loc">${PIN}<span>${esc(p.location)}</span></p>` : ""}` +
   `<a class="zh-pc-btn" href="${projectUrl(p)}" aria-label="${esc(readMore)}: ${esc(p.title)}">${esc(readMore)}${ARROW_R}</a></div></article>`;
 
@@ -372,7 +374,7 @@ const projectDetail = (c: Content) => {
 <a class="zh-pd-back" href="/projects/">${ARROW_L}<span>Back to Projects</span></a>
 <div class="zh-pd-hero">
  <figure class="zh-pd-main">${p.image ? img(p.image, p.title, 960, 640) : ""}</figure>
- <div class="zh-pd-info"><h1>${esc(p.title)}</h1>${p.location ? `<p class="zh-pc-loc">${PIN}<span>${esc(p.location)}</span></p>` : ""}${p.summary ? `<p class="zh-pd-sum">${esc(p.summary)}</p>` : ""}
+ <div class="zh-pd-info"><h1>${esc(p.title)}</h1><div class="zh-pd-meta">${p.location ? `<p class="zh-pc-loc">${PIN}<span>${esc(p.location)}</span></p>` : ""}${stageChip(p, "zh-pd-stage")}</div>${p.summary ? `<div class="zh-pd-sum zh-prose">${richOrText(p.summary)}</div>` : ""}
   ${stats ? `<div class="zh-pd-stats">${stats}</div>` : ""}${system}</div>
 </div>
 ${gallery.length ? `<h2 class="zh-pd-h">Project Gallery</h2>
