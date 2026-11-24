@@ -462,7 +462,7 @@ export type Project = {
   id: number; slug: string; title: string; category: string; location: string; summary: string; capacity: string;
   system_type: string; system_note: string; image: string; gallery: string; status: string; stage: string; sort: number;
   pv_details: string; pcu_details: string; completion: string; generation: string; savings: string; payback: string;
-  testimonial_video: string; testimonial_image: string; co2: string; trees: string; coal: string;
+  testimonial_video: string; testimonial_image: string; testimonial_quote: string; co2: string; trees: string; coal: string;
 };
 /** The gallery column is a JSON list of picture addresses; a damaged value is an empty gallery. */
 export function parseGallery(v: unknown): string[] {
@@ -487,8 +487,9 @@ export const PROJECT_FIELDS: Field[] = [
   T("savings", "Annual energy bill savings", "For example: ₹1,20,000."),
   T("payback", "Payback period", "For example: 4 years."),
   { k: "summary", label: "About this project (optional)", type: "html", help: "Shown under the details. Use the toolbar for headings, bold, lists, links, tables and images." },
+  TA("testimonialQuote", "Client testimonial: text (optional)", "What the client said. Use **text** for bold. Shown in the Client Testimonial part, next to the video or picture if there is one."),
   { k: "testimonialVideo", label: "Client testimonial: video (optional)", type: "video", spec: "Video: MP4 (H.264) or WebM, up to 25 MB. Landscape 16:9 (1280 × 720 px) fits best.", help: "Shown in the Client Testimonial part of the project page; visitors press play to watch it in a larger player." },
-  { k: "testimonialImage", label: "Client testimonial: image (optional)", type: "image", spec: "Image size: 1280 × 720 px (16:9) for a video cover, or any picture of the client or the testimonial.", help: "With a video it is the video's cover; without a video it is shown on its own. Leave both empty to leave the Client Testimonial part out." },
+  { k: "testimonialImage", label: "Client testimonial: image (optional)", type: "image", spec: "Image size: 1280 × 720 px (16:9) for a video cover, or any picture of the client or the testimonial.", help: "With a video it is the video's cover; without a video it is shown on its own. Leave the text, the video and the image all empty to leave the Client Testimonial part out." },
   { k: "gallery", label: "Project gallery (up to 12 images)", type: "list", itemLabel: "image", max: 12, help: "A row of images under the main content that scrolls by itself; visitors can open each one larger.", fields: [{ k: "image", label: "Image", type: "image", spec: PROJECT_IMAGE_SPEC }] },
   NUM("co2", "Environmental benefits: CO₂ saved (tonnes)", "For example 0.66. Leave 0 to leave this one out; if all three are 0 the whole Environmental Benefits part is left out."),
   NUM("trees", "Environmental benefits: tree equivalence (trees)", "For example 44.99."),

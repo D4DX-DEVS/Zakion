@@ -19,9 +19,9 @@ export default async function EditProject({ params, searchParams }: { params: Pr
   const initial = p
     ? { title: p.title, slug: p.slug, stage: p.stage === "ongoing" ? "Ongoing" : "Completed", visible: p.status === "draft" ? "Hidden" : "Shown", category: p.category, location: p.location, image: p.image, systemType: p.system_type || NO_SYSTEM, capacity: n(p.capacity),
         pvDetails: p.pv_details, pcuDetails: p.pcu_details, completion: p.completion, generation: p.generation, savings: p.savings, payback: p.payback, summary: richOrText(p.summary),
-        testimonialVideo: p.testimonial_video, testimonialImage: p.testimonial_image, gallery: parseGallery(p.gallery).map((image) => ({ image })), co2: n(p.co2), trees: n(p.trees), coal: n(p.coal), sort: p.sort }
+        testimonialQuote: p.testimonial_quote, testimonialVideo: p.testimonial_video, testimonialImage: p.testimonial_image, gallery: parseGallery(p.gallery).map((image) => ({ image })), co2: n(p.co2), trees: n(p.trees), coal: n(p.coal), sort: p.sort }
     : { title: "", slug: "", stage: "Completed", visible: "Shown", category: "Residential", location: "", image: "", systemType: NO_SYSTEM, capacity: 0, pvDetails: "", pcuDetails: "", completion: "", generation: "", savings: "", payback: "", summary: "",
-        testimonialVideo: "", testimonialImage: "", gallery: [], co2: 0, trees: 0, coal: 0, sort: next };
+        testimonialQuote: "", testimonialVideo: "", testimonialImage: "", gallery: [], co2: 0, trees: 0, coal: 0, sort: next };
   const uploaded = (await env().MEDIA.list({ limit: 1000 })).objects
     .filter((o) => /\.(png|jpe?g|webp|gif|svg)$/i.test(o.key) && !/-\d+x\d+\.\w+$/.test(o.key) && !o.key.startsWith("_snap/") && !o.key.startsWith("elementor/"))
     .sort((a, b) => b.uploaded.getTime() - a.uploaded.getTime()).slice(0, 150).map((o) => "/media/" + o.key);

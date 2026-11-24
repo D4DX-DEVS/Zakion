@@ -184,8 +184,8 @@ export async function saveProject(f: FormData) {
   const summary = htmlToText(d.summary) || /<(img|table)\b/i.test(d.summary) ? String(d.summary).trim() : ""; // an editor left with only empty lines is no description
   const t = (x: unknown, n = 300) => String(x ?? "").trim().slice(0, n);
   const v = [slug, title, category, t(d.location, 160), summary, capacity, systemType, String(d.image), gallery, d.visible === "Hidden" ? "draft" : "published", d.stage === "Ongoing" ? "ongoing" : "completed", Math.round(Number(d.sort)) || 0,
-    t(d.pvDetails), t(d.pcuDetails), t(d.completion, 120), t(d.generation, 160), t(d.savings, 160), t(d.payback, 120), String(d.testimonialVideo), String(d.testimonialImage), num(d.co2), num(d.trees), num(d.coal)];
-  const cols = ["slug", "title", "category", "location", "summary", "capacity", "system_type", "image", "gallery", "status", "stage", "sort", "pv_details", "pcu_details", "completion", "generation", "savings", "payback", "testimonial_video", "testimonial_image", "co2", "trees", "coal"];
+    t(d.pvDetails), t(d.pcuDetails), t(d.completion, 120), t(d.generation, 160), t(d.savings, 160), t(d.payback, 120), String(d.testimonialVideo), String(d.testimonialImage), t(d.testimonialQuote, 2000), num(d.co2), num(d.trees), num(d.coal)];
+  const cols = ["slug", "title", "category", "location", "summary", "capacity", "system_type", "image", "gallery", "status", "stage", "sort", "pv_details", "pcu_details", "completion", "generation", "savings", "payback", "testimonial_video", "testimonial_image", "testimonial_quote", "co2", "trees", "coal"];
   let oldSlug = "";
   if (id === "new") {
     const r = await db().prepare(`INSERT INTO projects (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`).bind(...v).run();

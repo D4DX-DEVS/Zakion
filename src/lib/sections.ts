@@ -327,16 +327,18 @@ const projectDetail = (c: Content) => {
   const gallery = parseGallery(p.gallery);
   const related = [...all.filter((x) => x.id !== p.id && x.category === p.category), ...all.filter((x) => x.id !== p.id && x.category !== p.category)].slice(0, 3);
   const kw = parseFloat(p.capacity), capacity = p.capacity ? (Number.isFinite(kw) ? `${kw} KW` : p.capacity) : ""; // a number is kilowatts; older text such as "10 KW" is shown as written
-  // the details, in this order; a line with no value is left out
-  const row = (label: string, value: string) => (String(value ?? "").trim() ? `<div class="zh-pd-row"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>` : "");
+  // the details, in this order, on every project page; a line with no value yet shows a dash
+  const row = (label: string, value: string) => { const v = String(value ?? "").trim(); return `<div class="zh-pd-row"><dt>${esc(label)}</dt><dd${v ? "" : ' class="is-empty"'}>${v ? esc(v) : "&ndash;"}</dd></div>`; };
   const specs = row("System Type", p.system_type) + row("Category", p.category) + row("Capacity", capacity) + row("PV Details", p.pv_details) + row("PCU Details", p.pcu_details) +
     row("Completion Date", p.completion) + row("Average Annual Unit Generation", p.generation) + row("Annual Energy Bill Savings", p.savings) + row("Payback Period", p.payback);
-  // the client's testimonial: a video (opens in the player of the Testimonials block, TC_JS) and/or a picture
-  const tmVideo = safeUrl(p.testimonial_video), tmImage = safeUrl(p.testimonial_image);
-  const testimonial = tmVideo || tmImage
-    ? `<h2 class="zh-pd-h">Client Testimonial</h2><figure class="zh-pd-tm">${tmVideo
-        ? `<button type="button" class="zh-pd-tmv" data-tc-video="${url(tmVideo)}" data-tc-name="${esc(p.title)}" aria-label="Play the video testimonial from ${esc(p.title)}">${tmImage ? img(tmImage, "", 960, 540) : `<video src="${url(tmVideo)}#t=0.1" muted playsinline preload="metadata" tabindex="-1" aria-hidden="true"></video>`}<span class="zh-pd-play">${PLAY_MARK}</span></button>`
-        : img(tmImage, `Testimonial from ${p.title}`, 960, 640)}<figcaption>${esc(p.title)}</figcaption></figure>${tmVideo ? TC_JS : ""}`
+  // the client's testimonial: a video (opens in the player of the Testimonials block, TC_JS) and/or a picture, and/or written text; left out when none of them is added
+  const tmVideo = safeUrl(p.testimonial_video), tmImage = safeUrl(p.testimonial_image), tmQuote = String(p.testimonial_quote ?? "").trim();
+  const tmMedia = tmVideo
+    ? `<button type="button" class="zh-pd-tmv" data-tc-video="${url(tmVideo)}" data-tc-name="${esc(p.title)}" aria-label="Play the video testimonial from ${esc(p.title)}">${tmImage ? img(tmImage, "", 960, 540) : `<video src="${url(tmVideo)}#t=0.1" muted playsinline preload="metadata" tabindex="-1" aria-hidden="true"></video>`}<span class="zh-pd-play">${PLAY_MARK}</span></button>`
+    : tmImage ? img(tmImage, `Testimonial from ${p.title}`, 960, 640) : "";
+  const testimonial = tmMedia || tmQuote
+    ? `<h2 class="zh-pd-h">Client Testimonial</h2><figure class="zh-pd-tm${tmMedia && tmQuote ? " zh-pd-tm--both" : ""}">${tmMedia ? `<div class="zh-pd-tmm">${tmMedia}</div>` : ""}` +
+      `${tmQuote ? `<blockquote class="zh-pd-tmq"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M10 6H6.5A2.5 2.5 0 0 0 4 8.5V13a2.5 2.5 0 0 0 2.5 2.5H8c0 1.7-.9 2.8-2.5 3.5l.7 1.5C9 19.3 10.5 17 10.5 13.5V6zM20 6h-3.5A2.5 2.5 0 0 0 14 8.5V13a2.5 2.5 0 0 0 2.5 2.5H18c0 1.7-.9 2.8-2.5 3.5l.7 1.5c2.8-1.2 4.3-3.5 4.3-7V6z"/></svg><p>${rt(tmQuote)}</p><footer>${esc(p.title)}</footer></blockquote>` : `<figcaption>${esc(p.title)}</figcaption>`}</figure>${tmVideo ? TC_JS : ""}`
     : "";
   // environmental benefits: numbers entered per project, shown as they are (no counting animation)
   const env = (icon: string, label: string, value: string, unit: string, w: number, h: number) =>
