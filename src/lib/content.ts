@@ -35,7 +35,7 @@ const BOOL = (k: string, label: string, help?: string): Field => ({ k, label, ty
 const SEL = (k: string, label: string, options: string[], help?: string): Field => ({ k, label, type: "select", options, help });
 
 // The home page sections in their default order (the page plan in home.ts uses this too). The admin can reorder or hide them.
-export const HOME_KEYS = ["about", "track", "vision", "story", "why", "renewable", "onGrid", "hybrid", "bess", "solarHome", "components", "aesthetics", "amc", "roi", "process", "partners", "testimonials", "projects", "cta", "contact"];
+export const HOME_KEYS = ["about", "track", "vision", "story", "why", "renewable", "onGrid", "hybrid", "bess", "calcBanner", "solarHome", "components", "aesthetics", "amc", "roi", "process", "partners", "testimonials", "projects", "cta", "contact"];
 
 // Which blocks each page shows by default, in order. The inner pages keep their own banner (page title and breadcrumb) on top.
 // The admin can reorder, remove and add blocks on every page (Site settings > Section order); the result is kept in the layout below.
@@ -238,6 +238,16 @@ export const SECTIONS: SectionDef[] = [
     },
   },
   {
+    key: "calcBanner", title: "Solar Calculator banner", page: "Home",
+    help: "A wide banner that invites visitors to try the Solar Calculator. The button opens the Solar Calculator page. Leave the button label or link empty to hide the button; hide the whole banner from this block's settings.",
+    fields: [T("eyebrow", "Small label"), TA("title", "Heading", MARKUP_HELP), TA("text", "Text"), T("btnText", "Button label"), T("btnLink", "Button link")],
+    data: {
+      eyebrow: "Free Solar Calculator", title: "How much can you ==save with solar?==",
+      text: "Enter your monthly bill or units and see your plant size, yearly savings and payback in seconds.",
+      btnText: "Solar Calculator", btnLink: "/solar-calculator/",
+    },
+  },
+  {
     key: "solarHome", title: "Solar Home (3 KW and 5 KW)", page: "Home", help: "Two plans are shown side by side. The table uses the same two plans.",
     fields: [T("title", "Heading"), TA("subtitle", "Subheading"), { ...IMG("photo", "House picture", "The picture on the right. The standard photo is animated: by day sunlight reaches the solar panels, then it turns to a dark night and the lights inside the house blink behind the windows. Any other picture is shown as it is. Clear it to show the drawn neon house instead."), spec: "Picture size: 1600 × 900 px (width × height), landscape 16:9, JPG or WebP, under 500 KB if you can. On a computer the middle of the picture is shown, so keep the house in the centre." },
       LIST("plans", "Plans (first two are shown)", "plan", [T("label", "Name (for example 3 KW)"), T("saving", "Bi-monthly saving"), T("units", "Daily units"), T("area", "Area needed")], 2, 2),
@@ -338,20 +348,19 @@ export const SECTIONS: SectionDef[] = [
   },
   {
     key: "calculator", title: "Solar Calculator (Solar Calculator page)", page: "Solar Calculator",
-    help: "The calculator itself: the heading above it, the numbers it works with and the button under the result. Plant size = monthly units ÷ 30 ÷ the units one kW makes a day; daily generation = plant size × that number. The rate of each state fills in the electricity rate (what a household pays for one unit, kWh); visitors can still change it in the calculator.",
+    help: "The calculator itself: the heading above it, the numbers it works with and the button under the result. Plant size = monthly units ÷ 30 ÷ the units one kW makes a day; daily generation = plant size × that number. The rate of each state fills in the electricity rate (what a household pays for one unit, kWh); visitors can still change it in the calculator. Visitors also enter a mobile number and an optional email: those arrive under Submissions and are emailed to the address set in the Contact block.",
     fields: [
       T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("subtitle", "Paragraph"),
       NUM("unitsPerKw", "Units one kW generates in a day", "Used for the plant size and the daily generation (4 means each kW makes 4 units a day)."), NUM("peakHours", "Peak sun hours a day", "Shown in the result, the same for every state."),
-      NUM("costResidential", "System cost per kW for homes (₹)", "Residential system with domestic-content (DCR) panels. The government subsidy is deducted from this."),
-      NUM("costCommercial", "System cost per kW for business and industry (₹)", "Commercial and industrial systems. No subsidy is applied."),
+      NUM("payback", "Payback period shown (years)", "Shown as the simple payback period in every result (2.5 means 2.5 years). The annual return shown is 100 ÷ this number."),
       LIST("states", "States and their electricity rate", "state", [T("name", "State or union territory"), NUM("tariff", "Electricity rate (₹ per unit)")], 40),
       T("ctaText", "Button under the result"), T("ctaLink", "Button link", "By default it opens the enquiry form on the Contact page."),
       TA("disclaimer", "Note under the result"),
     ],
     data: {
       eyebrow: "Solar Calculator", title: "Go solar,\n==save big==",
-      subtitle: "Find the right plant size for your home or business, and see your savings, subsidy and payback in a few clicks.",
-      unitsPerKw: 4, peakHours: 5, costResidential: 60000, costCommercial: 50000,
+      subtitle: "Find the right plant size for your home or business, and see your savings and payback in a few clicks.",
+      unitsPerKw: 4, peakHours: 5, payback: 2.5,
       states: [
         ["Andaman and Nicobar Islands", 6], ["Andhra Pradesh", 7], ["Arunachal Pradesh", 5], ["Assam", 7], ["Bihar", 7.5], ["Chandigarh", 5], ["Chhattisgarh", 7],
         ["Dadra and Nagar Haveli and Daman and Diu", 5], ["Delhi", 6.5], ["Goa", 5], ["Gujarat", 7], ["Haryana", 7], ["Himachal Pradesh", 5], ["Jammu and Kashmir", 5],
@@ -360,7 +369,7 @@ export const SECTIONS: SectionDef[] = [
         ["Telangana", 7.5], ["Tripura", 7], ["Uttar Pradesh", 7], ["Uttarakhand", 6], ["West Bengal", 8],
       ].map(([name, tariff]) => ({ name, tariff })),
       ctaText: "Get a free site survey", ctaLink: "/contact/?interest=On%20Grid%20System#contact",
-      disclaimer: "The computation is indicative in nature. Generation and financial savings may vary based on actual solar irradiation, panel efficiency, shading and local grid conditions. Subsidy amounts are as per the PM Surya Ghar Muft Bijli Yojana guidelines for residential consumers and are subject to change. Talk to a Zakion Energy solar advisor for a precise assessment.",
+      disclaimer: "The computation is indicative in nature. Generation and financial savings may vary based on actual solar irradiation, panel efficiency, shading and local grid conditions. Talk to a Zakion Energy solar advisor for a precise assessment.",
     },
   },
   {

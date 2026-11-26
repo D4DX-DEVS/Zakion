@@ -7,7 +7,7 @@
   var cfg;
   try { cfg = JSON.parse(cfgEl.textContent); } catch (e) { return; }
   var $ = function (id) { return document.getElementById(id); };
-  var elAmount = $("zc-amount"), elState = $("zc-state"), elCat = $("zc-cat"), elRate = $("zc-rate"), elRange = $("zc-range"), elRateT = $("zc-rate-t");
+  var elAmount = $("zc-amount"), elPhone = $("zc-phone"), elEmail = $("zc-email"), elState = $("zc-state"), elCat = $("zc-cat"), elRate = $("zc-rate"), elRange = $("zc-range"), elRateT = $("zc-rate-t");
   var hero = root.querySelector(".zc-hero");
   var CATS = ["Residential", "Commercial", "Industrial"];
 
@@ -18,6 +18,7 @@
     yearDiv: 1.03,           // yearly generation = monthly generation x 12 / 1.03
     deg1: 0.004,             // panel output lost in the first year
     degN: 0.003,             // panel output lost in each of the 2nd to 30th years
+    payback: cfg.payback || 2.5, // simple payback period shown in every result (years); the annual return shown is 100 / this
     years: 30,               // system life used for the lifetime figures
     co2: 0.82,               // kg of CO2 mitigated per unit (kWh) generated: 0.82 tonnes for every 1,000 units
     treeUnits: 750           // units generated that are equivalent to planting one tree
@@ -67,12 +68,20 @@
     var e = wrap.querySelector(".zc-err");
     if (e) e.textContent = msg;
     wrap.classList.toggle("bad", !!msg);
-    var c = wrap.querySelector("input[type=number],select");
+    var c = wrap.querySelector("input,select");
     if (c) { if (msg) c.setAttribute("aria-invalid", "true"); else c.removeAttribute("aria-invalid"); }
   }
 
   function read() {
-    return { mode: mode(), amount: parseFloat(elAmount.value), state: elState.value, cat: elCat.value, rate: parseFloat(elRate.value) };
+    return { mode: mode(), amount: parseFloat(elAmount.value), state: elState.value, cat: elCat.value, rate: parseFloat(elRate.value), phone: elPhone.value.trim(), email: elEmail.value.trim() };
+  }
+
+  /* the visitor's own details: a mobile number is needed, an email is optional (a shared link shows its result without them) */
+  function checkContact(v) {
+    var ok = true, digits = v.phone.replace(/\D/g, "");
+    if (!/^\+?[0-9\s\-()]{10,20}$/.test(v.phone) || digits.length < 10 || digits.length > 13) { fail("phone", "Enter a valid mobile number."); ok = false; } else fail("phone", "");
+    if (v.email && !/^\S+@\S+\.\S+$/.test(v.email)) { fail("email", "Enter a valid email or leave it empty."); ok = false; } else fail("email", "");
+    return ok;
   }
 
   function check(v) {
@@ -86,26 +95,18 @@
   }
 
   /* ---------- the maths ---------- */
-  function subsidy(kw) { // PM Surya Ghar: 30,000 per kW up to 2 kW, 18,000 for the third kW, 78,000 at most
-    if (kw <= 2) return 30000 * kw;
-    if (kw <= 3) return 60000 + 18000 * (kw - 2);
-    return 78000;
-  }
-
   function calc(v) {
-    var resi = v.cat === "Residential";
     var units = v.mode === "bill" ? v.amount / v.rate : v.amount;       // units used in a month (a bill is turned into units by the rate)
     var size = units / 30 / A.perKw;                                     // recommended plant size, kW
     var daily = size * A.perKw, monthly = daily * 30, annual = monthly * 12 / A.yearDiv;
     // 30 years: the yearly figure loses 0.4% in the first year and a further 0.3% in each of the 2nd to 30th years
     var life = 0, f = 1;
     for (var y = 0; y < A.years; y++) { f *= 1 - (y === 0 ? A.deg1 : A.degN); life += annual * f; }
-    var cost = Math.round(size * (resi ? cfg.costR : cfg.costC)), sub = resi ? Math.round(subsidy(size)) : 0, net = cost - sub;
     var annSav = annual * v.rate, co2 = life * A.co2 / 1000;               // CO2 mitigated, in tonnes: total units in 30 years x 0.82 kg. Savings = units x unit charge (the rate stays the same for 30 years)
     return {
-      v: v, sun: A.peak, resi: resi, units: units, size: size, daily: daily, monthly: monthly, annual: annual, life: life,
-      monSav: monthly * v.rate, annSav: annSav, lifeSav: life * v.rate, cost: cost, sub: sub, net: net,
-      payback: annSav > 0 ? net / annSav : 0, roi: net > 0 ? annSav / net * 100 : 0, co2: co2, trees: Math.round(life / A.treeUnits)   // equivalent trees: total units in 30 years / 750
+      v: v, sun: A.peak, units: units, size: size, daily: daily, monthly: monthly, annual: annual, life: life,
+      monSav: monthly * v.rate, annSav: annSav, lifeSav: life * v.rate,
+      payback: A.payback, roi: 100 / A.payback, co2: co2, trees: Math.round(life / A.treeUnits)   // equivalent trees: total units in 30 years / 750
     };
   }
 
@@ -117,7 +118,6 @@
     return "My solar savings report from " + cfg.brand + ":\n" +
       "Recommended plant size: " + r.size.toFixed(2) + " kWp\n" +
       "Yearly savings: " + inr(r.annSav) + "\n" +
-      "Net investment" + (r.resi ? " after subsidy" : "") + ": " + inr(r.net) + "\n" +
       "Payback: " + r.payback.toFixed(1) + " years\n" +
       "Try the calculator: ";
   }
@@ -132,9 +132,6 @@
       return '<div class="zc-3"><div><small>Monthly</small><b>' + a + '</b><em>' + unitA + '</em></div><div><small>Annual</small><b>' + b + '</b><em>' + unitB + '</em></div><div><small>' + A.years + '-year</small><b>' + c + '</b><em>' + unitC + '</em></div></div>';
     };
     var cta = cfg.cta && cfg.cta.text && cfg.cta.link ? '<a class="zh-btn" href="' + esc(cfg.cta.link) + '">' + esc(cfg.cta.text) + " " + ico("arrow-r") + "</a>" : "";
-    var subRow = r.resi
-      ? '<div class="zc-row sub"><span>PM Surya Ghar Govt. Subsidy<span class="zc-bdg">₹30,000/kW + ₹18,000/kW</span></span><b>− ₹' + n0(r.sub) + "</b></div>"
-      : '<div class="zc-row"><span>Government subsidy<span class="zc-bdg">Residential only</span></span><b>Not applicable</b></div>';
     out.innerHTML =
       '<div class="zc-res-top"><span class="zc-pill">' + ico("pin") + esc(v.state) + '</span><h2>Your Solar Savings Report</h2><p class="zh-sub">Based on your inputs — results are indicative</p></div>' +
       '<div class="zc-card zc-share"><span>' + ico("share") + 'Share Report</span><div class="zc-sbtns">' +
@@ -147,24 +144,12 @@
       '<div class="zc-card"><h4 class="zc-ct">' + ico("chart") + 'Total kWh Generated by Your Solar Plant</h4>' + tri(n0(r.monthly) + " kWh", n0(r.annual) + " kWh", n0(r.life) + " kWh", "per month", "per year", "lifetime total") + "</div>" +
       '<h3 class="zc-sec">' + ico("rupee") + 'Financial savings</h3>' +
       '<div class="zc-card"><h4 class="zc-ct">' + ico("bank") + "Electricity Bill Savings (at ₹" + (+v.rate.toFixed(2)) + "/kWh)</h4>" + tri(inr(r.monSav), inr(r.annSav), inr(r.lifeSav), "per month", "per year", "lifetime savings") + "</div>" +
-      '<h3 class="zc-sec">' + ico("doc") + 'System cost &amp; subsidy</h3>' +
-      '<div class="zc-card"><h4 class="zc-ct">' + ico("calc") + 'Project Cost Breakdown</h4><div class="zc-rows">' +
-        '<div class="zc-row"><span>System Cost' + (r.resi ? " (DCR Panels)" : "") + "</span><b>" + inr(r.cost) + "</b></div>" + subRow + "</div>" +
-        '<div class="zc-net"><span>Your Net Investment</span><b>' + inr(r.net) + "</b></div></div>" +
       '<div class="zc-2"><div class="zc-card zc-kpi">' + ico("clock") + "<b>" + r.payback.toFixed(1) + ' Yrs</b><span>Simple Payback Period</span></div>' +
         '<div class="zc-card zc-kpi">' + ico("chart") + "<b>" + r.roi.toFixed(1) + '%</b><span>Annual Return on Investment</span></div></div>' +
       '<h3 class="zc-sec">' + ico("leaf") + 'Environmental impact</h3>' +
       '<div class="zc-card zc-env"><div>' + ico("leaf") + "<p><b>" + (r.co2 >= 10 ? Math.round(r.co2) : r.co2.toFixed(1)) + ' T</b><span>CO₂ Emissions Mitigated (' + A.years + ' yrs)</span></p></div>' +
         "<div>" + ico("tree") + "<p><b>" + n0(r.trees) + "</b><span>Equivalent Trees Planted</span></p></div></div>" +
       '<p class="zc-note">' + ico("info") + "<span>" + esc(cfg.note || "The computation is indicative in nature. Actual generation and savings may vary.") + "</span></p>" +
-      '<details class="zc-how"><summary>How we worked this out</summary><ul>' +
-        "<li>Plant size = monthly units ÷ 30 ÷ " + A.perKw + (v.mode === "bill" ? " (monthly units = your bill ÷ the unit charge)" : "") + ". Daily generation = plant size × " + A.perKw + ". Peak sun hours: " + hrs(A.peak).replace("/day", "") + " for every state.</li>" +
-        "<li>Monthly generation = daily generation × 30. Yearly generation = monthly generation × 12 ÷ " + A.yearDiv + ".</li>" +
-        "<li>The " + A.years + "-year total is the yearly generation with " + (A.deg1 * 100).toFixed(1) + "% loss in the first year and " + (A.degN * 100).toFixed(1) + "% in each of the 2nd to " + A.years + "th years.</li>" +
-        "<li>Savings = units generated × your unit charge, for the month, the year and the " + A.years + " years.</li>" +
-        "<li>Payback = net investment ÷ yearly savings. Return = yearly savings ÷ net investment.</li>" +
-        "<li>CO₂ emissions mitigated = total units generated in " + A.years + " years × " + A.co2 + " kg per unit (" + A.co2 + " tonnes per 1,000 units). Equivalent trees planted = total units generated in " + A.years + " years ÷ " + A.treeUnits + " (units equivalent to 1 tree).</li>" +
-      "</ul></details>" +
       '<div class="zc-end">' + cta + '<button class="zh-btn zh-btn--line" type="button" id="zc-redo">' + ico("edit") + " Recalculate</button></div>";
 
     $("zc-pdf").addEventListener("click", function () { pdf(r, this); });
@@ -193,7 +178,7 @@
 
   function pdf(r, btn) {
     var W = 595.28, H = 841.89, M = 40, ops = [], v = r.v;
-    var navy = rgb("--navy", "#0d3d7b"), amber = rgb("--amber", "#fec142"), mut = rgb("--mut", "#3d5a86"), soft = rgb("--bg", "#f1f4fb"), line = rgb("--line", "#c9d6ec"), white = [1, 1, 1], green = [0.12, 0.54, 0.3];
+    var navy = rgb("--navy", "#0d3d7b"), amber = rgb("--amber", "#fec142"), mut = rgb("--mut", "#3d5a86"), soft = rgb("--bg", "#f1f4fb"), line = rgb("--line", "#c9d6ec"), white = [1, 1, 1];
     var meas = document.createElement("canvas").getContext("2d");
     var width = function (t, size, bold) { meas.font = (bold ? "bold " : "") + size + "px Helvetica, Arial, sans-serif"; return meas.measureText(t).width; };
     var pt = function (t) { return String(t).replace(/₹/g, "Rs. ").replace(/[–—−]/g, "-").replace(/₂/g, "2").replace(/[^\x20-\x7e]/g, "").replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)"); };
@@ -255,32 +240,22 @@
     heading("Financial savings (at Rs. " + (+v.rate.toFixed(2)) + " per kWh)", 378);
     triple(386, 56, [rs(r.monSav), "per month"], [rs(r.annSav), "per year"], [rs(r.lifeSav), "lifetime savings"]);
 
-    /* cost and subsidy */
-    heading("System cost & subsidy", 464);
-    rect(M, 472, W - 2 * M, 100, soft);
-    text("System cost" + (r.resi ? " (DCR panels)" : ""), M + 16, 494, 10.5, navy, false); text(rs(r.cost), W - M - 16, 494, 10.5, navy, true, "r");
-    hline(M + 16, W - M - 16, 504, line);
-    text(r.resi ? "PM Surya Ghar government subsidy" : "Government subsidy", M + 16, 523, 10.5, navy, false);
-    text(r.resi ? "- " + rs(r.sub) : "Not applicable", W - M - 16, 523, 10.5, r.resi ? green : mut, true, "r");
-    hline(M + 16, W - M - 16, 533, line);
-    text("Your net investment", M + 16, 558, 12, navy, true); text(rs(r.net), W - M - 16, 558, 15, navy, true, "r");
-
     /* payback and return */
     var bw = (W - 2 * M - 14) / 2;
     [[r.payback.toFixed(1) + " years", "Simple payback period"], [r.roi.toFixed(1) + "%", "Annual return on investment"]].forEach(function (x, i) {
       var bx = M + (bw + 14) * i;
-      rect(bx, 586, bw, 52, soft); rect(bx, 586, 4, 52, amber);
-      text(x[0], bx + 20, 610, 17, navy, true); text(x[1], bx + 20, 627, 8.5, mut, false);
+      rect(bx, 470, bw, 52, soft); rect(bx, 470, 4, 52, amber);
+      text(x[0], bx + 20, 494, 17, navy, true); text(x[1], bx + 20, 511, 8.5, mut, false);
     });
 
     /* environment */
-    heading("Environmental impact", 664);
-    rect(M, 672, W - 2 * M, 52, soft);
-    text((r.co2 >= 10 ? Math.round(r.co2) : r.co2.toFixed(1)) + " tonnes", M + 20, 696, 17, navy, true); text("CO2 emissions mitigated in " + A.years + " years", M + 20, 712, 8.5, mut, false);
-    text(n0(r.trees) + " trees", W / 2 + 10, 696, 17, navy, true); text("equivalent trees planted", W / 2 + 10, 712, 8.5, mut, false);
+    heading("Environmental impact", 556);
+    rect(M, 564, W - 2 * M, 52, soft);
+    text((r.co2 >= 10 ? Math.round(r.co2) : r.co2.toFixed(1)) + " tonnes", M + 20, 588, 17, navy, true); text("CO2 emissions mitigated in " + A.years + " years", M + 20, 604, 8.5, mut, false);
+    text(n0(r.trees) + " trees", W / 2 + 10, 588, 17, navy, true); text("equivalent trees planted", W / 2 + 10, 604, 8.5, mut, false);
 
     /* notes and contact */
-    var y = 744, notes = wrap((cfg.note || "The computation is indicative in nature.") + " How it is worked out: plant size = monthly units / 30 / " + A.perKw + "; daily generation = size x " + A.perKw + "; monthly = daily x 30; yearly = monthly x 12 / " + A.yearDiv + "; " + A.years + "-year total with " + (A.deg1 * 100).toFixed(1) + "% loss in year 1 and " + (A.degN * 100).toFixed(1) + "% in years 2 to " + A.years + "; savings = units x unit charge; peak sun hours " + A.peak + " for every state; CO2 mitigated = units x " + A.co2 + " kg; trees = units / " + A.treeUnits + ".", W - 2 * M, 7.5);
+    var y = 644, notes = wrap((cfg.note || "The computation is indicative in nature.") + " How it is worked out: plant size = monthly units / 30 / " + A.perKw + "; daily generation = size x " + A.perKw + "; monthly = daily x 30; yearly = monthly x 12 / " + A.yearDiv + "; " + A.years + "-year total with " + (A.deg1 * 100).toFixed(1) + "% loss in year 1 and " + (A.degN * 100).toFixed(1) + "% in years 2 to " + A.years + "; savings = units x unit charge; peak sun hours " + A.peak + " for every state; CO2 mitigated = units x " + A.co2 + " kg; trees = units / " + A.treeUnits + ".", W - 2 * M, 7.5);
     notes.slice(0, 6).forEach(function (l) { text(l, M, y, 7.5, mut, false); y += 10; });
     hline(M, W - M, 800, line);
     var contact = [cfg.brand, cfg.phone, cfg.email, location.host].filter(Boolean).join("   |   ");
@@ -309,18 +284,40 @@
     if (btn) { btn.disabled = true; setTimeout(function () { btn.disabled = false; }, 1200); }
   }
 
+  /* ---------- the visitor's details go to the company (Submissions in the admin, and an email) ---------- */
+  var lastLead = "";
+  function sendLead(v, r) {
+    var key = [v.phone, v.email, v.mode, v.amount, v.state, v.cat, v.rate].join("|");
+    if (key === lastLead) return; // the same details again (Recalculate, then Calculate) are not sent twice
+    lastLead = key;
+    var fd = new FormData();
+    fd.append("phone", v.phone); fd.append("email", v.email);
+    fd.append("_hp", (form.querySelector('[name="_hp"]') || {}).value || "");
+    fd.append("details", [
+      "Customer type: " + v.cat, "State: " + v.state,
+      (v.mode === "bill" ? "Monthly bill: " + inr(v.amount) : "Monthly units: " + n0(v.amount) + " kWh") + " (unit charge ₹" + (+v.rate.toFixed(2)) + ")",
+      "Recommended plant size: " + r.size.toFixed(2) + " kWp", "Daily generation: " + r.daily.toFixed(1) + " kWh", "Yearly generation: " + n0(r.annual) + " kWh",
+      "Yearly savings: " + inr(r.annSav), A.years + "-year savings: " + inr(r.lifeSav), "Payback period: " + r.payback.toFixed(1) + " years"
+    ].join(" | "));
+    try { fetch("/api/calculator", { method: "POST", body: fd, keepalive: true }).catch(function () { /* the result shows anyway */ }); } catch (x) { /* the result shows anyway */ }
+  }
+
   /* ---------- wiring ---------- */
   form.querySelectorAll("input[name=mode]").forEach(function (r) { r.addEventListener("change", setMode); });
   elAmount.addEventListener("input", function () { fail("amount", ""); });
+  elPhone.addEventListener("input", function () { fail("phone", ""); });
+  elEmail.addEventListener("input", function () { fail("email", ""); });
   elState.addEventListener("change", function () { fail("state", ""); var s = stateOf(elState.value); if (s) setRate(s.t, true); });
   elRange.addEventListener("input", function () { setRate(parseFloat(elRange.value), true); });
   elRate.addEventListener("input", function () { var x = parseFloat(elRate.value); if (isFinite(x)) setRate(x, false); });
   elRate.addEventListener("change", function () { var x = parseFloat(elRate.value); setRate(isFinite(x) ? x : 8, true); });
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    var v = read();
-    if (!check(v)) { var bad = form.querySelector(".zc-fld.bad input,.zc-fld.bad select"); if (bad) bad.focus(); return; }
-    render(calc(v));
+    var v = read(), okCalc = check(v), okContact = checkContact(v);
+    if (!okCalc || !okContact) { var bad = form.querySelector(".zc-fld.bad input,.zc-fld.bad select"); if (bad) bad.focus(); return; }
+    var r = calc(v);
+    sendLead(v, r);
+    render(r);
   });
 
   setMode();

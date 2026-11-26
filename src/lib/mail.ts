@@ -27,13 +27,14 @@ export type Enquiry = { name: string; email: string; phone: string; interest: st
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const oneLine = (s: string) => s.replace(/[\r\n]+/g, " ").trim();
 
-/** The notification for one enquiry: who wrote, how to reach them, what they are interested in and their message. Replying goes to the visitor. */
-export function enquiryMail(e: Enquiry, to: string): Mail {
-  const rows: [string, string][] = [["Name", e.name], ["Phone", e.phone], ["Email", e.email], ["Interested in", e.interest || "-"], ["Message", e.message || "-"]];
+/** The notification for one enquiry: who wrote, how to reach them, what they are interested in and their message. Replying goes to the visitor (when they gave an email).
+ *  "subject" replaces the default subject line. */
+export function enquiryMail(e: Enquiry, to: string, subject?: string): Mail {
+  const rows: [string, string][] = [["Name", e.name], ["Phone", e.phone], ["Email", e.email], ["Interested in", e.interest], ["Message", e.message]].map(([k, v]) => [k, v || "-"]);
   return {
     to,
     replyTo: e.email,
-    subject: `New enquiry from ${oneLine(e.name)}${e.interest ? " - " + oneLine(e.interest) : ""}`,
+    subject: subject ? oneLine(subject) : `New enquiry from ${oneLine(e.name)}${e.interest ? " - " + oneLine(e.interest) : ""}`,
     text: "New enquiry from the Zakion Energy website\n\n" + rows.map(([k, v]) => `${k}: ${v}`).join("\n") + "\n",
     html: `<div style="font-family:Arial,sans-serif;max-width:560px;color:#0d3d7b"><h2 style="margin:0 0 12px">New enquiry from the website</h2><table style="border-collapse:collapse;width:100%">` +
       rows.map(([k, v]) => `<tr><td style="padding:8px 12px;border:1px solid #dbe5f5;background:#f1f4fb;font-weight:bold;width:130px;vertical-align:top">${k}</td><td style="padding:8px 12px;border:1px solid #dbe5f5;white-space:pre-wrap">${esc(v)}</td></tr>`).join("") +

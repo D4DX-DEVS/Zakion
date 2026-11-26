@@ -586,7 +586,19 @@ ${o.map && safeUrl(k.map) ? `<div class="zh-ct-map zr zr-z"><iframe src="${url(k
 </section>${INTEREST_JS}`;
 };
 
-// Solar Calculator (the Solar Calculator page). The form is drawn here; the script public/zk-calc.js reads the settings from the JSON below (units one kW makes a day, peak sun hours, cost per kW, the electricity rate of each state), works out
+// Solar Calculator banner (home page, above Solar Home): a wide band with a few words and a button to the Solar Calculator page.
+// Edited in Studio (section "calcBanner"). The button shows only with both a label and a link.
+const calcBanner = (c: Content) => {
+  const a = c.calcBanner ?? {};
+  const btn = String(a.btnText ?? "").trim() && safeUrl(a.btnLink) ? `<a class="zh-btn" href="${url(a.btnLink)}">${ic("calc")} ${esc(a.btnText)} ${ic("arrow-r")}</a>` : "";
+  return `<section class="zh zh-calcb" id="solar-calculator-banner"><div class="zh-calcb-bg" aria-hidden="true"><i></i><i></i></div><div class="zh-wrap zh-calcb-in">
+ <span class="zh-calcb-ico zr" aria-hidden="true">${ic("calc")}</span>
+ <div class="zh-calcb-txt zr">${a.eyebrow ? `<span class="zh-calcb-eye">${ic("sun")}${esc(a.eyebrow)}</span>` : ""}${a.title ? `<h2>${rt(a.title)}</h2>` : ""}${a.text ? `<p>${rt(a.text)}</p>` : ""}</div>
+ ${btn ? `<div class="zh-calcb-cta zr">${btn}</div>` : ""}
+</div></section>`;
+};
+
+// Solar Calculator (the Solar Calculator page). The form is drawn here; the script public/zk-calc.js reads the settings from the JSON below (units one kW makes a day, peak sun hours, the payback period shown, the electricity rate of each state), works out
 // the result and draws it (plant size, generation, savings, subsidy, payback, environment) with the share buttons and the PDF download.
 // The page can be opened with the inputs in the address (?m=bill&v=2000&s=Kerala&c=Residential&t=8): the result then shows at once, which is what the share links use.
 const CATEGORIES_CALC = ["Residential", "Commercial", "Industrial"];
@@ -596,14 +608,14 @@ const calculator = (c: Content) => {
     .map((x: any) => ({ n: String(x?.name ?? "").trim(), t: Number(x?.tariff) || 0 }))
     .filter((x: { n: string; t: number }) => x.n && x.t > 0);
   const cfg = {
-    states, perKw: Number(k.unitsPerKw) || 4, peak: Number(k.peakHours) || 5, costR: Number(k.costResidential) || 60000, costC: Number(k.costCommercial) || 50000,
+    states, perKw: Number(k.unitsPerKw) || 4, peak: Number(k.peakHours) || 5, payback: Number(k.payback) || 2.5,
     cta: { text: String(k.ctaText ?? "").trim(), link: safeUrl(k.ctaLink) }, note: String(k.disclaimer ?? "").trim(),
     brand: "Zakion Energy", phone: String(c.header?.topPhone ?? "").trim(), email: String(c.header?.topEmail ?? "").trim(),
   };
   const first = states.find((x: { n: string }) => x.n === "Kerala")?.n ?? "";
   const intro = k.eyebrow || k.title || k.subtitle
     ? `<header class="zc-hero zr">${k.eyebrow ? `<span class="zc-pill">${ic("calc")}${esc(k.eyebrow)}</span>` : ""}${k.title ? `<h2>${rt(k.title)}</h2>` : ""}${k.subtitle ? `<p class="zh-sub">${rt(k.subtitle)}</p>` : ""}
-<ul class="zc-trust"><li>${ic("bolt")}Instant result</li><li>${ic("rupee")}Subsidy included</li><li>${ic("shield")}Free to use</li></ul></header>`
+<ul class="zc-trust"><li>${ic("bolt")}Instant result</li><li>${ic("rupee")}Savings &amp; payback</li><li>${ic("shield")}Free to use</li></ul></header>`
     : "";
   const opt = (v: string, icon: string, title: string, sub: string, on = false) =>
     `<label class="zc-opt"><input type="radio" name="mode" value="${v}"${on ? " checked" : ""}><span><i class="zc-oi">${ic(icon)}</i><div><b>${title}</b><small>${sub}</small></div><i class="zc-tick">${ic("check")}</i></span></label>`;
@@ -627,11 +639,20 @@ ${intro}
    <div class="zc-in"><span class="zc-ad">₹</span><input id="zc-rate" name="rate" type="number" inputmode="decimal" min="1" max="30" step="0.1" value="8" aria-label="Electricity rate in rupees per unit"></div></div>
    <input class="zc-range" id="zc-range" type="range" min="1" max="30" step="0.5" value="8" aria-label="Electricity rate slider"><div class="zc-ticks" aria-hidden="true"><span>₹1</span><span>₹8</span><span>₹15</span><span>₹22</span><span>₹30</span></div>
    <p class="zc-tip">${ic("pin")}<span>Select your state to auto-fill the average tariff rate. You can adjust it manually.</span></p></div></div>
+ <div class="zc-step"><div class="zc-sh"><span class="zc-n"><i>4</i>Step four</span><h3>Your contact details</h3></div>
+  <div class="zc-grid2">
+   <div class="zc-fld" data-f="phone"><label for="zc-phone">${ic("phone")}Mobile number</label>
+    <input class="zc-ctl" id="zc-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="e.g. 98470 12345" required aria-describedby="zc-phone-e"><p class="zc-err" id="zc-phone-e" role="alert"></p></div>
+   <div class="zc-fld" data-f="email"><label for="zc-email">${ic("mail")}Email <small>(optional)</small></label>
+    <input class="zc-ctl" id="zc-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" aria-describedby="zc-email-e"><p class="zc-err" id="zc-email-e" role="alert"></p></div>
+  </div>
+  <p class="zc-tip">${ic("info")}<span>Our solar advisor may call you to explain your report. We use these details only for that.</span></p>
+  <input class="zh-hp" type="text" name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true"></div>
  <button class="zh-btn zc-go" type="submit">${ic("calc")} Calculate My Solar Savings ${ic("arrow-r")}</button>
 </form>
 <div class="zc-res" id="zc-res" hidden tabindex="-1" aria-live="polite"></div>
 </div></div></section>
-<script type="application/json" id="zc-cfg">${JSON.stringify(cfg).replace(/</g, "\\u003c")}</script><script src="/zk-calc.js?v=3" defer></script>`;
+<script type="application/json" id="zc-cfg">${JSON.stringify(cfg).replace(/</g, "\\u003c")}</script><script src="/zk-calc.js?v=4" defer></script>`;
 };
 
 // FAQ (the FAQ page): the questions added under FAQs in the admin, as an accordion with a search box and category tabs, plus the FAQPage data
@@ -667,7 +688,7 @@ ${cta}
 };
 
 export const BUILD: Record<string, (c: Content, o?: { map?: boolean }) => string> = {
-  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail, amc, systems, systemDetail, testimonialsAll, calculator, faq,
+  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail, amc, systems, systemDetail, testimonialsAll, calcBanner, calculator, faq,
 };
 
 /** The deck sections for a page, in order, with the icon sprite and the animation script. */
