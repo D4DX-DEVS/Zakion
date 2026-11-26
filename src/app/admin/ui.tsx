@@ -19,6 +19,7 @@ const NAV: Nav[] = [
   { href: "/admin/posts", label: "Blog posts", icon: "pen", group: "Content", sub: "Write, edit and publish your articles." },
   { href: "/admin/media", label: "Library", icon: "image", group: "Library", sub: "Upload and manage images, videos and PDFs." },
   { href: "/admin/messages", label: "Submissions", icon: "inbox", group: "Submissions", sub: "Every enquiry sent through the website's contact form, with the visitor's details. Each one is also emailed to the team." },
+  { href: "/admin/calculator", label: "Solar Calculator", icon: "calculator", group: "Submissions", sub: "Everyone who used the Solar Calculator and left their mobile number (and email): what they calculated and the result they saw. Mark each one as contacted once you have called." },
   { href: "/admin/account", label: "Account", icon: "user", group: "Account", sub: "Change your password and recovery code." },
 ];
 

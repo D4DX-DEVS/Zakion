@@ -348,7 +348,7 @@ export const SECTIONS: SectionDef[] = [
   },
   {
     key: "calculator", title: "Solar Calculator (Solar Calculator page)", page: "Solar Calculator",
-    help: "The calculator itself: the heading above it, the numbers it works with and the button under the result. Plant size = monthly units ÷ 30 ÷ the units one kW makes a day; daily generation = plant size × that number. The rate of each state fills in the electricity rate (what a household pays for one unit, kWh); visitors can still change it in the calculator. Visitors also enter a mobile number and an optional email: those arrive under Submissions and are emailed to the address set in the Contact block.",
+    help: "The calculator itself: the heading above it, the numbers it works with and the button under the result. Plant size = monthly units ÷ 30 ÷ the units one kW makes a day; daily generation = plant size × that number. The rate of each state fills in the electricity rate (what a household pays for one unit, kWh); visitors can still change it in the calculator. Visitors also enter a mobile number and an optional email: those arrive under Solar Calculator in the left menu and are emailed to the address set in the Contact block.",
     fields: [
       T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("subtitle", "Paragraph"),
       NUM("unitsPerKw", "Units one kW generates in a day", "Used for the plant size and the daily generation (4 means each kW makes 4 units a day)."), NUM("peakHours", "Peak sun hours a day", "Shown in the result, the same for every state."),

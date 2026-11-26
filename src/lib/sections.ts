@@ -652,7 +652,7 @@ ${intro}
 </form>
 <div class="zc-res" id="zc-res" hidden tabindex="-1" aria-live="polite"></div>
 </div></div></section>
-<script type="application/json" id="zc-cfg">${JSON.stringify(cfg).replace(/</g, "\\u003c")}</script><script src="/zk-calc.js?v=4" defer></script>`;
+<script type="application/json" id="zc-cfg">${JSON.stringify(cfg).replace(/</g, "\\u003c")}</script><script src="/zk-calc.js?v=5" defer></script>`;
 };
 
 // FAQ (the FAQ page): the questions added under FAQs in the admin, as an accordion with a search box and category tabs, plus the FAQPage data

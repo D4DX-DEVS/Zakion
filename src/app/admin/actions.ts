@@ -450,6 +450,22 @@ export async function toggleFaq(f: FormData) {
   redirect("/admin/faqs?toggled=" + (x?.status === "published" ? "hidden" : "shown"));
 }
 
+// ---- Solar Calculator leads (table "calculator_leads"): who used the calculator and left their number ----
+
+/** Marks a lead as contacted, or back to new. */
+export async function toggleCalcLead(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "id");
+  const x = await db().prepare("SELECT status FROM calculator_leads WHERE id=?").bind(id).first<{ status: string }>();
+  if (x) await db().prepare("UPDATE calculator_leads SET status=? WHERE id=?").bind(x.status === "contacted" ? "new" : "contacted", id).run();
+  redirect("/admin/calculator?toggled=" + (x?.status === "contacted" ? "new" : "contacted"));
+}
+export async function deleteCalcLead(f: FormData) {
+  await requireAdmin();
+  await db().prepare("DELETE FROM calculator_leads WHERE id=?").bind(s(f, "id")).run();
+  redirect("/admin/calculator?deleted=1");
+}
+
 // ---- page sections (src/lib/content.ts): one JSON document per section, merged over the built-in defaults ----
 
 /** Called from the section editor to upload an image or video; returns the public URL. */

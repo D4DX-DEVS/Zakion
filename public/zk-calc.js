@@ -293,6 +293,8 @@
     var fd = new FormData();
     fd.append("phone", v.phone); fd.append("email", v.email);
     fd.append("_hp", (form.querySelector('[name="_hp"]') || {}).value || "");
+    fd.append("type", v.cat); fd.append("state", v.state); fd.append("mode", v.mode); fd.append("amount", v.amount); fd.append("rate", v.rate);
+    fd.append("size", r.size); fd.append("units", r.annual); fd.append("yearly", r.annSav); fd.append("life", r.lifeSav); fd.append("payback", r.payback);
     fd.append("details", [
       "Customer type: " + v.cat, "State: " + v.state,
       (v.mode === "bill" ? "Monthly bill: " + inr(v.amount) : "Monthly units: " + n0(v.amount) + " kWh") + " (unit charge ₹" + (+v.rate.toFixed(2)) + ")",

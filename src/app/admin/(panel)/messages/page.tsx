@@ -2,12 +2,10 @@ import { db } from "@/lib/env";
 import { deleteMessage } from "../../actions";
 import { ago, fmtDate } from "../../format";
 import { Icon } from "../../icons";
+import { MailChip } from "../../mail-chip";
 import { ConfirmButton } from "../../ui";
 
 type M = { id: number; name: string; email: string; phone: string; subject: string; message: string; mail_status?: string; created_at: string };
-
-// How the email to the team went: set when the enquiry was sent (see api/contact). Older enquiries have no note.
-const mailChip = (s?: string) => (!s ? null : s === "sent" ? <span className="chip published" title="The team was emailed about this enquiry">Emailed</span> : s === "not configured" ? <span className="chip draft" title="Email sending is not set up yet, so only this list has the enquiry">Email not set up</span> : <span className="chip draft" title={s}>Email failed</span>);
 
 // Admin > Submissions: every enquiry sent through the website's contact form (the Contact page and the Home page), newest first.
 export default async function Messages() {
@@ -28,7 +26,7 @@ export default async function Messages() {
         <article className="card msg" key={m.id}>
           <span className="av" aria-hidden="true">{(m.name || "?").charAt(0)}</span>
           <div className="body">
-            <h3>{m.name || "Unknown sender"}{m.subject && <span className="chip blue" title="Interested in">{m.subject}</span>}{mailChip(m.mail_status)}</h3>
+            <h3>{m.name || "Unknown sender"}{m.subject && <span className="chip blue" title="Interested in">{m.subject}</span>}<MailChip status={m.mail_status} /></h3>
             <div className="meta">
               {m.email && <a href={"mailto:" + m.email}><Icon name="mail" size={16} />{m.email}</a>}
               {m.phone && <a href={"tel:" + m.phone.replace(/[^\d+]/g, "")}><Icon name="phone" size={16} />{m.phone}</a>}

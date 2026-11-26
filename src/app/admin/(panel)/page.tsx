@@ -11,7 +11,7 @@ type Act = { icon: IconName; title: string; note: string; href: string; at: stri
 export default async function Overview() {
   const d = db();
   const n = async (q: string) => (await d.prepare(q).first<{ c: number }>())?.c ?? 0;
-  const [pages, posts, drafts, msgs, pg, ps, ms, rows, content] = await Promise.all([
+  const [pages, posts, drafts, msgs, pg, ps, ms, rows, content, calcLeads] = await Promise.all([
     n("SELECT COUNT(*) c FROM pages WHERE kind!='template'"),
     n("SELECT COUNT(*) c FROM posts"),
     n("SELECT COUNT(*) c FROM posts WHERE status='draft'"),
@@ -21,6 +21,7 @@ export default async function Overview() {
     d.prepare("SELECT id,name,subject,created_at FROM messages ORDER BY id DESC LIMIT 5").all<{ id: number; name: string; subject: string; created_at: string }>(),
     d.prepare("SELECT key, updated_at FROM site_content").all<{ key: string; updated_at: string }>().then((r) => r.results).catch(() => []),
     loadContent(),
+    n("SELECT COUNT(*) c FROM calculator_leads").catch(() => 0), // (the table comes with migration 0014)
   ]);
   const media = (await env().MEDIA.list({ limit: 1000 })).objects.filter((o) => !HIDDEN.test(o.key)).length;
   const layout: Layout = content._layout;
@@ -38,7 +39,7 @@ export default async function Overview() {
 
   const pulse: [IconName, string, number, string][] = [
     ["file", "Pages", pages, "/admin/pages"], ["pen", drafts ? `Posts · ${drafts} draft${drafts > 1 ? "s" : ""}` : "Posts", posts, "/admin/posts"],
-    ["image", "Library files", media, "/admin/media"], ["inbox", "Submissions", msgs, "/admin/messages"],
+    ["image", "Library files", media, "/admin/media"], ["inbox", "Submissions", msgs, "/admin/messages"], ["calculator", "Calculator leads", calcLeads, "/admin/calculator"],
   ];
   const launch: [IconName, string, string, string][] = [
     ["layers", "Edit the home page", "Studio", "/admin/studio"], ["pen", "Write a post", "Blog", "/admin/posts/new"],
