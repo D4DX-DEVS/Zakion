@@ -13,7 +13,8 @@
   /* top: logo and close */
   .main-header .elementskit-nav-identity-panel{order:0;display:flex!important;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:14px 18px!important;border-bottom:1px solid var(--zc-eef0f4,#eef0f4)}
   .zk-mm-logo{display:block}
-  .zk-mm-logo img{display:block;height:34px;width:auto}
+  /* a small logo: the theme's own rules (.ekit-wid-con img) force the logo to its full size unless this one is as specific */
+  .main-header .elementskit-nav-identity-panel .zk-mm-logo img{display:block;height:30px;width:auto;max-width:none}
   .main-header button.elementskit-menu-close{float:none!important;position:relative;display:grid;place-items:center;width:42px!important;height:42px;margin:0!important;padding:0!important;border-radius:12px!important;background:var(--e-global-color-accent)!important;color:#000!important;font-size:0!important;line-height:0;cursor:pointer;transition:transform .25s}
   .main-header button.elementskit-menu-close:hover{transform:rotate(90deg)}
   .main-header button.elementskit-menu-close::before,.main-header button.elementskit-menu-close::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:2.5px;margin:-1.25px 0 0 -9px;border-radius:2px;background:#101010;transform:rotate(45deg)}

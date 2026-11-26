@@ -41,7 +41,7 @@ export const HOME_KEYS = ["about", "track", "vision", "story", "why", "renewable
 // The admin can reorder, remove and add blocks on every page (Site settings > Section order); the result is kept in the layout below.
 // Blocks that only make sense on inner pages (they have no place in the home page's own order): the Projects page's tabs and cards, the system
 // cards of the Solutions page (the Home page keeps showing the full On Grid, Hybrid and BESS blocks) and the list of all testimonials.
-export const INNER_KEYS = ["portfolio", "systems", "testimonialsAll"];
+export const INNER_KEYS = ["portfolio", "systems", "testimonialsAll", "calculator", "faq"];
 export const ALL_KEYS = [...HOME_KEYS, ...INNER_KEYS];
 
 export const PAGE_DEFAULTS: Record<string, string[]> = {
@@ -50,10 +50,12 @@ export const PAGE_DEFAULTS: Record<string, string[]> = {
   "/services/": ["systems", "aesthetics", "amc", "components"],
   "/projects/": ["projects", "portfolio"],
   "/testimonials/": ["testimonialsAll"],
+  "/solar-calculator/": ["calculator"],
+  "/faq/": ["faq"],
   "/blog/": [],
   "/contact/": ["contact"],
 };
-export const PAGE_TITLES: Record<string, string> = { "/": "Home", "/about-us/": "About Us", "/services/": "Solutions", "/projects/": "Projects", "/testimonials/": "Testimonials", "/blog/": "Blog", "/contact/": "Contact" };
+export const PAGE_TITLES: Record<string, string> = { "/": "Home", "/about-us/": "About Us", "/services/": "Solutions", "/projects/": "Projects", "/testimonials/": "Testimonials", "/blog/": "Blog", "/faq/": "FAQ", "/solar-calculator/": "Solar Calculator", "/contact/": "Contact" };
 
 /** Home page layout kept by the admin in site_content under the key "_layout": section order, hidden sections, per-section settings,
  *  and (for the other pages) the blocks each one shows, in order. */
@@ -95,7 +97,7 @@ export const MARKUP_HELP = "Use ==text== for the amber highlight and **text** fo
 // built-in picture (1920 px wide strips in public/zk/banners, cut at the banner shape), used until the admin picks another one (or empties the field).
 export const BANNER_PAGES: { key: string; label: string; where: string; image: string }[] = [
   { key: "about", label: "About Us", where: "the About Us page", image: "/zk/banners/about.jpg" },
-  { key: "solutions", label: "Solutions (main page)", where: "the Solutions page and any other page under it", image: "/zk/banners/solutions.jpg" },
+  { key: "solutions", label: "Solutions (main page)", where: "the Solutions page and any other page under it", image: "/zk/banners/solutions.jpg?v=2" },
   { key: "pv", label: "Photovoltaic Solutions", where: "the Photovoltaic Solutions page", image: "/zk/banners/pv.jpg" },
   { key: "solarHome", label: "Solar Home", where: "the Solar Home page", image: "/zk/banners/solar-home.jpg" },
   { key: "energy", label: "Energy Engineering", where: "the Energy Engineering page", image: "/zk/banners/energy.jpg" },
@@ -104,6 +106,8 @@ export const BANNER_PAGES: { key: string; label: string; where: string; image: s
   { key: "testimonials", label: "Testimonials", where: "the Testimonials page", image: "/zk/banners/testimonials.jpg" },
   { key: "contact", label: "Contact", where: "the Contact page", image: "/zk/banners/contact.jpg" },
   { key: "blog", label: "Blog", where: "the Blog page, its categories and every article", image: "/zk/banners/blog.jpg" },
+  { key: "calculator", label: "Solar Calculator", where: "the Solar Calculator page", image: "/zk/banners/solutions.jpg?v=2" },
+  { key: "faq", label: "FAQ", where: "the FAQ page", image: "/zk/banners/contact.jpg" },
   { key: "other", label: "Any other page", where: "every page that is not listed above", image: "/zk/banners/other.jpg" },
 ];
 const BANNER_SPEC = "Image size: 1920 × 420 px (width × height), a wide strip about 4.5 times as wide as it is tall (the strip on a computer is about 1920 × 420 px). Smallest that still looks sharp: 1600 × 360 px; a 1920 px wide photo of any height works, but the strip then shows only a band across it. JPG or WebP, ideally under 500 KB so the page opens fast (up to 15 MB is accepted). The picture fills the strip behind the page title, so only a band across the middle shows: keep the main subject in the middle. The left side is darkened so the white title stays easy to read.";
@@ -333,6 +337,46 @@ export const SECTIONS: SectionDef[] = [
     data: { eyebrow: "Testimonials", title: "What our ==customers say==", subtitle: "Real feedback from the people we have worked with.", empty: "Testimonials are coming soon. Please check back." },
   },
   {
+    key: "calculator", title: "Solar Calculator (Solar Calculator page)", page: "Solar Calculator",
+    help: "The calculator itself: the heading above it, the numbers it works with and the button under the result. Plant size = monthly units ÷ 30 ÷ the units one kW makes a day; daily generation = plant size × that number. The rate of each state fills in the electricity rate (what a household pays for one unit, kWh); visitors can still change it in the calculator.",
+    fields: [
+      T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("subtitle", "Paragraph"),
+      NUM("unitsPerKw", "Units one kW generates in a day", "Used for the plant size and the daily generation (4 means each kW makes 4 units a day)."), NUM("peakHours", "Peak sun hours a day", "Shown in the result, the same for every state."),
+      NUM("costResidential", "System cost per kW for homes (₹)", "Residential system with domestic-content (DCR) panels. The government subsidy is deducted from this."),
+      NUM("costCommercial", "System cost per kW for business and industry (₹)", "Commercial and industrial systems. No subsidy is applied."),
+      LIST("states", "States and their electricity rate", "state", [T("name", "State or union territory"), NUM("tariff", "Electricity rate (₹ per unit)")], 40),
+      T("ctaText", "Button under the result"), T("ctaLink", "Button link", "By default it opens the enquiry form on the Contact page."),
+      TA("disclaimer", "Note under the result"),
+    ],
+    data: {
+      eyebrow: "Solar Calculator", title: "Go solar,\n==save big==",
+      subtitle: "Find the right plant size for your home or business, and see your savings, subsidy and payback in a few clicks.",
+      unitsPerKw: 4, peakHours: 5, costResidential: 60000, costCommercial: 50000,
+      states: [
+        ["Andaman and Nicobar Islands", 6], ["Andhra Pradesh", 7], ["Arunachal Pradesh", 5], ["Assam", 7], ["Bihar", 7.5], ["Chandigarh", 5], ["Chhattisgarh", 7],
+        ["Dadra and Nagar Haveli and Daman and Diu", 5], ["Delhi", 6.5], ["Goa", 5], ["Gujarat", 7], ["Haryana", 7], ["Himachal Pradesh", 5], ["Jammu and Kashmir", 5],
+        ["Jharkhand", 6.5], ["Karnataka", 7.5], ["Kerala", 8], ["Ladakh", 4.5], ["Lakshadweep", 5], ["Madhya Pradesh", 7.5], ["Maharashtra", 9], ["Manipur", 6],
+        ["Meghalaya", 6], ["Mizoram", 6], ["Nagaland", 6], ["Odisha", 6], ["Puducherry", 5], ["Punjab", 7], ["Rajasthan", 7.5], ["Sikkim", 5], ["Tamil Nadu", 7],
+        ["Telangana", 7.5], ["Tripura", 7], ["Uttar Pradesh", 7], ["Uttarakhand", 6], ["West Bengal", 8],
+      ].map(([name, tariff]) => ({ name, tariff })),
+      ctaText: "Get a free site survey", ctaLink: "/contact/?interest=On%20Grid%20System#contact",
+      disclaimer: "The computation is indicative in nature. Generation and financial savings may vary based on actual solar irradiation, panel efficiency, shading and local grid conditions. Subsidy amounts are as per the PM Surya Ghar Muft Bijli Yojana guidelines for residential consumers and are subject to change. Talk to a Zakion Energy solar advisor for a precise assessment.",
+    },
+  },
+  {
+    key: "faq", title: "FAQ (FAQ page)", page: "FAQ",
+    help: "The heading above the questions and the box under them on the FAQ page. The questions and answers themselves are added, edited and deleted under FAQs in the left menu. Leave the heading empty to show only the questions.",
+    fields: [
+      T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("subtitle", "Paragraph"), T("empty", "Text shown when there are no questions yet"),
+      T("ctaTitle", "Box under the questions: title"), TA("ctaText", "Box under the questions: text"), T("ctaBtn", "Box under the questions: button label"), T("ctaLink", "Box under the questions: button link"),
+    ],
+    data: {
+      eyebrow: "FAQ", title: "Solar questions,\n==answered==", subtitle: "Everything people ask us before going solar: cost, subsidy, net metering, installation and care.",
+      empty: "Questions are coming soon. Please check back.",
+      ctaTitle: "Still have a question?", ctaText: "Our solar advisors are happy to help. Call us or send an enquiry and we will get back to you.", ctaBtn: "Contact us", ctaLink: "/contact/",
+    },
+  },
+  {
     key: "projects", title: "Projects We've Delivered", page: "Home, Projects", help: "The photo grid. Each photo can link to a page.",
     fields: [TA("title", "Heading", MARKUP_HELP), T("count", "Big number"), TA("caption", "Caption under the number"), LIST("photos", "Project photos", "photo", [IMG("image", "Photo"), T("alt", "Description"), T("url", "Link (optional)")], 24)],
     data: {
@@ -346,16 +390,23 @@ export const SECTIONS: SectionDef[] = [
     data: { title: "Power Your Future\n==with Zakion==", sub: "Clean Energy Today. Sustainable Tomorrow.", quote: "\"Every solar installation is more than a project—it is a step towards energy independence, lower emissions, and a brighter future for generations to come. At Zakion Energy, we are proud to be your trusted partner in this journey.\"", btn1Text: "Book a free consultation", btn1Link: "/contact/", btn2Text: "Call +91 9188 944 337", btn2Link: "tel:+919188944337", image: "/zk/cta-worker.jpg" },
   },
   {
-    key: "contact", title: "Contact details and enquiry form", page: "Home, Contact", help: "Contact information, the QR code and the enquiry form. Messages arrive under Messages.",
+    key: "contact", title: "Contact details and enquiry form", page: "Home, Contact", help: "Contact information, the QR code and the enquiry form. Every enquiry is saved under Submissions in the left menu and emailed to the address set in \"Send enquiries to\".",
     fields: [T("eyebrow", "Small label above the heading"), TA("heading", "Heading"), LN("phones", "Phone numbers"), T("email", "Email"), T("website", "Website"), LN("addresses", "Addresses"), IMG("qr", "QR code image"), T("scanTitle", "QR heading"), TA("scanText", "QR text"),
-      T("facebook", "Facebook link"), T("instagram", "Instagram link"), T("linkedin", "LinkedIn link"), T("whatsapp", "WhatsApp link"), T("scheduleTitle", "Consultation heading"), TA("scheduleText", "Consultation text"),
-      LN("interests", "Enquiry form: options in the interest list"), T("button", "Form button label"), T("map", "Google Maps embed link", "Shown on the Contact page. Leave empty to hide the map.")],
+      T("facebook", "Facebook link"), T("instagram", "Instagram link"), T("linkedin", "LinkedIn link"), T("whatsapp", "WhatsApp link"), T("scheduleTitle", "Consultation heading", "Use ==text== for the amber highlight and a new line for a line break. With no highlight, the words Free Consultation are highlighted for you."), TA("scheduleText", "Consultation text"),
+      LN("interests", "Enquiry form: options in the interest list", "One option per line. The first one is picked when the form opens."), T("button", "Form button label"),
+      IMG("formImage", "Photo beside the form", "Shown on the right of the enquiry form on computers and below it on phones. Portrait works best: about 760 × 1000 px (3:4)."),
+      LIST("perks", "Benefits on the photo", "benefit", [SEL("icon", "Icon", ICONS), T("title", "Title"), T("text", "Short text")], 4),
+      T("notifyEmail", "Send enquiries to", "Every enquiry is emailed to this address and saved under Submissions."), T("thanksTitle", "Thank-you pop-up: title"), TA("thanksText", "Thank-you pop-up: message", "Shown in a pop-up after the visitor sends the form."), T("map", "Google Maps embed link", "Shown on the Contact page. Leave empty to hide the map.")],
     data: {
       eyebrow: "Contact us", heading: "Let's Power Your Future Together\nReady to Switch to Clean Solar Energy?", phones: "+91 9188 944 337\n+91 9188 944 338", email: "info@zakionenergy.com", website: "www.zakionenergy.com",
       addresses: "63/700, D Space, Sky Tower, Bank Road, Calicut- 673001\nKalathil Complex, opp. Federal Bank, Pulamanthole, Kerala 679323", qr: "/zk/qr.jpg", scanTitle: "Scan to Connect", scanText: "Scan to visit our website or contact us instantly.",
       facebook: "https://www.facebook.com/zakionenergy/", instagram: "https://www.instagram.com/zakionenergy/", linkedin: "https://in.linkedin.com/company/zakion-energy", whatsapp: "https://wa.me/919188944337",
-      scheduleTitle: "Schedule Your Free Consultation Today", scheduleText: "Discover how solar can reduce your energy costs and power a sustainable future.",
-      interests: "On Grid System\nHybrid System\nBattery Energy Storage System\nAMC Service\nOther", button: "Get a free consultation", map: "https://maps.google.com/maps?q=D%20Space%2C%20Sky%20Tower%2C%20Bank%20road%2C%20Calicut%20-%20673001&t=m&z=14&output=embed",
+      scheduleTitle: "Schedule Your\n==Free Consultation== Today", scheduleText: "Discover how solar can reduce your energy costs and power a sustainable future.",
+      interests: "On Grid System\nHybrid System\nBattery Energy Storage System\nAMC Service\nOther", button: "Get a free consultation",
+      formImage: "/zk/contact-house.jpg",
+      perks: [{ icon: "bolt", title: "Reduce Electricity Bills", text: "Save more every month" }, { icon: "leaf", title: "Go Green", text: "A cleaner planet for future" }, { icon: "shield", title: "Reliable Solution", text: "Expert support & service" }],
+      notifyEmail: "info@zakionenergy.com", thanksTitle: "Thank you!", thanksText: "We have received your enquiry. We will connect with you as soon as possible.",
+      map: "https://maps.google.com/maps?q=D%20Space%2C%20Sky%20Tower%2C%20Bank%20road%2C%20Calicut%20-%20673001&t=m&z=14&output=embed",
     },
   },
   {
@@ -373,6 +424,7 @@ export const SECTIONS: SectionDef[] = [
         { label: "Home", url: "/", children: [] }, { label: "About Us", url: "/about-us/", children: [] },
         { label: "Solutions", url: "/services/", children: [] },
         { label: "Projects", url: "/projects/", children: [] }, { label: "Blog", url: "/blog/", children: [] },
+        { label: "FAQ", url: "/faq/", children: [] },
       ],
       topEmail: "info@zakion.com", topPhone: "+91 9188 944 337", contactLabel: "Contact Us", contactUrl: "/contact/", showBrochure: true, brochureLabel: "Brochure", brochurePdf: "",
     },
@@ -541,6 +593,18 @@ export const TESTIMONIAL_FIELDS: Field[] = [
   { k: "poster", label: "Video cover picture (optional)", type: "image", spec: "Image size: 1280 × 720 px (16:9). The picture shown on the card before the video plays.", help: "Leave it empty to show the first frame of the video." },
 ];
 
+// ---- FAQs (table "faqs", managed under FAQs in the admin): the FAQ page ----
+
+export type Faq = { id: number; question: string; answer: string; category: string; sort: number; status: string; created_at: string };
+/** The fields of the FAQ editor (Admin > FAQs). */
+export const FAQ_FIELDS: Field[] = [
+  T("question", "Question"),
+  TA("answer", "Answer", "Use **text** for bold. A blank line starts a new paragraph."),
+  T("category", "Category", "Questions with the same category are grouped under one tab on the FAQ page, for example Cost and subsidy. Leave it empty to use General."),
+  NUM("sort", "Position on the page", "1 is the first question. You can also drag the questions into order in the FAQs list."),
+  SEL("visible", "Show on the website", ["Shown", "Hidden"], "Hidden questions are saved but not shown. You can also hide or show one from the FAQs list."),
+];
+
 // ---- reading and cleaning saved content ----
 
 const URLISH = /^(\/(?!\/)|https?:\/\/|mailto:|tel:|#)/i;
@@ -599,8 +663,10 @@ export async function loadContent(): Promise<Content> {
   try { projects = (await db().prepare("SELECT * FROM projects WHERE status='published' ORDER BY sort, id DESC").all<Project>()).results; } catch { /* table not created yet: no projects */ }
   let systems: System[] = [];
   try { systems = (await db().prepare("SELECT * FROM systems WHERE status='published' ORDER BY sort, id").all<System>()).results; } catch { /* table not created yet: no systems */ }
+  let faqs: Faq[] = [];
+  try { faqs = (await db().prepare("SELECT * FROM faqs WHERE status='published' ORDER BY sort, id").all<Faq>()).results; } catch { /* table not created yet: no questions */ }
   let testimonials: Testimonial[] = [];
   try { testimonials = (await db().prepare("SELECT * FROM testimonials WHERE status='published' ORDER BY created_at DESC, id DESC LIMIT 200").all<Testimonial>()).results; } catch { /* table not created yet: no testimonials */ }
-  return { ...Object.fromEntries(SECTIONS.map((d) => [d.key, merge(d, saved[d.key])])), _layout: cleanLayout(saved[LAYOUT_KEY]), [SITE_KEY]: saved[SITE_KEY] ?? null, _projects: projects, _systems: systems, _testimonials: testimonials };
+  return { ...Object.fromEntries(SECTIONS.map((d) => [d.key, merge(d, saved[d.key])])), _layout: cleanLayout(saved[LAYOUT_KEY]), [SITE_KEY]: saved[SITE_KEY] ?? null, _projects: projects, _systems: systems, _testimonials: testimonials, _faqs: faqs };
 }
 export async function loadOne(key: string) { const d = SECTION_BY_KEY[key]; const r = await db().prepare("SELECT data FROM site_content WHERE key=?").bind(key).first<{ data: string }>().catch(() => null); let s: unknown = null; try { s = r ? JSON.parse(r.data) : null; } catch { /* default */ } return { def: d, data: merge(d, s), customised: !!r }; }

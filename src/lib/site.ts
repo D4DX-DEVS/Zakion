@@ -26,11 +26,11 @@ export const SPACINGS_SITE = { Compact: "clamp(22px,calc(2.8*var(--u)),44px)", S
 
 export type SiteSettings = {
   primary: string; accent: string; headingFont: string; bodyFont: string;
-  width: keyof typeof WIDTHS; spacing: keyof typeof SPACINGS_SITE; backToTop: boolean; scrollAnimations: boolean; imageShine: boolean;
+  width: keyof typeof WIDTHS; spacing: keyof typeof SPACINGS_SITE; backToTop: boolean; calcButton: boolean; scrollAnimations: boolean; imageShine: boolean;
 };
 export const SITE_DEFAULTS: SiteSettings = {
   primary: DEFAULT_PRIMARY, accent: DEFAULT_ACCENT, headingFont: "Default", bodyFont: "Default",
-  width: "Standard", spacing: "Standard", backToTop: true, scrollAnimations: true, imageShine: true,
+  width: "Standard", spacing: "Standard", backToTop: true, calcButton: true, scrollAnimations: true, imageShine: true,
 };
 
 export const SITE_FIELDS: Field[] = [
@@ -41,6 +41,7 @@ export const SITE_FIELDS: Field[] = [
   { k: "width", label: "Content width", type: "select", options: Object.keys(WIDTHS), help: "How wide the page content is on a computer. Phones and tablets always use the full width." },
   { k: "spacing", label: "Space between blocks", type: "select", options: Object.keys(SPACINGS_SITE), help: "The gap above and below every block. A block's own spacing setting in Studio still wins." },
   { k: "backToTop", label: "Show the Back to top button", type: "bool" },
+  { k: "calcButton", label: "Show the Solar Calculator button on the left side", type: "bool", help: "A small tab on the left edge of every page (except the calculator itself). It shows only the icon; the name slides out when the mouse is over it." },
   { k: "scrollAnimations", label: "Animate blocks as they scroll into view", type: "bool", help: "Off shows everything straight away, with no fade-in and no counting numbers." },
   { k: "imageShine", label: "Moving light over images on hover", type: "bool", help: "Computer only." },
 ];
@@ -178,7 +179,7 @@ export type SettingsGroup = { key: string; title: string; help?: string; fields:
 export type SettingsTab = { id: string; label: string; sub: string; groups: SettingsGroup[] };
 
 export const SETTINGS_TABS: SettingsTab[] = [
-  { id: "layout", label: "Layout", sub: "How wide the pages are and how they behave.", groups: [{ key: "_site", title: "Page layout", fields: pick("_site", ["width", "spacing", "backToTop", "scrollAnimations", "imageShine"]) }] },
+  { id: "layout", label: "Layout", sub: "How wide the pages are and how they behave.", groups: [{ key: "_site", title: "Page layout", fields: pick("_site", ["width", "spacing", "backToTop", "calcButton", "scrollAnimations", "imageShine"]) }] },
   { id: "theme", label: "Theme colours", sub: "Two colours drive the whole site. Every other shade is worked out from them.", groups: [{ key: "_site", title: "Brand colours", fields: pick("_site", ["primary", "accent"]) }] },
   { id: "fonts", label: "Fonts", sub: "Pick the fonts for titles and for text.", groups: [{ key: "_site", title: "Fonts", fields: pick("_site", ["headingFont", "bodyFont"]) }] },
   { id: "header", label: "Header", sub: "The email and phone bar and the Contact and Brochure buttons at the top of every page.", groups: [

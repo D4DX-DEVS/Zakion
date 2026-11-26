@@ -36,16 +36,25 @@ h1,h2,h3,.elementor-heading-title{font-weight:700}
 .elementor-element.parallaxie.e-parent>.elementor-motion-effects-container>.elementor-motion-effects-layer,
 .page-header{background-image:var(--zk-banner,url("/zk/page-hero.jpg"))!important;background-size:cover!important;background-position:68% 40%!important;background-attachment:scroll!important}
 
+/* ---------- Corner buttons: WhatsApp (the Joinchat plugin) with Back to top above it ----------
+   Both are round, the same size (--zk-fab) and sit on one vertical line (--zk-fab-r from the right edge, --zk-fab-b from the bottom).
+   They get smaller on tablets and phones. */
+:root{--zk-fab:56px;--zk-fab-r:16px;--zk-fab-b:18px;--zk-fab-gap:12px}
+@media (max-width:900px){:root{--zk-fab:48px;--zk-fab-r:14px;--zk-fab-b:16px}}
+@media (max-width:600px){:root{--zk-fab:42px;--zk-fab-r:12px;--zk-fab-b:14px}}
+html body .joinchat{--s:var(--zk-fab);--sep:calc(var(--zk-fab-r) - 8px);--bottom:calc(var(--zk-fab-b) - 8px)}
+
 /* ---------- Back to top: sun button ---------- */
-.zk-top{position:fixed;right:clamp(14px,2vw,28px);bottom:clamp(88px,9vw,104px);z-index:9990;width:56px;height:56px;padding:0;border:0;border-radius:50%;cursor:pointer;
+/* its box is 8px smaller than --zk-fab: the white ring and the progress ring add 4px on every side, so the button looks as big as the WhatsApp one */
+.zk-top{position:fixed;right:calc(var(--zk-fab-r) + 4px);bottom:calc(var(--zk-fab-b) + var(--zk-fab) + var(--zk-fab-gap) + 4px);z-index:9990;width:calc(var(--zk-fab) - 8px);height:calc(var(--zk-fab) - 8px);min-width:0;min-height:0;padding:0!important;border:0!important;border-radius:50%!important;cursor:pointer;
   background:#fff;box-shadow:0 10px 26px rgba(var(--zr-082a5a,8,42,90),.3),0 0 0 4px #fff;color:var(--zc-082a5a,#082a5a);
   opacity:0;visibility:hidden;transform:translateY(40px) scale(.4) rotate(-90deg);transition:opacity .35s ease,transform .6s cubic-bezier(.34,1.56,.64,1),visibility 0s linear .6s,box-shadow .3s}
 .zk-top.show{opacity:1;visibility:visible;transform:none;transition:opacity .35s ease,transform .6s cubic-bezier(.34,1.56,.64,1),visibility 0s,box-shadow .3s}
 .zk-top:hover{box-shadow:0 14px 32px rgba(var(--zr-082a5a,8,42,90),.4),0 0 0 4px #fff}
 .zk-top:active{transform:scale(.92)}
 .zk-top:focus-visible{outline:3px solid var(--zc-0d3d7b,#0d3d7b);outline-offset:6px}
-.zk-top-core{position:absolute;inset:6px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 32% 28%,var(--zc-ffe08a,#ffe08a),var(--zc-fec142,#fec142) 55%,var(--zc-f5a800,#f5a800));box-shadow:inset 0 -3px 6px rgba(var(--zr-be7800,190,120,0),.35),inset 0 2px 4px rgba(255,255,255,.6)}
-.zk-top-arrow{grid-area:1/1;width:24px;height:24px;fill:none;stroke:var(--zc-082a5a,#082a5a);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;animation:zkBob 2.2s ease-in-out infinite}
+.zk-top-core{position:absolute;inset:calc(var(--zk-fab)*.107);border-radius:50%;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 32% 28%,var(--zc-ffe08a,#ffe08a),var(--zc-fec142,#fec142) 55%,var(--zc-f5a800,#f5a800));box-shadow:inset 0 -3px 6px rgba(var(--zr-be7800,190,120,0),.35),inset 0 2px 4px rgba(255,255,255,.6)}
+.zk-top-arrow{grid-area:1/1;width:calc(var(--zk-fab)*.43);height:calc(var(--zk-fab)*.43);fill:none;stroke:var(--zc-082a5a,#082a5a);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;animation:zkBob 2.2s ease-in-out infinite}
 .zk-top-arrow+.zk-top-arrow{transform:translateY(130%);animation:none}
 .zk-top:hover .zk-top-arrow{animation:none;transform:translateY(-130%);transition:transform .35s cubic-bezier(.5,0,.2,1)}
 .zk-top:hover .zk-top-arrow+.zk-top-arrow{transform:translateY(0)}
@@ -53,7 +62,7 @@ h1,h2,h3,.elementor-heading-title{font-weight:700}
 .zk-top-ring circle{fill:none;stroke-width:3}
 .zk-top-ring .bg{stroke:rgba(var(--zr-0d3d7b,13,61,123),.14)}
 .zk-top-ring .pg{stroke:var(--zc-0d3d7b,#0d3d7b);stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset .15s linear}
-.zk-top-rays{position:absolute;inset:-17px;border-radius:50%;pointer-events:none;opacity:0;transform:scale(.6);
+.zk-top-rays{position:absolute;inset:calc(var(--zk-fab)*-.3);border-radius:50%;pointer-events:none;opacity:0;transform:scale(.6);
   background:repeating-conic-gradient(var(--zc-fec142,#fec142) 0 7deg,transparent 7deg 30deg);-webkit-mask-image:radial-gradient(circle,transparent 58%,#000 60%,#000 100%);mask-image:radial-gradient(circle,transparent 58%,#000 60%,#000 100%);
   transition:opacity .35s ease,transform .5s cubic-bezier(.34,1.56,.64,1)}
 .zk-top:hover .zk-top-rays{opacity:.9;transform:scale(1);animation:zkRays 7s linear infinite}
@@ -62,7 +71,7 @@ h1,h2,h3,.elementor-heading-title{font-weight:700}
 @keyframes zkBob{0%,100%{transform:translateY(2px)}50%{transform:translateY(-3px)}}
 @keyframes zkRays{to{rotate:360deg}}
 @media (prefers-reduced-motion:reduce){.zk-top,.zk-top-arrow,.zk-top-rays{animation:none!important;transition:opacity .2s}}
-@media (max-width:600px){.zk-top{width:48px;height:48px}.zk-top-arrow{width:21px;height:21px}.zk-top-rays{inset:-14px}.zk-top-tip{display:none}}
+@media (max-width:600px){.zk-top-tip{display:none}}
 
 /* a header button the admin has switched off */
 .zk-hide{display:none!important}
@@ -87,3 +96,19 @@ h1,h2,h3,.elementor-heading-title{font-weight:700}
 body::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;z-index:60;pointer-events:none;
   background:linear-gradient(90deg,var(--zc-0d3d7b,#0d3d7b) 0%,var(--zc-0d3d7b,#0d3d7b) 20%,var(--zc-f5a800,#f5a800) 80%,var(--zc-f5a800,#f5a800) 100%);
   background:linear-gradient(90deg in oklab,var(--zc-0d3d7b,#0d3d7b) 0%,var(--zc-0d3d7b,#0d3d7b) 20%,var(--zc-f5a800,#f5a800) 80%,var(--zc-f5a800,#f5a800) 100%)}
+
+/* Solar Calculator tab on the left edge (markup: CALC_FLOAT in src/lib/chrome.ts). Icon only; the label slides out on hover or keyboard focus. */
+.zk-calc{position:fixed;left:0;top:50%;translate:0 -50%;z-index:900;display:flex;align-items:center;height:56px;max-width:56px;overflow:hidden;border-radius:0 999px 999px 0;background:linear-gradient(135deg,var(--zc-0b4ba3,#0b4ba3),var(--zc-082a5a,#082a5a));color:#fff;text-decoration:none;box-shadow:0 10px 26px rgba(var(--zr-082a5a,8,42,90),.35);transition:max-width .4s cubic-bezier(.22,.8,.24,1),box-shadow .25s}
+.zk-calc:hover,.zk-calc:focus-visible{max-width:250px;color:#fff;box-shadow:0 14px 32px rgba(var(--zr-082a5a,8,42,90),.45)}
+.zk-calc:focus-visible{outline:3px solid var(--zc-fec142,#fec142);outline-offset:2px}
+.zk-calc-ico{position:relative;display:grid;place-items:center;flex:none;width:56px;height:56px;color:var(--zc-fec142,#fec142)}
+.zk-calc-ico svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.zk-calc:hover .zk-calc-ico svg,.zk-calc:focus-visible .zk-calc-ico svg{transform:scale(1.12) rotate(-6deg)}
+.zk-calc-txt{padding:0 24px 0 2px;white-space:nowrap;font:600 17px/1 var(--zk-head,Rajdhani),sans-serif;letter-spacing:.015em;opacity:0;transition:opacity .15s}
+.zk-calc:hover .zk-calc-txt,.zk-calc:focus-visible .zk-calc-txt{opacity:1;transition:opacity .25s .12s}
+@keyframes zkCalcPing{0%{box-shadow:inset 0 0 0 0 rgba(var(--zr-fec142,254,193,66),.55)}70%,100%{box-shadow:inset 0 0 0 14px rgba(var(--zr-fec142,254,193,66),0)}}
+.zk-calc-ico::after{content:"";position:absolute;inset:6px;border-radius:50%;animation:zkCalcPing 2.6s ease-out infinite;pointer-events:none}
+.zk-calc:hover .zk-calc-ico::after{animation:none}
+@media (max-width:600px){.zk-calc{height:46px;max-width:46px}.zk-calc-ico{width:46px;height:46px}.zk-calc-ico svg{width:22px;height:22px}.zk-calc-txt{font-size:16px}}
+@media (prefers-reduced-motion:reduce){.zk-calc,.zk-calc-ico svg,.zk-calc-txt{transition:none}.zk-calc-ico::after{animation:none}}
+@media print{.zk-calc{display:none}}

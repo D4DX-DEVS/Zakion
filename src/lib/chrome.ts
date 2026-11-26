@@ -1,4 +1,4 @@
-// Parts that appear on every public page: the heading font, the scroll-motion switch and the "back to top" button.
+// Parts that appear on every public page: the heading font, the scroll-motion switch, the "back to top" button and the Solar Calculator tab.
 
 // Rajdhani is the logo's font; headings and the menu use it everywhere (rules in public/zk-wide.css).
 export const FONT_HEAD = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap">';
@@ -53,3 +53,10 @@ export const BACK_TO_TOP =
   `addEventListener('scroll',function(){if(!busy){busy=true;requestAnimationFrame(upd)}},{passive:true});` +
   `if('ResizeObserver' in window)new ResizeObserver(function(){size();upd()}).observe(document.body);addEventListener('resize',function(){size();upd()});size();upd();` +
   `b.addEventListener('click',function(){scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})})})();</script>`;
+
+// A tab on the left edge that opens the Solar Calculator: just the icon until the mouse (or keyboard focus) reaches it, then the label slides out.
+// Styles: .zk-calc in public/zk-wide.css. Switched on or off in Site settings > Layout; not shown on the calculator page itself.
+export const CALC_FLOAT =
+  `<a class="zk-calc" href="/solar-calculator/" aria-label="Solar Calculator">` +
+  `<span class="zk-calc-ico" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h.01M12 18h.01M16 18h.01"/></svg></span>` +
+  `<span class="zk-calc-txt" aria-hidden="true">Solar Calculator</span></a>`;

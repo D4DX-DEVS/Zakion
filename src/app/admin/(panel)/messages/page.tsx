@@ -4,27 +4,31 @@ import { ago, fmtDate } from "../../format";
 import { Icon } from "../../icons";
 import { ConfirmButton } from "../../ui";
 
-type M = { id: number; name: string; email: string; phone: string; subject: string; message: string; created_at: string };
+type M = { id: number; name: string; email: string; phone: string; subject: string; message: string; mail_status?: string; created_at: string };
 
+// How the email to the team went: set when the enquiry was sent (see api/contact). Older enquiries have no note.
+const mailChip = (s?: string) => (!s ? null : s === "sent" ? <span className="chip published" title="The team was emailed about this enquiry">Emailed</span> : s === "not configured" ? <span className="chip draft" title="Email sending is not set up yet, so only this list has the enquiry">Email not set up</span> : <span className="chip draft" title={s}>Email failed</span>);
+
+// Admin > Submissions: every enquiry sent through the website's contact form (the Contact page and the Home page), newest first.
 export default async function Messages() {
   const rows = (await db().prepare("SELECT * FROM messages ORDER BY id DESC").all<M>()).results;
   if (rows.length === 0) {
     return (
       <div className="card empty">
         <span className="eico"><Icon name="inbox" size={28} /></span>
-        <h3>No messages yet</h3>
-        <p>Contact form submissions will appear here.</p>
+        <h3>No submissions yet</h3>
+        <p>Enquiries sent through the contact form will appear here, and are emailed to the team.</p>
       </div>
     );
   }
   return (
     <>
-      <p className="lead page">{rows.length} {rows.length === 1 ? "message" : "messages"}, newest first.</p>
+      <p className="lead page">{rows.length} {rows.length === 1 ? "submission" : "submissions"}, newest first.</p>
       {rows.map(m => (
         <article className="card msg" key={m.id}>
           <span className="av" aria-hidden="true">{(m.name || "?").charAt(0)}</span>
           <div className="body">
-            <h3>{m.name || "Unknown sender"}{m.subject && <span className="chip blue">{m.subject}</span>}</h3>
+            <h3>{m.name || "Unknown sender"}{m.subject && <span className="chip blue" title="Interested in">{m.subject}</span>}{mailChip(m.mail_status)}</h3>
             <div className="meta">
               {m.email && <a href={"mailto:" + m.email}><Icon name="mail" size={16} />{m.email}</a>}
               {m.phone && <a href={"tel:" + m.phone.replace(/[^\d+]/g, "")}><Icon name="phone" size={16} />{m.phone}</a>}
@@ -35,7 +39,7 @@ export default async function Messages() {
               {m.email && <a className="btn sm" href={`mailto:${m.email}?subject=${encodeURIComponent("Re: " + (m.subject || "Your enquiry"))}`}><Icon name="mail" size={16} />Reply by email</a>}
               <form action={deleteMessage}>
                 <input type="hidden" name="id" value={m.id} />
-                <ConfirmButton className="btn del sm" message={`Delete the message from ${m.name}?`}><Icon name="trash" size={16} />Delete</ConfirmButton>
+                <ConfirmButton className="btn del sm" message={`Delete the submission from ${m.name}?`}><Icon name="trash" size={16} />Delete</ConfirmButton>
               </form>
             </div>
           </div>

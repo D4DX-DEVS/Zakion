@@ -33,12 +33,12 @@ export default async function Overview() {
     ...rows.filter((r) => SECTION_BY_KEY[r.key]).map((r): Act => ({ icon: SEC_ICON[r.key] ?? "layers", title: SECTION_BY_KEY[r.key].title, note: "Studio block edited", href: "/admin/studio?key=" + r.key, at: r.updated_at })),
     ...pg.results.map((r): Act => ({ icon: "file", title: r.title || r.path, note: "Page updated", href: "/admin/pages/edit?path=" + encodeURIComponent(r.path), at: r.updated_at })),
     ...ps.results.map((r): Act => ({ icon: "pen", title: r.title, note: r.status === "draft" ? "Draft saved" : "Blog post updated", href: "/admin/posts/" + r.id, at: r.updated_at })),
-    ...ms.results.map((r): Act => ({ icon: "inbox", title: r.name || "New message", note: "New message" + (r.subject ? ` · ${r.subject}` : ""), href: "/admin/messages", at: r.created_at })),
+    ...ms.results.map((r): Act => ({ icon: "inbox", title: r.name || "New submission", note: "New submission" + (r.subject ? ` · ${r.subject}` : ""), href: "/admin/messages", at: r.created_at })),
   ].sort((a, b) => time(b.at) - time(a.at)).slice(0, 7);
 
   const pulse: [IconName, string, number, string][] = [
     ["file", "Pages", pages, "/admin/pages"], ["pen", drafts ? `Posts · ${drafts} draft${drafts > 1 ? "s" : ""}` : "Posts", posts, "/admin/posts"],
-    ["image", "Library files", media, "/admin/media"], ["inbox", "Messages", msgs, "/admin/messages"],
+    ["image", "Library files", media, "/admin/media"], ["inbox", "Submissions", msgs, "/admin/messages"],
   ];
   const launch: [IconName, string, string, string][] = [
     ["layers", "Edit the home page", "Studio", "/admin/studio"], ["pen", "Write a post", "Blog", "/admin/posts/new"],

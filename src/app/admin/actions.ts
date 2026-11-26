@@ -11,7 +11,7 @@ import { passwordProblem } from "@/lib/password";
 import { htmlToText } from "@/lib/html";
 import { maxUpload, maxUploadLabel } from "@/lib/upload";
 import { fmtBytes } from "./format";
-import { type Field, ALL_KEYS, BANNER_PAGES, clean, cleanLayout, HOME_KEYS, CATEGORIES, NO_SYSTEM, PROJECT_FIELDS, SYSTEM_FIELDS, TESTIMONIAL_FIELDS, LAYOUT_KEY, loadContent, loadOne, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
+import { type Field, ALL_KEYS, BANNER_PAGES, clean, cleanLayout, HOME_KEYS, CATEGORIES, NO_SYSTEM, FAQ_FIELDS, PROJECT_FIELDS, SYSTEM_FIELDS, TESTIMONIAL_FIELDS, LAYOUT_KEY, loadContent, loadOne, PAGE_DEFAULTS, SECTION_BY_KEY, SITE_KEY, SPACINGS, sanitize, type Layout } from "@/lib/content";
 import { PAGE_PLAN } from "@/lib/home";
 import { bannerKey } from "@/lib/banners";
 import { CONTACT_NETS, cleanSite, SITE_DEFAULTS, siteOf, TAB_BY_ID } from "@/lib/site";
@@ -371,6 +371,83 @@ export async function toggleTestimonial(f: FormData) {
     await purgeSite(testimonialPaths());
   }
   redirect("/admin/testimonials?toggled=" + (x?.status === "published" ? "hidden" : "shown"));
+}
+
+// ---- FAQs (table "faqs"): the questions and answers on the FAQ page ----
+
+/** The page the questions show on. */
+const faqPaths = () => ["/faq/"];
+/** The editor sends the question as one JSON field (see FAQ_FIELDS in lib/content.ts); "key" is its id, or "new". */
+export async function saveFaq(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "key");
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("data") ?? "{}")); } catch { redirect("/admin/faqs/" + encodeURIComponent(id) + "?error=1"); }
+  const d = clean(FAQ_FIELDS, raw, {}) as Record<string, any>;
+  const question = String(d.question).trim().slice(0, 300);
+  if (!question) redirect("/admin/faqs/" + encodeURIComponent(id) + "?error=empty");
+  const answer = String(d.answer).trim().slice(0, 6000);
+  const category = String(d.category).trim().slice(0, 60) || "General";
+  const status = d.visible === "Hidden" ? "draft" : "published";
+  let sort = Math.round(Number(d.sort)) || 0;
+  if (id === "new") {
+    if (sort < 1) sort = ((await db().prepare("SELECT MAX(sort) AS m FROM faqs").first<{ m: number | null }>())?.m ?? 0) + 1; // no position given: last
+    const r = await db().prepare("INSERT INTO faqs (question,answer,category,sort,status) VALUES (?,?,?,?,?)").bind(question, answer, category, sort, status).run();
+    await renumberFaqs([], Number(r.meta.last_row_id), sort);
+    await purgeSite(faqPaths());
+    redirect("/admin/faqs/" + r.meta.last_row_id + "?saved=1");
+  }
+  const old = await db().prepare("SELECT id, sort FROM faqs WHERE id=?").bind(id).first<{ id: number; sort: number }>();
+  if (!old) redirect("/admin/faqs");
+  if (sort < 1) sort = old.sort;
+  await db().prepare("UPDATE faqs SET question=?,answer=?,category=?,sort=?,status=?,updated_at=datetime('now') WHERE id=?").bind(question, answer, category, sort, status, id).run();
+  await renumberFaqs([], Number(id), sort);
+  await purgeSite(faqPaths());
+  redirect("/admin/faqs/" + id + "?saved=1");
+}
+export async function deleteFaq(f: FormData) {
+  await requireAdmin();
+  await db().prepare("DELETE FROM faqs WHERE id=?").bind(s(f, "key")).run();
+  await renumberFaqs([]);
+  await purgeSite(faqPaths());
+  redirect("/admin/faqs?deleted=1");
+}
+/** Renumbers the questions 1, 2, 3 ... : first the ids in "first" in that order, or (with "pin") the question "pin" at position "at" among the others; the rest keep their order. */
+async function renumberFaqs(first: number[], pin?: number, at?: number) {
+  const all = await db().prepare("SELECT id FROM faqs ORDER BY sort, id").all<{ id: number }>().then((r) => r.results.map((x) => x.id));
+  let order = [...first.filter((id) => all.includes(id)), ...all.filter((id) => !first.includes(id))];
+  if (pin !== undefined && at !== undefined && order.includes(pin)) { order = order.filter((id) => id !== pin); order.splice(Math.max(0, Math.min(order.length, at - 1)), 0, pin); }
+  if (order.length) await db().batch(order.map((id, i) => db().prepare("UPDATE faqs SET sort=? WHERE id=?").bind(i + 1, id)));
+  return order;
+}
+/** Moves a question one place up or down the FAQ page (the up and down arrows in the list). */
+export async function moveFaq(f: FormData) {
+  await requireAdmin();
+  const id = Number(s(f, "key")), step = s(f, "dir") === "up" ? -1 : 1;
+  const order = await db().prepare("SELECT id FROM faqs ORDER BY sort, id").all<{ id: number }>().then((r) => r.results.map((x) => x.id));
+  const i = order.indexOf(id), j = i + step;
+  if (i >= 0 && j >= 0 && j < order.length) { [order[i], order[j]] = [order[j], order[i]]; await renumberFaqs(order); await purgeSite(faqPaths()); }
+  redirect("/admin/faqs");
+}
+/** Sets the whole order in one go (a row dragged to a new place in the list). */
+export async function reorderFaqs(f: FormData) {
+  await requireAdmin();
+  let raw: unknown;
+  try { raw = JSON.parse(String(f.get("keys") ?? "[]")); } catch { raw = []; }
+  await renumberFaqs((Array.isArray(raw) ? raw : []).map(Number).filter((n) => Number.isInteger(n)));
+  await purgeSite(faqPaths());
+  redirect("/admin/faqs");
+}
+/** Hides a shown question or shows a hidden one (the question is kept either way). */
+export async function toggleFaq(f: FormData) {
+  await requireAdmin();
+  const id = s(f, "key");
+  const x = await db().prepare("SELECT status FROM faqs WHERE id=?").bind(id).first<{ status: string }>();
+  if (x) {
+    await db().prepare("UPDATE faqs SET status=?, updated_at=datetime('now') WHERE id=?").bind(x.status === "published" ? "draft" : "published", id).run();
+    await purgeSite(faqPaths());
+  }
+  redirect("/admin/faqs?toggled=" + (x?.status === "published" ? "hidden" : "shown"));
 }
 
 // ---- page sections (src/lib/content.ts): one JSON document per section, merged over the built-in defaults ----

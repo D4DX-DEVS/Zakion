@@ -5,7 +5,7 @@ import { htmlToText } from "./html";
 import { stripLegacyBlocks } from "./legacy-blocks";
 import { applyPage, HOME_HEAD, PAGE_PLAN, replaceMain } from "./home";
 import { type Content, loadContent, type Project, type System } from "./content";
-import { BACK_TO_TOP, FONT_HEAD, LIGHT_JS, MOTION_EARLY, MOTION_JS } from "./chrome";
+import { BACK_TO_TOP, CALC_FLOAT, FONT_HEAD, LIGHT_JS, MOTION_EARLY, MOTION_JS } from "./chrome";
 import { swapFooter } from "./footer";
 import { applyHeader } from "./header";
 import { renderSections, SCRIPT_EARLY } from "./sections";
@@ -17,7 +17,7 @@ export type Post = { id: number; slug: string; title: string; excerpt: string; c
 export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const fmtDate = (d: string) => new Date(d.replace(" ", "T") + "Z").toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
 
-const FORM_JS = `<script>document.addEventListener('submit',async function(e){var f=e.target;if(!f.classList||!f.classList.contains('wpcf7-form'))return;e.preventDefault();var out=f.querySelector('.wpcf7-response-output');var b=f.querySelector('[type=submit]');b&&(b.disabled=true);try{var r=await fetch('/api/contact',{method:'POST',body:new FormData(f)});var j=await r.json();out.textContent=j.message;out.style.display='block';if(j.ok)f.reset()}catch(x){out.textContent='Something went wrong. Please try again.';out.style.display='block'}b&&(b.disabled=false)});</script>`;
+const FORM_JS = `<script>document.addEventListener('submit',async function(e){var f=e.target;if(!f.classList||!f.classList.contains('wpcf7-form'))return;e.preventDefault();var out=f.querySelector('.wpcf7-response-output');var b=f.querySelector('[type=submit]');function say(t,bad){if(!out)return;out.textContent=t;out.classList.toggle('is-bad',!!bad);out.style.display='block'}b&&(b.disabled=true);try{var r=await fetch('/api/contact',{method:'POST',body:new FormData(f)});var j=await r.json();if(j.ok){f.reset();if(out)out.style.display='none';var d=document.getElementById('zk-thanks');if(d&&d.showModal){if(!d.open)d.showModal()}else say(j.message,false)}else say(j.message,true)}catch(x){say('Something went wrong. Please try again.',true)}b&&(b.disabled=false)});document.addEventListener('click',function(e){var d=document.getElementById('zk-thanks');if(d&&d.open&&(e.target===d||(e.target.closest&&e.target.closest('#zk-thanks [data-close]'))))d.close()});</script>`;
 
 // search snippets cut off around 155 characters
 const clip = (s: string) => (s.length <= 155 ? s : s.slice(0, 155).replace(/\s+\S*$/, "") + "…");
@@ -64,8 +64,8 @@ function document_(p: Page, body: string, c: Content, post?: Post, deck = false)
   return `<!doctype html><html lang="en-US"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${site.scrollAnimations ? MOTION_EARLY : ""}<title>${t}</title>` +
     (p.description ? `<meta name="description" content="${esc(p.description)}">` : "") +
     `<meta property="og:title" content="${t}">` + seoHead(p, post, isPlaceholder(body), sameAs.length ? sameAs : undefined) +
-    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${head}${PUBLIC_CSS}<link rel="stylesheet" href="/zk-deck.css?v=15">${FONT_HEAD}<link rel="stylesheet" href="/zk-wide.css?v=11">${p.path in PAGE_PLAN || p.path.startsWith("/projects/") || deck ? HOME_HEAD : ""}<link rel="stylesheet" href="/zk-footer.css?v=2"><link rel="stylesheet" href="/zk-motion.css?v=14"><link rel="stylesheet" href="/zk-menu.css?v=10">${siteHead(site)}</head>` +
-    `<body class="${esc(p.body_class)}">${improveBody(swapFooter(noSmoothScroll(applyHeader(body, c, p.path)), c), post ? post.title : p.title.split(/ [–|] /)[0])}${site.scrollAnimations ? MOTION_JS : ""}${site.imageShine ? LIGHT_JS : ""}${noSmoothScroll(foot)}${FORM_JS}${site.backToTop ? BACK_TO_TOP : ""}<script src="/zk-deck.js?v=12" defer></script></body></html>`;
+    `<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192"><link rel="apple-touch-icon" href="/apple-touch-icon.png">${head}${PUBLIC_CSS}<link rel="stylesheet" href="/zk-deck.css?v=15">${FONT_HEAD}<link rel="stylesheet" href="/zk-wide.css?v=15">${p.path in PAGE_PLAN || p.path.startsWith("/projects/") || deck ? HOME_HEAD : ""}<link rel="stylesheet" href="/zk-footer.css?v=2"><link rel="stylesheet" href="/zk-motion.css?v=14"><link rel="stylesheet" href="/zk-menu.css?v=11">${siteHead(site)}</head>` +
+    `<body class="${esc(p.body_class)}">${improveBody(swapFooter(noSmoothScroll(applyHeader(body, c, p.path)), c), post ? post.title : p.title.split(/ [–|] /)[0])}${site.scrollAnimations ? MOTION_JS : ""}${site.imageShine ? LIGHT_JS : ""}${noSmoothScroll(foot)}${FORM_JS}${site.backToTop ? BACK_TO_TOP : ""}${site.calcButton && p.path !== "/solar-calculator/" ? CALC_FLOAT : ""}<script src="/zk-deck.js?v=12" defer></script></body></html>`;
 }
 
 const html = (s: string, status = 200) => {

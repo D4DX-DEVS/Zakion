@@ -988,15 +988,28 @@ dialog.zh-vlb .zh-vlb-x:hover{background:#fec142!important}
 .zh-pd-tm figcaption{margin-top:10px;font-size:15px;font-weight:600;color:var(--navy)}
 .zh-pd-tm figcaption::before{content:"— ";color:var(--amber-d,#e89a00)}
 /* environmental benefits: grey and green pictures with the figures beside them, shown as entered (no counting) */
-.zh-env{margin-top:clamp(34px,4.4vw,62px);padding:clamp(20px,2.6vw,38px) clamp(20px,3vw,44px);border-radius:22px;background:#fff;border:1px solid var(--zc-e4ebf7,#e4ebf7);box-shadow:0 12px 32px rgba(var(--zr-082a5a,8,42,90),.07)}
-.zh .zh-env-h{margin:0 0 clamp(14px,1.8vw,24px);padding-bottom:clamp(12px,1.4vw,18px);border-bottom:2px solid var(--zc-edf0f5,#edf0f5);font:700 clamp(24px,2.4vw,34px)/1.15 var(--zk-head,Rajdhani),sans-serif;color:var(--zc-2b3340,#2b3340)}
-.zh-env-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(18px,3vw,44px) clamp(20px,4vw,60px)}
-.zh-env-i{display:flex;align-items:center;gap:clamp(14px,2vw,28px)}
-.zh-env-i img{flex:none;width:clamp(96px,11vw,150px);height:auto}
-.zh-env-i span{display:block;font-size:clamp(17px,1.7vw,24px);color:var(--zc-6b7280,#6b7280)}
-.zh-env-i b{display:block;margin-top:4px;font:700 clamp(22px,2.2vw,32px)/1.15 var(--zk-head,Rajdhani),sans-serif;color:var(--zc-2b3340,#2b3340)}
+/* Environmental benefits: a sticker on the project picture, pinned to its lower left corner and tilted a little (it straightens on hover) */
+.zh-pd-sticker{position:absolute;z-index:2;left:clamp(12px,1.6vw,22px);bottom:clamp(12px,1.6vw,22px);width:min(236px,calc(100% - 24px));padding:10px 14px 9px;border-radius:16px;background:#fff;border:3px solid #fff;box-shadow:0 14px 30px rgba(4,18,43,.34),0 0 0 1px rgba(8,42,90,.08);rotate:-2deg;transform-origin:0 100%;transition:rotate .3s ease}
+.zh-pd-main:hover .zh-pd-sticker{rotate:0deg}
+.zh .zh-st-h{margin:0 0 6px;padding-bottom:6px;border-bottom:2px solid var(--amber);font:700 14.5px/1.2 var(--zk-head,Rajdhani),sans-serif;letter-spacing:.02em;color:var(--navy)}
+.zh-st-grid{display:grid;gap:5px}
+.zh-st-i{display:flex;align-items:center;gap:11px}
+/* (the picture's own rule, .zh-pd-main img, stretches every image inside it, so the icons say what they are) */
+.zh-pd-main .zh-st-i img{position:static;inset:auto;display:block;flex:none;width:44px;height:auto;aspect-ratio:auto;object-fit:contain}
+.zh-st-i span{display:block;font-size:12px;line-height:1.2;color:var(--zc-6b7280,#6b7280)}
+.zh-st-i b{display:block;margin-top:1px;font:700 17px/1.15 var(--zk-head,Rajdhani),sans-serif;color:var(--zc-2b3340,#2b3340)}
+@media (prefers-reduced-motion:reduce){.zh-pd-sticker{transition:none}}
 @media (max-width:900px){.zh-pd-tm--both{grid-template-columns:1fr}}
-@media (max-width:640px){.zh-pd-row{grid-template-columns:1fr;gap:2px}.zh-env-grid{grid-template-columns:1fr}.zh-pd-play{width:58px;height:58px;margin:-29px 0 0 -29px}}
+@media (max-width:640px){.zh-pd-row{grid-template-columns:1fr;gap:2px}.zh-pd-play{width:58px;height:58px;margin:-29px 0 0 -29px}
+  /* phones: the sticker becomes a strip along the bottom of the picture, the benefits side by side */
+  .zh-pd-sticker{left:10px;right:10px;bottom:10px;width:auto;padding:9px 10px 8px;rotate:0deg}
+  .zh .zh-st-h{margin-bottom:6px;padding-bottom:5px;font-size:13px}
+  .zh-st-grid{grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+  .zh-st-i{flex-direction:column;gap:3px;text-align:center}
+  .zh-pd-main .zh-st-i img{width:40px}
+  .zh-st-i span{font-size:11px}
+  .zh-st-i b{font-size:15px}
+}
 
 .zh-ams-cta{display:flex;justify-content:center;margin-top:clamp(24px,3vw,40px)}
 
@@ -1023,7 +1036,8 @@ dialog.zh-vlb .zh-vlb-x:hover{background:#fec142!important}
 .elementor .zh-slts a.zh-slt-btn--line,.elementor .zh-slts a.zh-slt-btn--line:visited{background:transparent;border-color:rgba(255,255,255,.9);color:#fff}
 .elementor .zh-slts a.zh-slt-btn--line:hover{background:#fff;border-color:#fff;color:#0d3d7b}
 /* a dark veil on the left keeps the text readable over any picture */
-.zh-slt:has(.zh-slt-in)::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,18,43,.78),rgba(4,18,43,.4) 55%,transparent);pointer-events:none}
+/* (it reaches left over the banner's own side padding, so no strip of unshaded picture is left at the screen edge) */
+.zh-slt:has(.zh-slt-in)::before{content:"";position:absolute;inset:0 0 0 calc(-1*var(--padding-left,0px));background:linear-gradient(90deg,rgba(4,18,43,.78),rgba(4,18,43,.4) 55%,transparent);pointer-events:none}
 @media (max-width:767px){
   .zh-hero-vid>.zh-slts{pointer-events:auto;display:block}
   /* under the video only the text of the slide on show takes room (a slide without text leaves no empty block) */

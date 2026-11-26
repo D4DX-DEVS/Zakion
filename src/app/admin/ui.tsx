@@ -15,9 +15,10 @@ const NAV: Nav[] = [
   { href: "/admin/projects", label: "Projects", icon: "grid", group: "Content", sub: "Add and edit the projects on the Projects page: the cards, the filter tabs and each project's own page." },
   { href: "/admin/systems", label: "Systems", icon: "sun", group: "Content", sub: "Add and edit the system types on the Solutions page: each has a card with a picture and a Read More button, and its own page." },
   { href: "/admin/testimonials", label: "Testimonials", icon: "quote", group: "Content", sub: "Add and edit what customers say: written quotes and videos. The latest show in the Home page carousel; all of them are on the Testimonials page." },
+  { href: "/admin/faqs", label: "FAQs", icon: "help", group: "Content", sub: "Add, edit, reorder and delete the questions and answers on the FAQ page." },
   { href: "/admin/posts", label: "Blog posts", icon: "pen", group: "Content", sub: "Write, edit and publish your articles." },
   { href: "/admin/media", label: "Library", icon: "image", group: "Library", sub: "Upload and manage images, videos and PDFs." },
-  { href: "/admin/messages", label: "Inbox", icon: "inbox", group: "Inbox", sub: "Enquiries sent through your contact form." },
+  { href: "/admin/messages", label: "Submissions", icon: "inbox", group: "Submissions", sub: "Every enquiry sent through the website's contact form, with the visitor's details. Each one is also emailed to the team." },
   { href: "/admin/account", label: "Account", icon: "user", group: "Account", sub: "Change your password and recovery code." },
 ];
 
@@ -41,6 +42,7 @@ function Palette({ open, onClose, sections, tabs, pages }: { open: boolean; onCl
     { label: "Add a project", hint: "Action", href: "/admin/projects/new", icon: "plus" },
     { label: "Add a system", hint: "Action", href: "/admin/systems/new", icon: "plus" },
     { label: "Add a testimonial", hint: "Action", href: "/admin/testimonials/new", icon: "plus" },
+    { label: "Add a FAQ", hint: "Action", href: "/admin/faqs/new", icon: "plus" },
     { label: "Upload to the library", hint: "Action", href: "/admin/media", icon: "upload" },
     ...pages.map((p): Cmd => ({ label: `${p.title} page`, hint: "Pages: edit sections", href: pageHref(p), icon: "file" })),
     ...tabs.map((t): Cmd => ({ label: t.label, hint: "Site settings", href: "/admin/settings?tab=" + t.id, icon: "settings" })),

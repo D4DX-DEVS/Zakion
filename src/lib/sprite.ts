@@ -52,4 +52,13 @@ export const SPRITE = `<svg width="0" height="0" style="position:absolute" aria-
 <symbol id="zi-gauge" viewBox="0 0 24 24"><path d="M4 17a8 8 0 1 1 16 0"/><path d="m12 17 4-6"/><path d="M12 5v2M5.600 8.600l1.400 1.400M18.400 8.600 17 10"/></symbol>
 <symbol id="zi-power" viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M6.300 6.300a8 8 0 1 0 11.400 0"/></symbol>
 <symbol id="zi-cycle" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14-4L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14 4l2-2"/><path d="M20 20v-5h-5"/></symbol>
+<symbol id="zi-download" viewBox="0 0 24 24"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></symbol>
+<symbol id="zi-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.500"/><circle cx="18" cy="6" r="2.500"/><circle cx="18" cy="18" r="2.500"/><path d="m8.200 10.800 7.600-3.600M8.200 13.200l7.600 3.600"/></symbol>
+<symbol id="zi-tree" viewBox="0 0 24 24"><path d="M12 21v-5M12 3 7 10h3l-4 6h12l-4-6h3z"/></symbol>
+<symbol id="zi-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 18h.01M12 18h.01M16 18h.01"/></symbol>
+<symbol id="zi-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+<symbol id="zi-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13.500 6.500l4 4"/></symbol>
+<symbol id="zi-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.500 21a7.500 7.500 0 0 1 15 0"/></symbol>
+<symbol id="zi-dots" viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3.200"/></symbol>
+<symbol id="zi-bess" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="m12.800 8-2.600 4.200h3.600L11.200 17"/></symbol>
 </defs></svg>`;

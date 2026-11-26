@@ -1,5 +1,5 @@
 // HTML builders for the page sections. Each one renders from the editable content in lib/content.ts (defaults + admin edits).
-import { CATEGORIES, Content, ICONS, parseFeatures, parseGallery, type Project, safeUrl, type System, type Testimonial } from "./content";
+import { CATEGORIES, Content, type Faq, ICONS, parseFeatures, parseGallery, type Project, safeUrl, type System, type Testimonial } from "./content";
 import { richOrText } from "./html";
 import { ic, SPRITE } from "./sprite";
 import { NEON_HOUSE, PHOTO_FX } from "./neon-house";
@@ -340,14 +340,14 @@ const projectDetail = (c: Content) => {
     ? `<h2 class="zh-pd-h">Client Testimonial</h2><figure class="zh-pd-tm${tmMedia && tmQuote ? " zh-pd-tm--both" : ""}">${tmMedia ? `<div class="zh-pd-tmm">${tmMedia}</div>` : ""}` +
       `${tmQuote ? `<blockquote class="zh-pd-tmq"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M10 6H6.5A2.5 2.5 0 0 0 4 8.5V13a2.5 2.5 0 0 0 2.5 2.5H8c0 1.7-.9 2.8-2.5 3.5l.7 1.5C9 19.3 10.5 17 10.5 13.5V6zM20 6h-3.5A2.5 2.5 0 0 0 14 8.5V13a2.5 2.5 0 0 0 2.5 2.5H18c0 1.7-.9 2.8-2.5 3.5l.7 1.5c2.8-1.2 4.3-3.5 4.3-7V6z"/></svg><p>${rt(tmQuote)}</p><footer>${esc(p.title)}</footer></blockquote>` : `<figcaption>${esc(p.title)}</figcaption>`}</figure>${tmVideo ? TC_JS : ""}`
     : "";
-  // environmental benefits: numbers entered per project, shown as they are (no counting animation)
+  // environmental benefits: numbers entered per project, shown as they are (no counting animation), as a sticker on the project picture
   const env = (icon: string, label: string, value: string, unit: string, w: number, h: number) =>
-    parseFloat(value) > 0 ? `<div class="zh-env-i"><img src="/zk/env-${icon}.png" alt="" width="${w}" height="${h}" loading="lazy" decoding="async"><div><span>${label}</span><b>${esc(String(parseFloat(value)))}${unit}</b></div></div>` : "";
+    parseFloat(value) > 0 ? `<div class="zh-st-i"><img src="/zk/env-${icon}.png" alt="" width="${w}" height="${h}" loading="lazy" decoding="async"><div><span>${label}</span><b>${esc(String(parseFloat(value)))}${unit}</b></div></div>` : "";
   const benefits = env("co2", "CO<sub>2</sub> Saved", p.co2, "t", 172, 115) + env("trees", "Tree Equivalence", p.trees, " Trees", 139, 120) + env("coal", "Coal Saved", p.coal, "t", 126, 104);
   return `<section class="zh zh-pd" id="project"><div class="zh-wrap">
 <a class="zh-pd-back" href="/projects/">${ARROW_L}<span>Back to Projects</span></a>
 <div class="zh-pd-hero">
- <figure class="zh-pd-main">${p.image ? img(p.image, p.title, 960, 640) : ""}</figure>
+ <figure class="zh-pd-main">${p.image ? img(p.image, p.title, 960, 640) : ""}${benefits ? `<div class="zh-pd-sticker" role="group" aria-label="Environmental benefits"><p class="zh-st-h">Environmental Benefits</p><div class="zh-st-grid">${benefits}</div></div>` : ""}</figure>
  <div class="zh-pd-info"><h1>${esc(p.title)}</h1><div class="zh-pd-meta">${p.location ? `<p class="zh-pc-loc">${PIN}<span>${esc(p.location)}</span></p>` : ""}${stageChip(p, "zh-pd-stage")}</div>
   ${specs ? `<dl class="zh-pd-specs">${specs}</dl>` : ""}</div>
 </div>
@@ -357,7 +357,6 @@ ${gallery.length ? `<h2 class="zh-pd-h">Project Gallery</h2>
 <div class="zh-pd-car"><div class="zh-pd-track" tabindex="0" role="region" aria-label="Project gallery">${gallery.map((g, i) => `<button type="button" class="zh-pd-th" data-full="${url(g)}" data-alt="${esc(p.title)} picture ${i + 1}" aria-label="Open picture ${i + 1} of ${gallery.length}"><img src="${url(g)}" alt="" loading="lazy" decoding="async"></button>`).join("")}</div>
 <button type="button" class="zh-pd-gp" aria-label="Previous pictures">${ARROW_L}</button><button type="button" class="zh-pd-gn" aria-label="Next pictures">${ARROW_R}</button></div>
 <dialog class="zh-lb" aria-label="Project picture"><button type="button" class="zh-lb-x" aria-label="Close">×</button><button type="button" class="zh-lb-p" aria-label="Previous picture">${ARROW_L}</button><img alt=""><button type="button" class="zh-lb-n" aria-label="Next picture">${ARROW_R}</button></dialog>${PD_JS}` : ""}
-${benefits ? `<div class="zh-env"><h2 class="zh-env-h">Environmental Benefits</h2><div class="zh-env-grid">${benefits}</div></div>` : ""}
 ${related.length ? `<div class="zh-pd-rh"><h2 class="zh-pd-h">Related Projects</h2><a class="zh-pd-all" href="/projects/">View All Projects${ARROW_R}</a></div>
 <div class="zh-pf-grid">${related.map((x) => projectCard(x, readMore)).join("")}</div>` : ""}
 </div></section>`;
@@ -532,6 +531,14 @@ const cta = (c: Content) => { const a = c.cta; return `<section class="zh zh-cta
 // Arriving with ?interest=AMC (the Enquire about AMC button) picks the matching option of "I am interested in": an exact match, else an option that contains the word.
 const INTEREST_JS = `<script>(function(){var q=(new URLSearchParams(location.search).get('interest')||'').toLowerCase();if(!q)return;var r=[].slice.call(document.querySelectorAll('.zh-chips input[name=Subject]')),m=r.filter(function(i){return i.value.toLowerCase()===q})[0]||r.filter(function(i){return i.value.toLowerCase().indexOf(q)>-1})[0];if(m)m.checked=true})();</script>`;
 
+// The icon of an interest option: picked from the words in its label (the options are free text in the admin).
+const interestIcon = (label: string) => {
+  const t = label.toLowerCase();
+  return /hybrid/.test(t) ? "battery" : /battery|bess|storage/.test(t) ? "bess" : /grid/.test(t) ? "panel" : /amc|service|maintenance/.test(t) ? "wrench" : /other/.test(t) ? "dots" : "bolt";
+};
+// A heading without any ==highlight== gets its "Free Consultation" highlighted, so a heading saved before the redesign matches the new look.
+const accentTitle = (t: unknown) => { const x = String(t ?? ""); return x.includes("==") ? x : x.replace(/(free consultation)/i, "==$1=="); };
+
 const contact = (c: Content, o: { map?: boolean } = {}) => {
   const k = c.contact; const phones = lines(k.phones); const addr = lines(k.addresses);
   const social = [["facebook", "Facebook", "fb"], ["instagram", "Instagram", "ig"], ["linkedin", "LinkedIn", "in"], ["whatsapp", "WhatsApp", "wa"]].filter(([key]) => safeUrl(k[key]));
@@ -539,9 +546,16 @@ const contact = (c: Content, o: { map?: boolean } = {}) => {
   const web = safeUrl(k.website) || ("https://" + String(k.website).replace(/^https?:\/\//, ""));
   const item = (icon: string, label: string, body: string) => `<li class="zh-ci zr"><span class="zh-ci-ic">${ic(icon)}</span><div><small>${label}</small>${body}</div></li>`;
   const interests = lines(k.interests);
+  const perks = (Array.isArray(k.perks) ? k.perks : []).filter((p: any) => String(p?.title ?? "").trim());
+  const photo = safeUrl(k.formImage);
+  const field = (icon: string, input: string, cls = "") => `<label class="zh-fld${cls ? " " + cls : ""}">${ic(icon)}${input}</label>`;
+  const media = photo || perks.length
+    ? `<div class="zh-cc-media${photo ? "" : " zh-cc-media--plain"}" aria-label="Why choose solar">${photo ? `<svg class="zh-about-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs><clipPath id="zh-ccblob" clipPathUnits="objectBoundingBox"><path d="M.27 0H1V1H.2C.08.9.01.74.01.55.01.31.12.1.27 0Z"/></clipPath></defs></svg><div class="zh-cc-img">${img(photo, "A home with solar panels on the roof", 736, 1012)}</div>` : ""}
+${perks.length ? `<ul class="zh-cc-perks">${perks.map((p: any) => `<li><span class="zh-cc-pi">${ic((ICONS as readonly string[]).includes(p.icon) ? p.icon : "bolt")}</span><div><b>${esc(p.title)}</b>${String(p.text ?? "").trim() ? `<small>${esc(p.text)}</small>` : ""}</div></li>`).join("")}</ul>` : ""}</div>`
+    : "";
   return `<section class="zh zh-contact" id="contact"><div class="zh-ct-bg" aria-hidden="true"><i></i><i></i></div><div class="zh-wrap">
 <header class="zh-ct-head">${k.eyebrow ? `<span class="zh-ct-eye zr">${esc(k.eyebrow)}</span>` : ""}<h2 class="zh-ct-h zr">${rt(k.heading)}</h2><span class="zh-amberbar zr"></span></header>
-<div class="zh-ct-grid">
+<div class="zh-ct-grid zh-ct-grid--cc">
  <aside class="zh-ct-info zr zr-l">
   <ul class="zh-cis">
    ${phones.length ? item("phone", "Call us", phones.map((p) => `<a href="${esc(tel(p))}">${esc(p)}</a>`).join("")) : ""}
@@ -552,21 +566,108 @@ const contact = (c: Content, o: { map?: boolean } = {}) => {
   <div class="zh-ct-qr">${k.qr ? img(k.qr, "QR code to visit the Zakion Energy website", 149, 148) : ""}<div><h3>${rt(k.scanTitle)}</h3><p>${rt(k.scanText)}</p>
    <span class="zh-ct-soc">${social.map(([key, label, icon]) => `<a href="${url(k[key])}" aria-label="${label}" rel="noopener">${ic(icon)}</a>`).join("")}</span></div></div>
  </aside>
- <form class="wpcf7-form zh-form zh-ct-form zr zr-r" method="post" action="/api/contact" novalidate>
-  <h3>${rt(k.scheduleTitle)}</h3><p class="zh-ct-sub">${rt(k.scheduleText)}</p>
-  <div class="zh-fg"><input name="FullName" placeholder="Full name" aria-label="Full name" required autocomplete="name"><input name="Phone" type="tel" placeholder="Phone" aria-label="Phone" required autocomplete="tel"><input class="wide" name="Email" type="email" placeholder="Email" aria-label="Email" required autocomplete="email"></div>
-  ${interests.length ? `<fieldset class="zh-chips"><legend>I am interested in</legend><div>${interests.map((x, i) => `<label><input type="radio" name="Subject" value="${esc(x)}"${i === 0 ? " checked" : ""}><span>${esc(x)}</span></label>`).join("")}</div></fieldset>` : ""}
-  <textarea name="Write" rows="3" placeholder="Location and average monthly electricity bill (optional)" aria-label="Message"></textarea>
-  <button class="zh-btn" type="submit">${esc(k.button)} ${ic("arrow-r")}</button>
-  <div class="wpcf7-response-output" role="status" style="display:none"></div>
- </form>
+ <div class="zh-cc zr zr-r"><div class="zh-cc-in">
+  <form class="wpcf7-form zh-form zh-cc-form" method="post" action="/api/contact" novalidate>
+   <span class="zh-cc-bar" aria-hidden="true"></span>
+   <h3>${rt(accentTitle(k.scheduleTitle))}</h3><p class="zh-ct-sub">${rt(k.scheduleText)}</p>
+   <div class="zh-fg">${field("user", '<input name="FullName" placeholder="Full name" aria-label="Full name" required autocomplete="name">')}${field("phone", '<input name="Phone" type="tel" placeholder="Phone" aria-label="Phone" required autocomplete="tel">')}${field("mail", '<input name="Email" type="email" placeholder="Email" aria-label="Email" required autocomplete="email">', "wide")}</div>
+   ${interests.length ? `<fieldset class="zh-chips"><legend>I am interested in</legend><div>${interests.map((x, i) => `<label><input type="radio" name="Subject" value="${esc(x)}"${i === 0 ? " checked" : ""}><span>${ic(interestIcon(x))}${esc(x)}<i class="zh-chk">${ic("check")}</i></span></label>`).join("")}</div></fieldset>` : ""}
+   ${field("doc", '<textarea name="Write" rows="3" placeholder="Location and average monthly electricity bill (optional)" aria-label="Message"></textarea>', "zh-fld--ta")}
+   <input class="zh-hp" type="text" name="_wpcf7_ak_hp_textarea" tabindex="-1" autocomplete="off" aria-hidden="true">
+   <button class="zh-btn zh-cc-btn" type="submit">${esc(k.button)} ${ic("arrow-r")}</button>
+   <div class="wpcf7-response-output" role="status" style="display:none"></div>
+  </form>
+  ${media}
+ </div></div>
 </div>
 ${o.map && safeUrl(k.map) ? `<div class="zh-ct-map zr zr-z"><iframe src="${url(k.map)}" title="Zakion Energy office location" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>` : ""}
-</div></section>${INTEREST_JS}`;
+</div>
+<dialog class="zk-thanks" id="zk-thanks" aria-labelledby="zk-thanks-h" aria-describedby="zk-thanks-p"><div class="zk-thanks-in"><span class="zk-thanks-ic">${ic("check")}</span><h3 id="zk-thanks-h">${esc(k.thanksTitle || "Thank you!")}</h3><p id="zk-thanks-p">${esc(k.thanksText || "We have received your enquiry. We will connect with you as soon as possible.")}</p><button class="zh-btn" type="button" data-close>Close</button></div></dialog>
+</section>${INTEREST_JS}`;
+};
+
+// Solar Calculator (the Solar Calculator page). The form is drawn here; the script public/zk-calc.js reads the settings from the JSON below (units one kW makes a day, peak sun hours, cost per kW, the electricity rate of each state), works out
+// the result and draws it (plant size, generation, savings, subsidy, payback, environment) with the share buttons and the PDF download.
+// The page can be opened with the inputs in the address (?m=bill&v=2000&s=Kerala&c=Residential&t=8): the result then shows at once, which is what the share links use.
+const CATEGORIES_CALC = ["Residential", "Commercial", "Industrial"];
+const calculator = (c: Content) => {
+  const k = c.calculator ?? {};
+  const states = (Array.isArray(k.states) ? k.states : [])
+    .map((x: any) => ({ n: String(x?.name ?? "").trim(), t: Number(x?.tariff) || 0 }))
+    .filter((x: { n: string; t: number }) => x.n && x.t > 0);
+  const cfg = {
+    states, perKw: Number(k.unitsPerKw) || 4, peak: Number(k.peakHours) || 5, costR: Number(k.costResidential) || 60000, costC: Number(k.costCommercial) || 50000,
+    cta: { text: String(k.ctaText ?? "").trim(), link: safeUrl(k.ctaLink) }, note: String(k.disclaimer ?? "").trim(),
+    brand: "Zakion Energy", phone: String(c.header?.topPhone ?? "").trim(), email: String(c.header?.topEmail ?? "").trim(),
+  };
+  const first = states.find((x: { n: string }) => x.n === "Kerala")?.n ?? "";
+  const intro = k.eyebrow || k.title || k.subtitle
+    ? `<header class="zc-hero zr">${k.eyebrow ? `<span class="zc-pill">${ic("calc")}${esc(k.eyebrow)}</span>` : ""}${k.title ? `<h2>${rt(k.title)}</h2>` : ""}${k.subtitle ? `<p class="zh-sub">${rt(k.subtitle)}</p>` : ""}
+<ul class="zc-trust"><li>${ic("bolt")}Instant result</li><li>${ic("rupee")}Subsidy included</li><li>${ic("shield")}Free to use</li></ul></header>`
+    : "";
+  const opt = (v: string, icon: string, title: string, sub: string, on = false) =>
+    `<label class="zc-opt"><input type="radio" name="mode" value="${v}"${on ? " checked" : ""}><span><i class="zc-oi">${ic(icon)}</i><div><b>${title}</b><small>${sub}</small></div><i class="zc-tick">${ic("check")}</i></span></label>`;
+  return `<section class="zh zh-calc" id="solar-calculator"><div class="zh-wrap"><div class="zc" id="zc">
+${intro}
+<form class="zc-form zr" id="zc-form" novalidate>
+ <div class="zc-step"><div class="zc-sh"><span class="zc-n"><i>1</i>Step one</span><h3>How would you like to calculate?</h3></div>
+  <div class="zc-opts" role="radiogroup" aria-label="Calculate from">${opt("bill", "rupee", "Monthly Bill", "Enter your current electricity bill amount", true)}${opt("units", "bolt", "Monthly Units", "Enter electricity consumption in kWh")}</div>
+  <div class="zc-fld" data-f="amount"><label for="zc-amount">${ic("rupee")}<span id="zc-amt-l">Your average monthly electricity bill</span></label>
+   <div class="zc-in"><span class="zc-ad" id="zc-pre">₹</span><input id="zc-amount" name="amount" type="number" inputmode="decimal" min="1" step="any" placeholder="e.g. 2000" autocomplete="off" required aria-describedby="zc-amount-e"><span class="zc-ad" id="zc-suf" hidden>kWh</span></div>
+   <p class="zc-err" id="zc-amount-e" role="alert"></p></div></div>
+ <div class="zc-step"><div class="zc-sh"><span class="zc-n"><i>2</i>Step two</span><h3>Your location &amp; customer type</h3></div>
+  <div class="zc-grid2">
+   <div class="zc-fld" data-f="state"><label for="zc-state">${ic("pin")}State / Union Territory</label>
+    <select class="zc-ctl" id="zc-state" name="state" required aria-describedby="zc-state-e"><option value="">Select state</option>${states.map((x: { n: string }) => `<option value="${esc(x.n)}"${x.n === first ? " selected" : ""}>${esc(x.n)}</option>`).join("")}</select><p class="zc-err" id="zc-state-e" role="alert"></p></div>
+   <div class="zc-fld" data-f="cat"><label for="zc-cat">${ic("users")}Customer category</label>
+    <select class="zc-ctl" id="zc-cat" name="cat">${CATEGORIES_CALC.map((x, i) => `<option value="${x}"${i === 0 ? " selected" : ""}>${x}</option>`).join("")}</select></div>
+  </div></div>
+ <div class="zc-step"><div class="zc-sh"><span class="zc-n"><i>3</i>Step three</span><h3>Your electricity unit cost</h3></div>
+  <div class="zc-rate"><div class="zc-rate-top"><div class="zc-rate-v"><b id="zc-rate-t">₹8.00</b><span>per kWh (unit)</span></div>
+   <div class="zc-in"><span class="zc-ad">₹</span><input id="zc-rate" name="rate" type="number" inputmode="decimal" min="1" max="30" step="0.1" value="8" aria-label="Electricity rate in rupees per unit"></div></div>
+   <input class="zc-range" id="zc-range" type="range" min="1" max="30" step="0.5" value="8" aria-label="Electricity rate slider"><div class="zc-ticks" aria-hidden="true"><span>₹1</span><span>₹8</span><span>₹15</span><span>₹22</span><span>₹30</span></div>
+   <p class="zc-tip">${ic("pin")}<span>Select your state to auto-fill the average tariff rate. You can adjust it manually.</span></p></div></div>
+ <button class="zh-btn zc-go" type="submit">${ic("calc")} Calculate My Solar Savings ${ic("arrow-r")}</button>
+</form>
+<div class="zc-res" id="zc-res" hidden tabindex="-1" aria-live="polite"></div>
+</div></div></section>
+<script type="application/json" id="zc-cfg">${JSON.stringify(cfg).replace(/</g, "\\u003c")}</script><script src="/zk-calc.js?v=3" defer></script>`;
+};
+
+// FAQ (the FAQ page): the questions added under FAQs in the admin, as an accordion with a search box and category tabs, plus the FAQPage data
+// search engines read. Edited in Studio (section "faq") for the heading and the box under the list.
+const FAQ_JS = `<script>(function(){var root=document.querySelector('.zh-faq');if(!root)return;
+var items=[].slice.call(root.querySelectorAll('.zh-faq-i')),tabs=[].slice.call(root.querySelectorAll('.zh-faq-tabs .zh-pf-tab')),q=root.querySelector('.zh-faq-q input'),none=root.querySelector('.zh-faq-none'),cat='';
+function run(){var t=(q&&q.value||'').toLowerCase().trim(),n=0;items.forEach(function(it){var ok=(!cat||it.getAttribute('data-cat')===cat)&&(!t||it.getAttribute('data-q').indexOf(t)>-1);it.hidden=!ok;if(ok)n++});if(none)none.hidden=n>0}
+tabs.forEach(function(b){b.addEventListener('click',function(){cat=b.getAttribute('data-cat')||'';tabs.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});run()})});
+if(q)q.addEventListener('input',run);
+var h=location.hash.slice(1);if(h){var el=document.getElementById(h);if(el&&el.tagName==='DETAILS'){el.open=true;setTimeout(function(){el.scrollIntoView({block:'center'})},150)}}
+})();</script>`;
+const plain = (t: unknown) => String(t ?? "").replace(/\*\*|==/g, "");
+const faq = (c: Content) => {
+  const f = c.faq ?? {}, list: Faq[] = c._faqs ?? [];
+  const catOf = (x: Faq) => String(x.category ?? "").trim() || "General";
+  const cats = [...new Set(list.map(catOf))];
+  const intro = f.eyebrow || f.title || f.subtitle ? `<header class="zh-head zh-faq-head zr c">${f.eyebrow ? `<span class="zh-eye">${rt(f.eyebrow)}</span>` : ""}${f.title ? `<h2>${rt(f.title)}</h2>` : ""}${f.subtitle ? `<p class="zh-sub">${rt(f.subtitle)}</p>` : ""}</header>` : "";
+  const answer = (t: string) => String(t ?? "").split(/\n{2,}/).map((p) => p.trim()).filter(Boolean).map((p) => `<p>${rt(p)}</p>`).join("");
+  const ld = list.length ? `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: list.map((x) => ({ "@type": "Question", name: plain(x.question), acceptedAnswer: { "@type": "Answer", text: plain(x.answer) } })) }).replace(/</g, "\\u003c")}</script>` : "";
+  const cta = f.ctaTitle || f.ctaText || (f.ctaBtn && safeUrl(f.ctaLink))
+    ? `<aside class="zh-faq-cta zr">${f.ctaTitle || f.ctaText ? `<div>${f.ctaTitle ? `<h3>${rt(f.ctaTitle)}</h3>` : ""}${f.ctaText ? `<p>${rt(f.ctaText)}</p>` : ""}</div>` : ""}${f.ctaBtn && safeUrl(f.ctaLink) ? `<a class="zh-btn" href="${url(f.ctaLink)}">${esc(f.ctaBtn)} ${ic("arrow-r")}</a>` : ""}</aside>`
+    : "";
+  const body = list.length
+    ? `<div class="zh-faq-q zr">${ic("search")}<input type="search" placeholder="Search the questions" aria-label="Search the questions" autocomplete="off"></div>
+${cats.length > 1 ? `<div class="zh-pf-tabs zh-faq-tabs zr" role="group" aria-label="Question categories"><button type="button" class="zh-pf-tab" data-cat="" aria-pressed="true">All</button>${cats.map((x) => `<button type="button" class="zh-pf-tab" data-cat="${esc(x)}" aria-pressed="false">${esc(x)}</button>`).join("")}</div>` : ""}
+<div class="zh-faq-list">${list.map((x) => `<details class="zh-faq-i zr" id="faq-${x.id}" data-cat="${esc(catOf(x))}" data-q="${esc((plain(x.question) + " " + plain(x.answer)).toLowerCase())}"><summary><span>${esc(x.question)}</span></summary><div class="zh-faq-a"><span class="zh-faq-cat">${esc(catOf(x))}</span>${answer(x.answer)}</div></details>`).join("")}</div>
+<p class="zh-pf-none zh-faq-none" hidden>No question matches your search. Try a different word, or call us and we will help.</p>`
+    : `<p class="zh-pf-none">${esc(f.empty)}</p>`;
+  return `<section class="zh zh-faq" id="faqs"><div class="zh-wrap"><div class="zh-faq-in">${intro}
+${body}
+${cta}
+</div></div></section>${ld}${list.length ? FAQ_JS : ""}`;
 };
 
 export const BUILD: Record<string, (c: Content, o?: { map?: boolean }) => string> = {
-  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail, amc, systems, systemDetail, testimonialsAll,
+  about, vision, story, why, renewable, onGrid, hybrid, bess, solarHome, components, aesthetics, roi, process: process_, track, partners, testimonials, projects, cta, contact, portfolio, projectDetail, amc, systems, systemDetail, testimonialsAll, calculator, faq,
 };
 
 /** The deck sections for a page, in order, with the icon sprite and the animation script. */
