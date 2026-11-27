@@ -7,6 +7,6 @@ export const SEO = {
   '/services/energy-engineering/': ['Energy Engineering – Audits & Thermography | Zakion Energy', 'Energy audits, thermography, water and air audits, energy mass balance studies and power quality assessments to reduce energy waste and costs.'],
   '/services/emobility-infrastructure/': ['EV Charging Infrastructure – eMobility | Zakion Energy', 'Electric vehicle charging infrastructure for homes, apartments, hotels, workplaces, public parking and commercial or industrial fleets.'],
   '/projects/': ['Our Projects | Zakion Energy', 'Browse solar and renewable energy projects delivered by Zakion Energy for residences and businesses.'],
-  '/contact/': ['Contact Zakion Energy – Calicut Office, Phone & Email', 'Contact Zakion Energy at D Space, Sky Tower, Bank Road, Calicut 673001. Call +91 9497 113001 or email info@zakion.com.'],
+  '/contact/': ['Contact Zakion Energy – Calicut Office, Phone & Email', 'Contact Zakion Energy at D Space, Sky Tower, Bank Road, Calicut 673001. Call +91 9497 113001 or email zakionenergy20@gmail.com.'],
   '/blog/': ['Blog – Renewable Energy Articles | Zakion Energy', 'Articles on solar and renewable energy from Zakion Energy.'],
 };

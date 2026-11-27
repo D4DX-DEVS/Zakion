@@ -6,7 +6,7 @@ export type SeoPost = { slug: string; title: string; excerpt: string; image: str
 const BRAND = "Zakion Energy";
 const ORG = {
   name: "Zakion Energy Pvt. Ltd.",
-  email: "info@zakion.com",
+  email: "zakionenergy20@gmail.com",
   telephone: "+91 9188 944 337",
   foundingDate: "2015",
   address: { streetAddress: "D Space, Sky Tower, Bank Road", addressLocality: "Calicut", postalCode: "673001", addressCountry: "IN" },
