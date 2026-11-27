@@ -63,7 +63,7 @@
   }
 
   function fail(field, msg) {
-    var wrap = form.querySelector('[data-f="' + field + '"]');
+    var wrap = root.querySelector('[data-f="' + field + '"]');
     if (!wrap) return;
     var e = wrap.querySelector(".zc-err");
     if (e) e.textContent = msg;
@@ -73,14 +73,14 @@
   }
 
   function read() {
-    return { mode: mode(), amount: parseFloat(elAmount.value), state: elState.value, cat: elCat.value, rate: parseFloat(elRate.value), phone: elPhone.value.trim(), email: elEmail.value.trim() };
+    return { mode: mode(), amount: parseFloat(elAmount.value), state: elState.value, cat: elCat.value, rate: parseFloat(elRate.value) };
   }
 
-  /* the visitor's own details: a mobile number is needed, an email is optional (a shared link shows its result without them) */
-  function checkContact(v) {
-    var ok = true, digits = v.phone.replace(/\D/g, "");
-    if (!/^\+?[0-9\s\-()]{10,20}$/.test(v.phone) || digits.length < 10 || digits.length > 13) { fail("phone", "Enter a valid mobile number."); ok = false; } else fail("phone", "");
-    if (v.email && !/^\S+@\S+\.\S+$/.test(v.email)) { fail("email", "Enter a valid email or leave it empty."); ok = false; } else fail("email", "");
+  /* the visitor's own details, asked when they download the PDF: a mobile number is needed, an email is optional */
+  function checkContact(c) {
+    var ok = true, digits = c.phone.replace(/\D/g, "");
+    if (!/^\+?[0-9\s\-()]{10,20}$/.test(c.phone) || digits.length < 10 || digits.length > 13) { fail("phone", "Enter a valid mobile number."); ok = false; } else fail("phone", "");
+    if (c.email && !/^\S+@\S+\.\S+$/.test(c.email)) { fail("email", "Enter a valid email or leave it empty."); ok = false; } else fail("email", "");
     return ok;
   }
 
@@ -149,10 +149,10 @@
       '<h3 class="zc-sec">' + ico("leaf") + 'Environmental impact</h3>' +
       '<div class="zc-card zc-env"><div>' + ico("leaf") + "<p><b>" + (r.co2 >= 10 ? Math.round(r.co2) : r.co2.toFixed(1)) + ' T</b><span>CO₂ Emissions Mitigated (' + A.years + ' yrs)</span></p></div>' +
         "<div>" + ico("tree") + "<p><b>" + n0(r.trees) + "</b><span>Equivalent Trees Planted</span></p></div></div>" +
-      '<p class="zc-note">' + ico("info") + "<span>" + esc(cfg.note || "The computation is indicative in nature. Actual generation and savings may vary.") + "</span></p>" +
       '<div class="zc-end">' + cta + '<button class="zh-btn zh-btn--line" type="button" id="zc-redo">' + ico("edit") + " Recalculate</button></div>";
 
-    $("zc-pdf").addEventListener("click", function () { pdf(r, this); });
+    $("zc-pdf").addEventListener("click", function () { requestPdf(r, this); });
+    loadLogo(); // ready for the PDF
     $("zc-redo").addEventListener("click", back);
     form.hidden = true;
     if (hero) hero.hidden = true;
@@ -176,7 +176,8 @@
     return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
   }
 
-  function pdf(r, btn) {
+  async function pdf(r, btn) {
+    var logo = await loadLogo();
     var W = 595.28, H = 841.89, M = 40, ops = [], v = r.v;
     var navy = rgb("--navy", "#0d3d7b"), amber = rgb("--amber", "#fec142"), mut = rgb("--mut", "#3d5a86"), soft = rgb("--bg", "#f1f4fb"), line = rgb("--line", "#c9d6ec"), white = [1, 1, 1];
     var meas = document.createElement("canvas").getContext("2d");
@@ -193,88 +194,86 @@
       ops.push("BT /" + (bold ? "F2" : "F1") + " " + size + " Tf " + col(c) + " rg " + f(x) + " " + f(Y(y)) + " Td (" + pt(t) + ") Tj ET");
       return w;
     }
-    function wrap(t, maxW, size) {
-      var words = String(t).split(/\s+/), lines = [], cur = "";
-      words.forEach(function (w) { var n = cur ? cur + " " + w : w; if (width(n, size) > maxW && cur) { lines.push(cur); cur = w; } else cur = n; });
-      if (cur) lines.push(cur);
-      return lines;
-    }
     function heading(t, y) { rect(M, y - 9, 4, 12, amber); text(t.toUpperCase(), M + 12, y, 9.5, navy, true); }
     function triple(y, h, a, b, c) {
       rect(M, y, W - 2 * M, h, soft);
       var cw = (W - 2 * M) / 3, labels = ["MONTHLY", "ANNUAL", A.years + "-YEAR"];
       [a, b, c].forEach(function (x, i) {
         var cx = M + cw * i + cw / 2;
-        text(labels[i], cx, y + 19, 7.5, mut, true, "c");
-        text(x[0], cx, y + 39, 16, navy, true, "c");
-        text(x[1], cx, y + 50, 7.5, mut, false, "c");
+        text(labels[i], cx, y + h * 0.34, 7.5, mut, true, "c");
+        text(x[0], cx, y + h * 0.68, 16, navy, true, "c");
+        text(x[1], cx, y + h * 0.89, 7.5, mut, false, "c");
       });
     }
 
     /* header */
     rect(0, 0, W, 100, navy); rect(0, 100, W, 4, amber);
-    text("ZAKION ENERGY", M, 46, 22, white, true);
-    text("Solar Savings Report", M, 68, 13, amber, true);
+    if (logo) { var lw = 170, lh = lw * logo.h / logo.w; ops.push("q " + f(lw) + " 0 0 " + f(lh) + " " + f(M) + " " + f(Y(26 + lh)) + " cm /Im1 Do Q"); } // the main logo
+    else text("ZAKION ENERGY", M, 46, 22, white, true);
+    text("Solar Savings Report", M, logo ? 82 : 68, 13, amber, true);
     var d = new Date();
     text("Generated " + d.getDate() + " " + ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()] + " " + d.getFullYear(), W - M, 46, 9.5, white, false, "r");
     text(v.state + " | " + v.cat, W - M, 64, 9.5, white, false, "r");
 
     /* inputs */
-    rect(M, 118, W - 2 * M, 46, soft);
+    rect(M, 122, W - 2 * M, 52, soft);
     var cw4 = (W - 2 * M) / 4, ins = [["CUSTOMER", v.cat], ["STATE", v.state], [v.mode === "bill" ? "MONTHLY BILL" : "MONTHLY UNITS", v.mode === "bill" ? rs(v.amount) : n0(v.amount) + " kWh"], ["ELECTRICITY RATE", "Rs. " + (+v.rate.toFixed(2)) + " / kWh"]];
-    ins.forEach(function (x, i) { var cx = M + cw4 * i + 14; text(x[0], cx, 136, 7, mut, true); text(x[1], cx, 153, 10.5, navy, true); });
+    ins.forEach(function (x, i) { var cx = M + cw4 * i + 14; text(x[0], cx, 142, 7, mut, true); text(x[1], cx, 161, 10.5, navy, true); });
 
     /* plant size */
-    rect(M, 178, W - 2 * M, 92, navy);
-    text("RECOMMENDED PLANT SIZE", M + 22, 202, 8.5, white, true);
-    var sw = text(r.size.toFixed(2), M + 22, 244, 40, white, true);
-    text("kWp", M + 22 + sw + 6, 244, 16, amber, true);
-    text(basis(r), M + 22, 261, 8.5, white, false);
+    rect(M, 192, W - 2 * M, 104, navy);
+    text("RECOMMENDED PLANT SIZE", M + 22, 216, 8.5, white, true);
+    var sw = text(r.size.toFixed(2), M + 22, 260, 40, white, true);
+    text("kWp", M + 22 + sw + 6, 260, 16, amber, true);
+    text(basis(r), M + 22, 279, 8.5, white, false);
     var rx = W - M - 24;
-    text("DAILY GENERATION", rx, 204, 7.5, white, true, "r"); text(r.daily.toFixed(1) + " kWh", rx, 222, 15, white, true, "r");
-    text("PEAK SUN HOURS", rx, 242, 7.5, white, true, "r"); text(hrs(r.sun), rx, 260, 15, white, true, "r");
+    text("DAILY GENERATION", rx, 220, 7.5, white, true, "r"); text(r.daily.toFixed(1) + " kWh", rx, 238, 15, white, true, "r");
+    text("PEAK SUN HOURS", rx, 262, 7.5, white, true, "r"); text(hrs(r.sun), rx, 280, 15, white, true, "r");
 
     /* generation and savings */
-    heading("Electricity generation", 292);
-    triple(300, 56, [n0(r.monthly) + " kWh", "per month"], [n0(r.annual) + " kWh", "per year"], [n0(r.life) + " kWh", "lifetime total"]);
-    heading("Financial savings (at Rs. " + (+v.rate.toFixed(2)) + " per kWh)", 378);
-    triple(386, 56, [rs(r.monSav), "per month"], [rs(r.annSav), "per year"], [rs(r.lifeSav), "lifetime savings"]);
+    heading("Electricity generation", 326);
+    triple(336, 64, [n0(r.monthly) + " kWh", "per month"], [n0(r.annual) + " kWh", "per year"], [n0(r.life) + " kWh", "lifetime total"]);
+    heading("Financial savings (at Rs. " + (+v.rate.toFixed(2)) + " per kWh)", 430);
+    triple(440, 64, [rs(r.monSav), "per month"], [rs(r.annSav), "per year"], [rs(r.lifeSav), "lifetime savings"]);
 
     /* payback and return */
     var bw = (W - 2 * M - 14) / 2;
     [[r.payback.toFixed(1) + " years", "Simple payback period"], [r.roi.toFixed(1) + "%", "Annual return on investment"]].forEach(function (x, i) {
       var bx = M + (bw + 14) * i;
-      rect(bx, 470, bw, 52, soft); rect(bx, 470, 4, 52, amber);
-      text(x[0], bx + 20, 494, 17, navy, true); text(x[1], bx + 20, 511, 8.5, mut, false);
+      rect(bx, 534, bw, 60, soft); rect(bx, 534, 4, 60, amber);
+      text(x[0], bx + 20, 562, 17, navy, true); text(x[1], bx + 20, 580, 8.5, mut, false);
     });
 
     /* environment */
-    heading("Environmental impact", 556);
-    rect(M, 564, W - 2 * M, 52, soft);
-    text((r.co2 >= 10 ? Math.round(r.co2) : r.co2.toFixed(1)) + " tonnes", M + 20, 588, 17, navy, true); text("CO2 emissions mitigated in " + A.years + " years", M + 20, 604, 8.5, mut, false);
-    text(n0(r.trees) + " trees", W / 2 + 10, 588, 17, navy, true); text("equivalent trees planted", W / 2 + 10, 604, 8.5, mut, false);
+    heading("Environmental impact", 624);
+    rect(M, 634, W - 2 * M, 60, soft);
+    text((r.co2 >= 10 ? Math.round(r.co2) : r.co2.toFixed(1)) + " tonnes", M + 20, 662, 17, navy, true); text("CO2 emissions mitigated in " + A.years + " years", M + 20, 680, 8.5, mut, false);
+    text(n0(r.trees) + " trees", W / 2 + 10, 662, 17, navy, true); text("equivalent trees planted", W / 2 + 10, 680, 8.5, mut, false);
 
-    /* notes and contact */
-    var y = 644, notes = wrap((cfg.note || "The computation is indicative in nature.") + " How it is worked out: plant size = monthly units / 30 / " + A.perKw + "; daily generation = size x " + A.perKw + "; monthly = daily x 30; yearly = monthly x 12 / " + A.yearDiv + "; " + A.years + "-year total with " + (A.deg1 * 100).toFixed(1) + "% loss in year 1 and " + (A.degN * 100).toFixed(1) + "% in years 2 to " + A.years + "; savings = units x unit charge; peak sun hours " + A.peak + " for every state; CO2 mitigated = units x " + A.co2 + " kg; trees = units / " + A.treeUnits + ".", W - 2 * M, 7.5);
-    notes.slice(0, 6).forEach(function (l) { text(l, M, y, 7.5, mut, false); y += 10; });
+    /* contact */
     hline(M, W - M, 800, line);
     var contact = [cfg.brand, cfg.phone, cfg.email, location.host].filter(Boolean).join("   |   ");
     text(contact, M, 816, 8.5, navy, true);
     text("Page generated by the " + cfg.brand + " Solar Calculator. This is an estimate, not a quotation.", M, 829, 7, mut, false);
 
-    /* assemble the file: objects, cross-reference table, trailer */
+    /* assemble the file: objects (fonts, page, text and the logo picture), cross-reference table, trailer */
+    var img = null;
+    if (logo) { var zipped = await deflate(logo.rgb); img = { data: zipped || logo.rgb, flate: !!zipped }; }
     var stream = ops.join("\n"), parts = [], offs = [], pos = 0;
-    var add = function (s) { offs.push(pos); parts.push(s); pos += s.length; };
+    var blen = function (p) { return typeof p === "string" ? p.length : p.byteLength; }; // the text parts are plain ASCII
+    var add = function () { offs.push(pos); for (var i = 0; i < arguments.length; i++) { parts.push(arguments[i]); pos += blen(arguments[i]); } };
     var head = "%PDF-1.4\n"; parts.push(head); pos = head.length;
     add("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
     add("2 0 obj\n<< /Type /Pages /Kids [5 0 R] /Count 1 >>\nendobj\n");
     add("3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n");
     add("4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>\nendobj\n");
-    add("5 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + f(W) + " " + f(H) + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>\nendobj\n");
+    add("5 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + f(W) + " " + f(H) + "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>" + (img ? " /XObject << /Im1 8 0 R >>" : "") + " >> /Contents 6 0 R >>\nendobj\n");
     add("6 0 obj\n<< /Length " + stream.length + " >>\nstream\n" + stream + "\nendstream\nendobj\n");
     add("7 0 obj\n<< /Title (Solar Savings Report) /Producer (" + pt(cfg.brand) + ") >>\nendobj\n");
-    var xref = "xref\n0 8\n0000000000 65535 f \n" + offs.map(function (o) { return String(o).padStart(10, "0") + " 00000 n \n"; }).join("");
-    parts.push(xref + "trailer\n<< /Size 8 /Root 1 0 R /Info 7 0 R >>\nstartxref\n" + pos + "\n%%EOF\n");
+    if (img) add("8 0 obj\n<< /Type /XObject /Subtype /Image /Width " + logo.w + " /Height " + logo.h + " /ColorSpace /DeviceRGB /BitsPerComponent 8" + (img.flate ? " /Filter /FlateDecode" : "") + " /Length " + img.data.byteLength + " >>\nstream\n", img.data, "\nendstream\nendobj\n");
+    var count = offs.length + 1;
+    var xref = "xref\n0 " + count + "\n0000000000 65535 f \n" + offs.map(function (o) { return String(o).padStart(10, "0") + " 00000 n \n"; }).join("");
+    parts.push(xref + "trailer\n<< /Size " + count + " /Root 1 0 R /Info 7 0 R >>\nstartxref\n" + pos + "\n%%EOF\n");
 
     var blob = new Blob(parts, { type: "application/pdf" }), a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -284,15 +283,66 @@
     if (btn) { btn.disabled = true; setTimeout(function () { btn.disabled = false; }, 1200); }
   }
 
-  /* ---------- the visitor's details go to the company (Submissions in the admin, and an email) ---------- */
+  /* the main logo for the PDF header: a white logo with a see-through background, flattened onto the header colour so it needs no transparency */
+  var logoP = null;
+  function loadLogo() {
+    if (logoP) return logoP;
+    logoP = new Promise(function (res) {
+      if (!cfg.logo) return res(null);
+      var im = new Image();
+      im.onload = function () {
+        try {
+          var w = 460, h = Math.round(w * im.naturalHeight / im.naturalWidth), c = document.createElement("canvas"), x, n = rgb("--navy", "#0d3d7b");
+          c.width = w; c.height = h; x = c.getContext("2d");
+          x.fillStyle = "rgb(" + n.map(function (k) { return Math.round(k * 255); }).join(",") + ")"; x.fillRect(0, 0, w, h);
+          x.drawImage(im, 0, 0, w, h);
+          var d = x.getImageData(0, 0, w, h).data, px = new Uint8Array(w * h * 3), i, j = 0;
+          for (i = 0; i < d.length; i += 4) { px[j++] = d[i]; px[j++] = d[i + 1]; px[j++] = d[i + 2]; }
+          res({ w: w, h: h, rgb: px });
+        } catch (e) { res(null); }
+      };
+      im.onerror = function () { res(null); };
+      im.src = cfg.logo;
+    });
+    logoP.then(function (l) { if (!l) logoP = null; }); // try again next time if it did not load
+    return logoP;
+  }
+  function deflate(bytes) { // zlib compression, where the browser has it (the logo is mostly flat colour, so it shrinks a lot)
+    if (typeof CompressionStream === "undefined") return Promise.resolve(null);
+    try {
+      var cs = new CompressionStream("deflate"), w = cs.writable.getWriter();
+      w.write(bytes); w.close();
+      return new Response(cs.readable).arrayBuffer().then(function (b) { return new Uint8Array(b); }, function () { return null; });
+    } catch (e) { return Promise.resolve(null); }
+  }
+
+  /* ---------- downloading the PDF asks for a mobile number (and an optional email); they go to the company ---------- */
+  var dlg = $("zc-dlg"), dform = $("zc-dlg-form"), contact = null, pending = null;
+  function requestPdf(r, btn) {
+    if (contact) { sendLead(contact, r); pdf(r, btn); return; } // already given on this visit: no second question
+    pending = { r: r, btn: btn };
+    fail("phone", ""); fail("email", "");
+    if (dlg.showModal) { dlg.showModal(); setTimeout(function () { elPhone.focus(); }, 60); }
+  }
+  dform.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var c = { phone: elPhone.value.trim(), email: elEmail.value.trim() };
+    if (!checkContact(c)) { var bad = dform.querySelector(".zc-fld.bad input"); if (bad) bad.focus(); return; }
+    contact = c;
+    dlg.close();
+    if (pending) { var p = pending; pending = null; sendLead(c, p.r); pdf(p.r, p.btn); }
+  });
+  dlg.addEventListener("click", function (e) { if (e.target === dlg || (e.target.closest && e.target.closest("[data-close]"))) dlg.close(); });
+
+  /* ---------- the visitor's details go to the company (the Solar Calculator list in the admin, and an email) ---------- */
   var lastLead = "";
-  function sendLead(v, r) {
-    var key = [v.phone, v.email, v.mode, v.amount, v.state, v.cat, v.rate].join("|");
-    if (key === lastLead) return; // the same details again (Recalculate, then Calculate) are not sent twice
+  function sendLead(c, r) {
+    var v = r.v, key = [c.phone, c.email, v.mode, v.amount, v.state, v.cat, v.rate].join("|");
+    if (key === lastLead) return; // the same details again (a second download) are not sent twice
     lastLead = key;
     var fd = new FormData();
-    fd.append("phone", v.phone); fd.append("email", v.email);
-    fd.append("_hp", (form.querySelector('[name="_hp"]') || {}).value || "");
+    fd.append("phone", c.phone); fd.append("email", c.email);
+    fd.append("_hp", (dform.querySelector('[name="_hp"]') || {}).value || "");
     fd.append("type", v.cat); fd.append("state", v.state); fd.append("mode", v.mode); fd.append("amount", v.amount); fd.append("rate", v.rate);
     fd.append("size", r.size); fd.append("units", r.annual); fd.append("yearly", r.annSav); fd.append("life", r.lifeSav); fd.append("payback", r.payback);
     fd.append("details", [
@@ -315,11 +365,9 @@
   elRate.addEventListener("change", function () { var x = parseFloat(elRate.value); setRate(isFinite(x) ? x : 8, true); });
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    var v = read(), okCalc = check(v), okContact = checkContact(v);
-    if (!okCalc || !okContact) { var bad = form.querySelector(".zc-fld.bad input,.zc-fld.bad select"); if (bad) bad.focus(); return; }
-    var r = calc(v);
-    sendLead(v, r);
-    render(r);
+    var v = read();
+    if (!check(v)) { var bad = form.querySelector(".zc-fld.bad input,.zc-fld.bad select"); if (bad) bad.focus(); return; }
+    render(calc(v));
   });
 
   setMode();

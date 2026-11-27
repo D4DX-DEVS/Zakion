@@ -609,7 +609,7 @@ const calculator = (c: Content) => {
     .filter((x: { n: string; t: number }) => x.n && x.t > 0);
   const cfg = {
     states, perKw: Number(k.unitsPerKw) || 4, peak: Number(k.peakHours) || 5, payback: Number(k.payback) || 2.5,
-    cta: { text: String(k.ctaText ?? "").trim(), link: safeUrl(k.ctaLink) }, note: String(k.disclaimer ?? "").trim(),
+    cta: { text: String(k.ctaText ?? "").trim(), link: safeUrl(k.ctaLink) }, logo: "/media/2024/03/zak-logo-w.png", // the main logo (white version) for the PDF header
     brand: "Zakion Energy", phone: String(c.header?.topPhone ?? "").trim(), email: String(c.header?.topEmail ?? "").trim(),
   };
   const first = states.find((x: { n: string }) => x.n === "Kerala")?.n ?? "";
@@ -639,20 +639,23 @@ ${intro}
    <div class="zc-in"><span class="zc-ad">₹</span><input id="zc-rate" name="rate" type="number" inputmode="decimal" min="1" max="30" step="0.1" value="8" aria-label="Electricity rate in rupees per unit"></div></div>
    <input class="zc-range" id="zc-range" type="range" min="1" max="30" step="0.5" value="8" aria-label="Electricity rate slider"><div class="zc-ticks" aria-hidden="true"><span>₹1</span><span>₹8</span><span>₹15</span><span>₹22</span><span>₹30</span></div>
    <p class="zc-tip">${ic("pin")}<span>Select your state to auto-fill the average tariff rate. You can adjust it manually.</span></p></div></div>
- <div class="zc-step"><div class="zc-sh"><span class="zc-n"><i>4</i>Step four</span><h3>Your contact details</h3></div>
-  <div class="zc-grid2">
-   <div class="zc-fld" data-f="phone"><label for="zc-phone">${ic("phone")}Mobile number</label>
-    <input class="zc-ctl" id="zc-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="e.g. 98470 12345" required aria-describedby="zc-phone-e"><p class="zc-err" id="zc-phone-e" role="alert"></p></div>
-   <div class="zc-fld" data-f="email"><label for="zc-email">${ic("mail")}Email <small>(optional)</small></label>
-    <input class="zc-ctl" id="zc-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" aria-describedby="zc-email-e"><p class="zc-err" id="zc-email-e" role="alert"></p></div>
-  </div>
-  <p class="zc-tip">${ic("info")}<span>Our solar advisor may call you to explain your report. We use these details only for that.</span></p>
-  <input class="zh-hp" type="text" name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true"></div>
  <button class="zh-btn zc-go" type="submit">${ic("calc")} Calculate My Solar Savings ${ic("arrow-r")}</button>
 </form>
 <div class="zc-res" id="zc-res" hidden tabindex="-1" aria-live="polite"></div>
+<dialog class="zc-dlg" id="zc-dlg" aria-labelledby="zc-dlg-h"><form class="zc-dlg-in" id="zc-dlg-form" novalidate>
+ <button type="button" class="zc-dlg-x" data-close aria-label="Close">&times;</button>
+ <span class="zc-dlg-ic" aria-hidden="true">${ic("download")}</span>
+ <h3 id="zc-dlg-h">Download your report</h3>
+ <p class="zc-dlg-p">Enter your contact details to get the PDF. Our solar advisor may call you to explain your report. We use these details only for that.</p>
+ <div class="zc-fld" data-f="phone"><label for="zc-phone">${ic("phone")}Mobile number</label>
+  <input class="zc-ctl" id="zc-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="e.g. 98470 12345" required aria-describedby="zc-phone-e"><p class="zc-err" id="zc-phone-e" role="alert"></p></div>
+ <div class="zc-fld" data-f="email"><label for="zc-email">${ic("mail")}Email <small>(optional)</small></label>
+  <input class="zc-ctl" id="zc-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" aria-describedby="zc-email-e"><p class="zc-err" id="zc-email-e" role="alert"></p></div>
+ <input class="zh-hp" type="text" name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+ <button class="zh-btn zc-go" type="submit">${ic("download")} Download PDF</button>
+</form></dialog>
 </div></div></section>
-<script type="application/json" id="zc-cfg">${JSON.stringify(cfg).replace(/</g, "\\u003c")}</script><script src="/zk-calc.js?v=5" defer></script>`;
+<script type="application/json" id="zc-cfg">${JSON.stringify(cfg).replace(/</g, "\\u003c")}</script><script src="/zk-calc.js?v=6" defer></script>`;
 };
 
 // FAQ (the FAQ page): the questions added under FAQs in the admin, as an accordion with a search box and category tabs, plus the FAQPage data

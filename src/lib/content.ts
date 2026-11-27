@@ -348,14 +348,13 @@ export const SECTIONS: SectionDef[] = [
   },
   {
     key: "calculator", title: "Solar Calculator (Solar Calculator page)", page: "Solar Calculator",
-    help: "The calculator itself: the heading above it, the numbers it works with and the button under the result. Plant size = monthly units ÷ 30 ÷ the units one kW makes a day; daily generation = plant size × that number. The rate of each state fills in the electricity rate (what a household pays for one unit, kWh); visitors can still change it in the calculator. Visitors also enter a mobile number and an optional email: those arrive under Solar Calculator in the left menu and are emailed to the address set in the Contact block.",
+    help: "The calculator itself: the heading above it, the numbers it works with and the button under the result. Plant size = monthly units ÷ 30 ÷ the units one kW makes a day; daily generation = plant size × that number. The rate of each state fills in the electricity rate (what a household pays for one unit, kWh); visitors can still change it in the calculator. When a visitor downloads the PDF report they are asked for a mobile number and an optional email: those arrive under Solar Calculator in the left menu and are emailed to the address set in the Contact block.",
     fields: [
       T("eyebrow", "Small heading"), TA("title", "Heading", MARKUP_HELP), TA("subtitle", "Paragraph"),
       NUM("unitsPerKw", "Units one kW generates in a day", "Used for the plant size and the daily generation (4 means each kW makes 4 units a day)."), NUM("peakHours", "Peak sun hours a day", "Shown in the result, the same for every state."),
       NUM("payback", "Payback period shown (years)", "Shown as the simple payback period in every result (2.5 means 2.5 years). The annual return shown is 100 ÷ this number."),
       LIST("states", "States and their electricity rate", "state", [T("name", "State or union territory"), NUM("tariff", "Electricity rate (₹ per unit)")], 40),
       T("ctaText", "Button under the result"), T("ctaLink", "Button link", "By default it opens the enquiry form on the Contact page."),
-      TA("disclaimer", "Note under the result"),
     ],
     data: {
       eyebrow: "Solar Calculator", title: "Go solar,\n==save big==",
@@ -369,7 +368,6 @@ export const SECTIONS: SectionDef[] = [
         ["Telangana", 7.5], ["Tripura", 7], ["Uttar Pradesh", 7], ["Uttarakhand", 6], ["West Bengal", 8],
       ].map(([name, tariff]) => ({ name, tariff })),
       ctaText: "Get a free site survey", ctaLink: "/contact/?interest=On%20Grid%20System#contact",
-      disclaimer: "The computation is indicative in nature. Generation and financial savings may vary based on actual solar irradiation, panel efficiency, shading and local grid conditions. Talk to a Zakion Energy solar advisor for a precise assessment.",
     },
   },
   {
