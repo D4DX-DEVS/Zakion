@@ -3,6 +3,13 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 initOpenNextCloudflareForDev();
 
+// No CSP (the pages use inline scripts and embeds) and no HSTS (set that in Cloudflare, it applies to the whole domain).
+const security = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
 const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
 
 const config: NextConfig = {
@@ -10,6 +17,7 @@ const config: NextConfig = {
   // uploads go through server actions: one request may carry up to two files of the 25 MB video limit in src/lib/upload.ts
   experimental: { serverActions: { bodySizeLimit: "50mb" } },
   headers: async () => [
+    { source: "/:path*", headers: security },
     { source: "/admin/:path*", headers: noindex },
     { source: "/api/:path*", headers: noindex },
   ],

@@ -2,7 +2,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { cached } from "@/lib/cache";
 import { env } from "@/lib/env";
 import { renderPath } from "@/lib/render";
-import { CANONICAL, canonicalRedirect } from "@/lib/seo";
+import { CANONICAL } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +25,6 @@ async function renderWithSnapshot(path: string) {
 }
 
 export async function GET(req: Request, ctx: { params: Promise<{ slug?: string[] }> }) {
-  const moved = canonicalRedirect(req); // http, www and the old workers.dev address all go to the real domain
-  if (moved) return moved;
   const { slug = [] } = await ctx.params;
   const url = new URL(req.url);
   // one URL per page: /about-us -> /about-us/

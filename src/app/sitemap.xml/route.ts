@@ -1,14 +1,12 @@
 import { cached } from "@/lib/cache";
 import { db } from "@/lib/env";
-import { CANONICAL, canonicalRedirect, isHiddenPath, PLACEHOLDER_SQL, siteUrl } from "@/lib/seo";
+import { CANONICAL, isHiddenPath, PLACEHOLDER_SQL, siteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 type Row = { loc: string; lastmod: string };
 
 export function GET(req: Request) {
-  const moved = canonicalRedirect(req);
-  if (moved) return moved;
   return cached(req, 3600, async () => {
     const d = db();
     const [pages, posts, projects, systems] = await Promise.all([

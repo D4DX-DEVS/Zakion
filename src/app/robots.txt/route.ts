@@ -1,4 +1,4 @@
-import { canonicalRedirect, isStaging, siteUrl } from "@/lib/seo";
+import { isStaging, siteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -8,9 +8,7 @@ const AI_BOTS = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude
 const PRIVATE = "Disallow: /admin\nDisallow: /api/\nAllow: /\n";
 
 // Small and free of database calls, so it is built fresh each time: a cached "Disallow: /" must never outlive a deploy.
-export function GET(req: Request) {
-  const moved = canonicalRedirect(req);
-  if (moved) return moved;
+export function GET() {
   const base = siteUrl();
   const body = isStaging()
     ? "User-agent: *\nDisallow: /\n"

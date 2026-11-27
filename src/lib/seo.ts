@@ -1,4 +1,4 @@
-import { isHiddenPath, redirectTarget } from "./canonical";
+import { isHiddenPath } from "./canonical";
 import { env } from "./env";
 
 export { isHiddenPath };
@@ -37,14 +37,6 @@ const PAGE_TYPE: Record<string, string> = { "/about-us/": "AboutPage", "/contact
 export const siteUrl = () => (env().SITE_URL || "").replace(/\/$/, "");
 // Until a real domain is set as SITE_URL, the site is a staging copy and must stay out of search results.
 export const isStaging = () => { const s = siteUrl(); return !s || /\.workers\.dev$|localhost/.test(new URL(s).hostname); };
-
-/** 301 to the one real address (http -> https, www and *.workers.dev -> SITE_URL), or null when the request is already right. */
-export const canonicalRedirect = (req: Request) => {
-  let scheme: string | null = null;
-  try { scheme = JSON.parse(req.headers.get("cf-visitor") || "{}").scheme ?? null; } catch { /* no usable header: no http redirect */ }
-  const to = redirectTarget(req.url, siteUrl(), scheme);
-  return to ? Response.redirect(to, 301) : null;
-};
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 const shortName = (title: string) => title.split(/ [–|] /)[0];
