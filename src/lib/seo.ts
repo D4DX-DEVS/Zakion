@@ -10,7 +10,7 @@ const BRAND = "Zakion Energy";
 const ORG = {
   name: "Zakion Energy Pvt. Ltd.",
   email: "zakionenergy20@gmail.com",
-  telephone: "+91 9188 944 337",
+  telephone: "+919188944337",
   foundingDate: "2015",
   address: { streetAddress: "D Space, Sky Tower, Bank Road", addressLocality: "Calicut", addressRegion: "Kerala", postalCode: "673001", addressCountry: "IN" },
   description: "Zakion Energy Pvt. Ltd. is a solar EPC, energy engineering and eMobility infrastructure company founded in 2015 and based in Calicut, Kerala, India.",
@@ -107,8 +107,24 @@ export function seoHead(p: SeoPage, post?: SeoPost, placeholder = false, sameAs?
 const nameFromFile = (src: string) => src.split("/").pop()!.replace(/\.\w+$/, "").replace(/[-_]+/g, " ").replace(/^./, c => c.toUpperCase());
 
 // Alt text only where the page gives us something true to say; decorative images keep alt="".
-export function improveBody(html: string, pageName: string) {
+// Leftovers of the old WordPress staging site: its address in share links and the Joinchat credit, and a LinkedIn share link
+// with a relative address and demo text.
+const STAGING = "wordpress-1683093-6757014.cloudwaysapps.com";
+function fixStagingLinks(html: string) {
+  const base = siteUrl();
+  return html
+    .replaceAll("https%3A%2F%2F" + STAGING, encodeURIComponent(base))
+    .replaceAll("https://" + STAGING, base)
+    .replaceAll(STAGING, new URL(base).host)
+    .replace(/(linkedin\.com\/shareArticle\?mini=true&amp;url=)(\/[^&"]*)/g, (_m, a: string, path: string) => a + encodeURIComponent(base + path))
+    .replace(/&amp;summary=Lorem[^"]*/g, "");
+}
+
+export function improveBody(rawHtml: string, pageName: string) {
   let gallery = 0;
+  // The home hero's H1 is empty in the imported markup (the visible slider text is not a heading). Give it the real heading, off-screen.
+  const h1 = pageName === BRAND ? BRAND + " – Solar EPC, Energy Engineering & eMobility in Calicut, Kerala" : pageName;
+  const html = fixStagingLinks(rawHtml).replace(/(<h1 class="elementor-heading-title[^"]*")><\/h1>/, (_m, open: string) => open + ' style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">' + esc(h1) + "</h1>");
   const withAlt = html.replace(/<img\b[^>]*>/g, (tag, idx: number) => {
     if (!/\salt=(""|'')/.test(tag)) return tag;
     const src = (tag.match(/\ssrc="([^"]+)"/) || [])[1] || "";
