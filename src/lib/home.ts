@@ -25,7 +25,7 @@ export const ANCHORS: Record<string, string> = {
 export const HOME_HEAD =
   '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
   '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap">' +
-  '<link rel="stylesheet" href="/zk-home.css?v=75"><link rel="stylesheet" href="/zk-tools.css?v=15">';
+  '<link rel="stylesheet" href="/zk-home.css?v=76"><link rel="stylesheet" href="/zk-tools.css?v=15">';
 
 const FOOTER_MARK = "ekit-template-content-footer";
 const footerStart = (body: string) => { const i = body.indexOf(FOOTER_MARK); return i < 0 ? -1 : body.lastIndexOf("<div", i); };
@@ -123,8 +123,8 @@ const bannerSlides = (h: Content["hero"]): Slide[] =>
 
 const CHEVRON = (d: string) => `<svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" focusable="false"><path d="${d}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const SLIDER_JS = (sec: number) => `<script>(function(){var box=document.querySelector('.zh-slider');if(!box)return;
-var S=[].slice.call(box.querySelectorAll('.zh-sl')),n=S.length,D=[].slice.call(box.querySelectorAll('.zh-dot')),pl=box.querySelector('.zh-play'),vol=box.querySelector('.zh-vol'),ctl=box.querySelector('.zh-vctl'),V=S.map(function(s){return s.querySelector('video')}),Y=S.map(function(s){return s.getAttribute('data-yt')}),hasV=V.some(function(v){return v}),hasY=Y.some(function(y){return y}),T=[].slice.call((box.parentNode||document).querySelectorAll('.zh-slt')),P=[],yr=[],yp=[];
-var sec=${sec},i=0,t=0,ft=0,vis=true,userPaused=false,muted=true,chosen=false,gest=false,still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+var S=[].slice.call(box.querySelectorAll('.zh-sl')),n=S.length,D=[].slice.call(box.querySelectorAll('.zh-dot')),pl=box.querySelector('.zh-play'),vol=box.querySelector('.zh-vol'),ctl=box.querySelector('.zh-vctl'),V=S.map(function(s){return s.querySelector('video')}),Y=S.map(function(s){return s.getAttribute('data-yt')}),hasV=V.some(function(v){return v}),hasY=Y.some(function(y){return y}),T=[].slice.call((box.parentNode||document).querySelectorAll('.zh-slt')),P=[],yr=[],yp=[],ht=[];
+var HOLD=3500,sec=${sec},i=0,t=0,ft=0,vis=true,userPaused=false,muted=true,chosen=false,gest=false,still=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function eff(){return muted||(!!Y[i]&&!gest)}
 function ui(){if(!vol)return;var m=eff();vol.classList.toggle('is-muted',m);vol.setAttribute('aria-pressed',m?'false':'true');vol.setAttribute('aria-label',m?'Turn sound on':'Turn sound off')}
 function mute(m){muted=m;V.forEach(function(v){if(v)v.muted=m});P.forEach(function(p){try{if(m)p.mute();else if(gest)p.unMute()}catch(e){}});ui()}
@@ -142,7 +142,7 @@ S.forEach(function(s,j){s.classList.toggle('on',j===i);s.setAttribute('aria-hidd
 D.forEach(function(d,j){d.classList.toggle('on',j===i);if(j===i)d.setAttribute('aria-current','true');else d.removeAttribute('aria-current')});
 T.forEach(function(x,j){x.classList.toggle('on',j===i);x.setAttribute('aria-hidden',j===i?'false':'true')});
 var ov=V[old];if(ov&&old!==i){ov.pause();setTimeout(function(){if(V[i]!==ov){try{ov.currentTime=0}catch(e){}}},900)}
-var oy=P[old];if(oy&&old!==i){try{oy.pauseVideo()}catch(e){}setTimeout(function(){if(i!==old){try{oy.seekTo(0,true)}catch(e){}S[old].classList.remove('yt-on');yp[old]=0}},900)}
+var oy=P[old];if(oy&&old!==i){try{oy.pauseVideo()}catch(e){}setTimeout(function(){if(i!==old){try{oy.seekTo(0,true)}catch(e){}clearTimeout(ht[old]);S[old].classList.remove('yt-on');yp[old]=0}},900)}
 var v=V[i];if(v){try{v.currentTime=0}catch(e){}v.muted=muted}
 var y=P[i];if(y&&yr[i]){try{y.seekTo(0,true)}catch(e){}}
 var nx=V[(i+1)%n];if(nx)nx.preload='auto';
@@ -154,7 +154,7 @@ v.addEventListener('error',function(){if(V[i]===v&&n>1)setTimeout(function(){if(
 v.addEventListener('play',pui);v.addEventListener('pause',pui);
 v.addEventListener('loadedmetadata',function(){if(i===k)fit(false)})});
 S.forEach(function(s,k){var m=s.querySelector('img');if(!m)return;if(m.complete&&m.naturalWidth)return;m.addEventListener('load',function(){if(i===k)fit(false)})});
-if(hasY){var boot=function(){S.forEach(function(s,k){if(!Y[k])return;P[k]=new YT.Player(s.querySelector('.zh-ytp').firstChild,{videoId:Y[k],playerVars:{autoplay:0,mute:1,controls:0,rel:0,playsinline:1,modestbranding:1,iv_load_policy:3,disablekb:1,fs:0,cc_load_policy:0,origin:location.origin},events:{onReady:function(e){e.target.mute();yr[k]=1;if(i===k)arm()},onStateChange:function(e){if(e.data===1){yp[k]=1;s.classList.add('yt-on')}if(e.data===1||e.data===2)pui();if(e.data===0&&i===k){if(n>1&&!still)go(i+1);else{try{e.target.seekTo(0);e.target.playVideo()}catch(x){}}}}}})})};
+if(hasY){var boot=function(){S.forEach(function(s,k){if(!Y[k])return;P[k]=new YT.Player(s.querySelector('.zh-ytp').firstChild,{videoId:Y[k],playerVars:{autoplay:0,mute:1,controls:0,rel:0,playsinline:1,modestbranding:1,iv_load_policy:3,disablekb:1,fs:0,cc_load_policy:0,origin:location.origin},events:{onReady:function(e){e.target.mute();yr[k]=1;if(i===k)arm()},onStateChange:function(e){var st=e.data;if(st===1){yp[k]=1;clearTimeout(ht[k]);ht[k]=setTimeout(function(){s.classList.add('yt-on')},HOLD)}else if(st===0||st===2){clearTimeout(ht[k]);s.classList.remove('yt-on')}if(st===1||st===2)pui();if(st===0&&i===k){if(n>1&&!still)go(i+1);else{try{e.target.seekTo(0);e.target.playVideo()}catch(x){}}}}}})})};
 if(window.YT&&YT.Player)boot();else{var pr=window.onYouTubeIframeAPIReady;window.onYouTubeIframeAPIReady=function(){if(pr)pr();boot()};var sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';document.head.appendChild(sc)}}
 var pv=box.querySelector('.zh-prev'),nx=box.querySelector('.zh-next');
 if(pv)pv.addEventListener('click',function(){go(i-1)});if(nx)nx.addEventListener('click',function(){go(i+1)});

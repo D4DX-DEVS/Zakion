@@ -1018,6 +1018,9 @@ dialog.zh-vlb .zh-vlb-x:hover{background:#fec142!important}
 /* a YouTube slide: its cover picture shows until the clip plays; the player is cropped a little (as the old looping banner did) to hide YouTube's own title bar */
 .zh-ytp{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 .zh-ytp iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;transform:scale(1.26)}
+/* YouTube draws its own overlay (title and a big pause or play button) when a clip starts, pauses or ends, and a few seconds into playback it hides it again.
+   The cover picture sits above the player and stays there through those moments (see onStateChange in src/lib/home.ts), then fades out to the plain video. */
+.zh-ytposter{z-index:1}
 .zh-sl.yt-on .zh-ytposter{opacity:0;transition:opacity .6s ease}
 /* the text of the slides sits in the banner's text place (over the picture; under it on phones), one block per slide, the one of the slide on show visible.
    The banner is outside the .zh sections, so these styles carry their own colours and do not rely on the section variables. */
